@@ -12,11 +12,23 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    cpuConfig = cpu_config_create(argv[1], cpuLogger);
-
+    log_info(cpuLogger,"Creado log de la cpu");
+    cpuConfig = cpu_crear_config(CONFIG_CPU, cpuLogger);
+    if (cpuConfig == NULL) log_error(cpuLogger, "no se pudo leer la config");
+    
     // conexion con MEMORIA
 
-    const int socketMEMORIA = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
+    //iniciar CPU como servidor para esperar a MEMORIA
+
+    int socket_CPU = iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig),(char *)cpu_config_obtener_puerto_escucha(cpuConfig));
+    log_info(cpuLogger,"listo para recibir a MEMORIA");
+    int socket_memoria = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
+    if (socket_memoria == -1) log_error(cpuLogger, "no se establecio conexion con MEMORIA");
+        
+
+
+
+    /*const int socketMEMORIA = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
     if (socketMEMORIA == -1) {
         log_error(cpuLogger, "no se establecio conexion con MEMORIA");
         log_destroy(cpuLogger);
@@ -32,7 +44,7 @@ int main(int argc, char* argv[]) {
         log_destroy(cpuLogger);
         return -1;
     }    
-
+*/
     // aceptar conexion con kernel
     int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
         struct sockaddr cliente = {0};
