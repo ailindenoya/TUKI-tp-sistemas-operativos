@@ -54,22 +54,26 @@ int iniciar_servidor(char* ip, char* port) {
 
 int conectar_a_servidor(char* ip, char* port) {
     int conexion;
+    int status;
     struct addrinfo hints;
-    struct addrinfo* servidor;
+    struct addrinfo* servidor; // puntero a los resultados
     struct addrinfo* p; // para no perder el valor de servidor
 
-    memset(&hints, 0, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));// asegura que la struct no este vacia
 
     // hints para establecer protocolos:
 
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_UNSPEC;  // ipv4 - ipv6 para usar uno en especifico:  AF_INET o AF_INET6
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE; // pone el ip random automaticamente
 
-    if (getaddrinfo(ip, port, &hints, &servidor) != 0) {
-        fprintf(stderr, "getaddrinfo error: %s", gai_strerror(getaddrinfo(ip, port, &hints, &servidor)));
-        return EXIT_FAILURE;
+    if (status = getaddrinfo(ip, port, &hints, &servidor) != 0) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        exit(1);
     }
+    // servidor ahora apunta a una lista de 1 o mas structs de addrinfo
+
+    
     for (p = servidor; p != NULL; p = p->ai_next) {
         conexion = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (-1 == conexion) {

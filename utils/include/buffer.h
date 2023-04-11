@@ -8,5 +8,7 @@ typedef struct {
     void *stream;
 } t_buffer;
 
+t_buffer* buffer_crear(void);
+void buffer_destruir(t_buffer* self);
 
 #endif 

@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"string.h": "c",
+			"consola_config.h": "c",
+			"config_inicializacion.h": "c",
+			"stdlib.h": "c",
+			"config.h": "c",
+			"stream.h": "c",
+			"conexiones.c": "cpp",
+			"log.h": "c",
+			"list.h": "c",
+			"kernel_config.h": "c",
+			"stdnoreturn.h": "c"
+		}
+	}
+}

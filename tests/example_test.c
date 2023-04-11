@@ -2,8 +2,12 @@
 #include <stdbool.h>
 #include <cspecs/cspec.h>
 
-context (example) {
-    bool la_verdad = true;
+
+
+
+
+//context (example) {
+ //   bool la_verdad = true;
 
   /*  describe("Hello world") {
         it("la_verdad should be true") {
@@ -11,4 +15,4 @@ context (example) {
         } end
     } end
 */
-}
+//}
