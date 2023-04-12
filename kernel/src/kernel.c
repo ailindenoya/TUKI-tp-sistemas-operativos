@@ -16,6 +16,9 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
+static void kernel_acepta_conexion(int socketEscucha);
+static void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLogger);
+
 static void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
@@ -60,7 +63,7 @@ void intentar_establecer_conexion(int socket, char* tipo){
 int main(int argc, char* argv[]){
     kernelLogger = log_create(LOGS_KERNEL, MODULO_KERNEL, true, LOG_LEVEL_DEBUG);
 
-    kernelConfig = kernel_crear_config(argv[1], kernelLogger);
+    kernelConfig = kernel_config_crear(argv[1], kernelLogger);
 
     // conexion con CPU
 
@@ -82,7 +85,7 @@ int main(int argc, char* argv[]){
     intentar_establecer_conexion(socketFILESYSTEM, "FILESYSTEM");
 
     // inicializa servidor de instancias CONSOLA
-    int socketESCUCHA = iniciar_servidor(kernel_config_obtener_ip_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
+    int socketESCUCHA = iniciar_servidor(kernel_config_obtener_puerto_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 
 
