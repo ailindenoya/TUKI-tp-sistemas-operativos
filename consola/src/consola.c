@@ -1,4 +1,4 @@
-#include "../consola/include/consola_config.h"
+#include "../include/consola_config.h"
 
 
 #define LOGS_CONSOLA "bin/consola.log"
@@ -25,11 +25,13 @@ int main(int argc, char *argv[]) {
     const int kernelSocket = conectar_a_servidor(kernelIP, kernelPUERTO);
     if (kernelSocket == -1) {
         log_error(consolaLogger, "Consola no se pudo conectar con Kernel");
-        consola_destruir(consolaConfig, consolaLogger);
+        consola_destruir(consolaLogger, consolaConfig);
         return -1;
     }
 
-
+    consola_config_destruir(consolaConfig);
+    log_destroy(consolaLogger);
+    return 0;
 
 }
 
