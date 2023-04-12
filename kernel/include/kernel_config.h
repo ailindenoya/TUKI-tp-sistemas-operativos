@@ -18,10 +18,11 @@
 
 typedef struct t_kernel_config t_kernel_config;
 
+t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger) ;
 void avisar_si_hay_error(int socket, char* tipo);
 void intentar_establecer_conexion(int socket, char* tipo);
-t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger) ;
 void kernel_config_destruir(t_kernel_config* self);
+
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) ;
 char* kernel_config_obtener_puerto_memoria(t_kernel_config* self);
 char* kernel_config_obtener_ip_filesystem(t_kernel_config* self) ;
