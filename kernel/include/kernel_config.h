@@ -1,9 +1,10 @@
 #ifndef KERNEL_CONFIG_H_INCLUDED
 #define KERNEL_CONFIG_H_INCLUDED
 
+
 #include <commons/log.h>
 #include <commons/config.h>
-
+#include <commons/string.h>
 #include <commons/collections/list.h>
 
 typedef struct t_kernel_config t_kernel_config;
@@ -27,7 +28,7 @@ struct t_kernel_config {
 };
 
 
-static void __kernel_config_initializer(void* moduleConfig, t_config* tempCfg) {
+static void kernel_config_inciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
     kernelConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
     kernelConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
@@ -39,8 +40,8 @@ static void __kernel_config_initializer(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->ESTIMACION_INICIAL = config_get_double_value(tempCfg, "ESTIMACION_INICIAL");
     kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "ALFA");
     kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MULTIPROGRAMACION");
-    kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
-    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
+ /* kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
+    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");*/  
 }
 
 

@@ -16,7 +16,8 @@
 			"log.h": "c",
 			"list.h": "c",
 			"kernel_config.h": "c",
-			"stdnoreturn.h": "c"
+			"stdnoreturn.h": "c",
+			"conexiones.h": "c"
 		}
 	}
 }
