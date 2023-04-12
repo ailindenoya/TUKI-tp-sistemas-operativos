@@ -1,6 +1,15 @@
 #ifndef KERNEL_CONFIG_H_INCLUDED
 #define KERNEL_CONFIG_H_INCLUDED
 
+#include <errno.h>
+#include <stdlib.h>
+#include <stdnoreturn.h>
+#include <string.h>
+#include <sys/socket.h>
+
+#include "../../utils/include/flagsParaCommons.h"
+#include "../../utils/include/conexiones.h"
+#include "../../utils/include/stream.h"
 
 #include <commons/log.h>
 #include <commons/config.h>
@@ -11,7 +20,6 @@ typedef struct t_kernel_config t_kernel_config;
 
 void avisar_si_hay_error(int socket, char* tipo);
 void intentar_establecer_conexion(int socket, char* tipo);
-void kernel_config_inciar(void* moduleConfig, t_config* tempCfg);
 t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger) ;
 void kernel_config_destruir(t_kernel_config* self);
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) ;

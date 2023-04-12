@@ -1,9 +1,4 @@
-#include <sys/socket.h>
 #include "../include/cpu_config.h"
-#include "../../utils/include/stream.h"
-#include "../../utils/include/conexiones.h"
-#include "../../utils/include/flagsParaCommons.h"
-
 
 
 #define LOGS_CPU "../bin/cpu.log"

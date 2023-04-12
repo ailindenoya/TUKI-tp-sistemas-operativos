@@ -1,13 +1,4 @@
-#include "../cpu/include/cpu_config.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <commons/config.h>
-#include <commons/log.h>
-#include <commons/collections/list.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include "../include/cpu_config.h"
 
 t_log* cpuLogger;
 t_cpu_config* cpuConfig;
@@ -28,6 +19,7 @@ struct t_cpu_config {
 };
 
 t_cpu_config* cpuConfig;
+static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
 
 static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_cpu_config* cpuConfig = (t_cpu_config*)moduleConfig;
@@ -43,7 +35,7 @@ static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
 
 t_cpu_config* cpu_config_crear(char* cpuConfigPath, t_log* cpuLogger) {
     t_cpu_config* self = malloc(sizeof(*self));
-    config_init(self, cpuConfigPath, cpuLogger, cpu_iniciar_config);
+    config_iniciar(self, cpuConfigPath, cpuLogger, cpu_iniciar_config);
     return self;
 }
 
@@ -54,7 +46,7 @@ char* cpu_config_obtener_ip_cpu(t_cpu_config* self) {
 char* cpu_config_obtener_ip_memoria(t_cpu_config* self) {
     return self->IP_MEMORIA;
 }
-char* cpu_config_obtener_retardo_instruccion(t_cpu_config* self) {
+uint32_t cpu_config_obtener_retardo_instruccion(t_cpu_config* self) {
     return self->RETARDO_INSTRUCCION;
 }
 char* cpu_config_obtener_puerto_memoria(t_cpu_config* self) {

@@ -5,6 +5,7 @@ struct t_consola_config {
     char* IP_KERNEL;
     char* PUERTO_KERNEL;
 };
+void consola_iniciar_config(void* configurarModulo, t_config* tempCfg);
 
 static void consola_iniciar_config(void* configurarModulo, t_config* tempCfg) {
     t_consola_config* consolaConfig = (t_consola_config*)configurarModulo;

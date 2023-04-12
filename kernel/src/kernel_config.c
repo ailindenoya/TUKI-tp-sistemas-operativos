@@ -27,7 +27,9 @@ struct t_kernel_config {
 
 };
 
-static void kernel_config_inciar(void* moduleConfig, t_config* tempCfg) {
+static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg);
+
+static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
     kernelConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
     kernelConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
@@ -39,13 +41,14 @@ static void kernel_config_inciar(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->ESTIMACION_INICIAL = config_get_double_value(tempCfg, "ESTIMACION_INICIAL");
     kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "ALFA");
     kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MULTIPROGRAMACION");
-    kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
-    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
+  // kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
+//    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
 }
+
 
 t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger) {
     t_kernel_config* self = malloc(sizeof(*self));
-    config_iniciar(self, kernelConfigPath, kernelLogger, kernel_config_inciar);
+    config_iniciar(self, kernelConfigPath, kernelLogger, kernel_config_iniciar);
     return self;
 }
 
@@ -81,9 +84,6 @@ char* kernel_config_obtener_puerto_cpu(t_kernel_config* self) {
 }
 char* kernel_config_obtener_puerto_escucha(t_kernel_config* self) {
     return self->PUERTO_ESCUCHA;
-}
-char* kernel_config_obtener_ip_memoria(t_kernel_config* self) {
-    return self->IP_MEMORIA;
 }
 bool kernel_config_es_algoritmo_hrrn(t_kernel_config* self) {
     return strcmp(self->ALGORITMO_PLANIFICACION, "HRRN") == 0;
