@@ -17,7 +17,8 @@
 			"list.h": "c",
 			"kernel_config.h": "c",
 			"stdnoreturn.h": "c",
-			"conexiones.h": "c"
+			"conexiones.h": "c",
+			"flagsparacommons.h": "c"
 		}
 	}
 }

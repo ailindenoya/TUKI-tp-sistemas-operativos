@@ -1,10 +1,14 @@
-#include "../cpu/include/cpu_config.h"
-
-
+#include <sys/socket.h>
+#include "../include/cpu_config.h"
 #include "../../utils/include/stream.h"
-#define LOGS_CPU "bin/cpu.log"
+#include "../../utils/include/conexiones.h"
+#include "../../utils/include/flagsParaCommons.h"
+
+
+
+#define LOGS_CPU "../bin/cpu.log"
 #define MODULO_CPU "CPU"
-#define CONFIG_CPU "cfg/cpu_config.cfg"
+#define CONFIG_CPU "../cfg/cpu_config.cfg"
 
 
 extern t_log* cpuLogger;
@@ -12,61 +16,48 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    log_info(cpuLogger,"Creado log de la cpu");
-    cpuConfig = cpu_crear_config(CONFIG_CPU, cpuLogger);
-    if (cpuConfig == NULL) log_error(cpuLogger, "no se pudo leer la config");
-    
+    cpuConfig = cpu_config_crear(argv[1], cpuLogger);
+
     // conexion con MEMORIA
 
-    //iniciar CPU como servidor para esperar a MEMORIA
-
-    int socket_CPU = iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig),(char *)cpu_config_obtener_puerto_escucha(cpuConfig));
-    log_info(cpuLogger,"listo para recibir a MEMORIA");
-    int socket_memoria = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
-    if (socket_memoria == -1) log_error(cpuLogger, "no se establecio conexion con MEMORIA");
-        
-
-
-
-    /*const int socketMEMORIA = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
+    const int socketMEMORIA = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
     if (socketMEMORIA == -1) {
         log_error(cpuLogger, "no se establecio conexion con MEMORIA");
         log_destroy(cpuLogger);
         return -1;
     }
-
     stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_cpu);
     uint8_t memoriaResponse = stream_recibir_header(socketMEMORIA);
     t_buffer* bufferMemoria = buffer_crear();
-    stream_recibir_buffer(cpu_config_setear_socket_memoria(cpuConfig), bufferMemoria);
+    stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig), bufferMemoria);
+
     if (memoriaResponse != HANDSHAKE_puede_continuar) {
         log_error(cpuLogger, "no se establecio conexion con Memoria");
         log_destroy(cpuLogger);
         return -1;
     }    
-*/
+
     // aceptar conexion con kernel
     int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
         struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
-    // Conexión con Kernel 
     int socketKERNEL = accept(socketKERNELESCUCHA, &cliente, &len);
     if (socketKERNEL == -1) {
         log_error(cpuLogger, "no se pudo establecer conexion inicial con KERNEL");
         log_destroy(cpuLogger);
         return -1;
     }
-    cpu_config_set_socket_dispatch(cpuConfig, socketKERNEL);
+    cpu_config_setear_socket_kernel(cpuConfig, socketKERNEL);
 
-    uint8_t kernelDispatchResponse = stream_recv_header(socketKERNEL);
-    stream_recv_empty_buffer(socketKERNEL);
-    if (kernelDispatchResponse != HANDSHAKE_dispatch) {
-        log_error(cpuLogger, "Error al intentar establecer Handshake inicial con módulo Kernel por canal Dispatch");
+    uint8_t respuestaKERNEL = stream_recibir_header(socketKERNEL);
+    stream_recibir_buffer_vacio(socketKERNEL);
+    if (respuestaKERNEL != HANDSHAKE_kernel) {
+        log_error(cpuLogger, "error al intentar establecer HANDSHAKE inicial con kernel");
         log_destroy(cpuLogger);
         return -1;
     }
-    stream_send_empty_buffer(socketKERNEL, HANDSHAKE_puede_continuar);
-    log_info(cpuLogger, "Conexión con Kernel por canal Dispatch establecida");
+    stream_enviar_buffer_vacio(socketKERNEL, HANDSHAKE_puede_continuar);
+    log_info(cpuLogger, "conexion con kernel establecida");
 
 }
