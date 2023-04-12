@@ -1,7 +1,7 @@
 #include "../cpu/include/cpu_config.h"
 
 
-
+#include "../../utils/include/stream.h"
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
 #define CONFIG_CPU "cfg/cpu_config.cfg"
