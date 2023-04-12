@@ -33,6 +33,8 @@ static void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
     fileSystemConfig->RETARDO_ACCESO_BLOQUE = config_get_int_value(tempCfg, "RETARDO_ACCESO_BLOQUE");
 }
 
+
+
 t_fileSystem_config* fileSystem_config_crear(char* fileSystemConfigPath, t_log* fileSystemLogger){
     t_fileSystem_config* self = malloc(self);
     config_iniciar(self, fileSystemConfigPath, fileSystemLogger, fileSystem_config_iniciar);
