@@ -36,7 +36,7 @@ static void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
 
 
 t_fileSystem_config* fileSystem_config_crear(char* fileSystemConfigPath, t_log* fileSystemLogger){
-    t_fileSystem_config* self = malloc(self);
+    t_fileSystem_config* self = malloc(sizeof(*self));
     config_iniciar(self, fileSystemConfigPath, fileSystemLogger, fileSystem_config_iniciar);
     return self;
 }
