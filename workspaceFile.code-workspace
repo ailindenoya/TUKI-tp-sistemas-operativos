@@ -1,24 +1,29 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": "cpu"
+		},
+		{
+			"path": "consola"
+		},
+		{
+			"path": "fileSystem"
+		},
+		{
+			"path": "kernel"
+		},
+		{
+			"path": "memoria"
+		},
+		{
+			"path": "utils"
 		}
 	],
-	"settings": {
-		"files.associations": {
-			"string.h": "c",
-			"consola_config.h": "c",
-			"config_inicializacion.h": "c",
-			"stdlib.h": "c",
-			"config.h": "c",
-			"stream.h": "c",
-			"conexiones.c": "cpp",
-			"log.h": "c",
-			"list.h": "c",
-			"kernel_config.h": "c",
-			"stdnoreturn.h": "c",
-			"conexiones.h": "c",
-			"flagsparacommons.h": "c"
-		}
-	}
+	"settings": { 
+		"debug.onTaskErrors": "abort", 
+		"files.associations": { 
+			"*.h": "c", 
+		}, 
+		"C_Cpp.errorSquiggles": "disabled", 
+	}, 
 }

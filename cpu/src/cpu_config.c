@@ -30,6 +30,7 @@ static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     cpuConfig->TAM_MAX_SEGMENTO = config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO");
     cpuConfig->SOCKET_MEMORIA = -1;
     cpuConfig->SOCKET_KERNEL = -1;
+    free(tempCfg);
 }
 
 

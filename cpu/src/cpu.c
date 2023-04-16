@@ -1,9 +1,9 @@
 #include "../include/cpu_config.h"
 
 
-#define LOGS_CPU "../bin/cpu.log"
+#define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
-#define CONFIG_CPU "../cfg/cpu_config.cfg"
+#define CONFIG_CPU "cfg/cpu_config.cfg"
 
 
 extern t_log* cpuLogger;
@@ -11,7 +11,8 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    cpuConfig = cpu_config_crear(argv[1], cpuLogger);
+    log_info(cpuLogger, "hola :D");
+    cpuConfig = cpu_config_crear(CONFIG_CPU, cpuLogger);
 
     // conexion con MEMORIA
 

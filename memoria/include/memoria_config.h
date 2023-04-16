@@ -16,7 +16,6 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 
-typedef struct t_memoria_config t_memoria_config;
 
 typedef struct t_memoria_config t_memoria_config;
 
@@ -30,7 +29,7 @@ int memoria_config_obtener_retardo_memoria(t_memoria_config*);
 int memoria_config_obtener_retardo_compactacion(t_memoria_config*);
 int memoria_config_obtener_tamanio_memoria(t_memoria_config*);
 int memoria_config_obtener_tamanio_segmento(t_memoria_config*);
-t_memoria_config* memoria_config_create(char* memoriaConfigPath, t_log*);
+t_memoria_config* memoria_config_crear(char* memoriaConfigPath, t_log*);
 
 
 

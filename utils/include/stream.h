@@ -3,8 +3,8 @@
 
 #include "buffer.h"
 
-static void stream_enviar(int toSocket, void* streamToSend, uint32_t bufferSize);
-static void* stream_crear(uint8_t header, t_buffer* buffer);
+void stream_enviar(int toSocket, void* streamToSend, uint32_t bufferSize);
+void* stream_crear(uint8_t header, t_buffer* buffer);
 void stream_recibir_buffer(int origenSocket, t_buffer* destBuffer);
 void stream_enviar_buffer(int destinoSocket, uint8_t header, t_buffer* buffer);
 void stream_enviar_buffer_vacio(int destinoSocket, uint8_t header);

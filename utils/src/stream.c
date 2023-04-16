@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 
 
-static void stream_enviar(int toSocket, void* streamToSend, uint32_t bufferSize) {
+void stream_enviar(int toSocket, void* streamToSend, uint32_t bufferSize) {
     uint8_t header = 0;
     uint32_t tamanio = 0;
     ssize_t bytesEnviados = send(toSocket, streamToSend, sizeof(header) + sizeof(tamanio) + bufferSize, 0);
@@ -18,7 +18,7 @@ static void stream_enviar(int toSocket, void* streamToSend, uint32_t bufferSize)
     }
 }
 
-static void* stream_crear(uint8_t header, t_buffer* buffer) {
+void* stream_crear(uint8_t header, t_buffer* buffer) {
     void* streamAEnviar = malloc(sizeof(header) + sizeof(buffer->size) + buffer->size);
     int offset = 0;
     memcpy(streamAEnviar + offset, &header, sizeof(header));

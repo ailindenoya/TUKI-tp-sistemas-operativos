@@ -8,6 +8,7 @@
 #include "../../utils/include/flagsParaCommons.h"
 #include "../../utils/include/stream.h"
 #include "../../utils/src/conexiones.c"
+#include "../../utils/src/config_inicializacion.c"
 
 typedef struct t_consola_config t_consola_config;
 char *consola_config_obtener_kernel_IP(t_consola_config *);

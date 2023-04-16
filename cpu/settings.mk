@@ -10,8 +10,11 @@ CDEBUG=-g -Wall -DDEBUG
 CRELEASE=-O3 -Wall -DNDEBUG
 
 # Arguments when executing with start, memcheck or helgrind
-ARGS=cfg/prueba_estabilidad_integral_config.cfg
+ARGS=cfg/cpu_config.cfg
 
 # Valgrind flags
-MEMCHECK_FLAGS=--track-origins=yes --log-file="memcheck.log"
-HELGRIND_FLAGS=--log-file="helgrind.log"
+MEMCHECK_FLAGS=--track-origins=yes
+HELGRIND_FLAGS=
+
+# Source files (*.c) to be excluded from tests compilation
+TEST_EXCLUDE=src/main.c

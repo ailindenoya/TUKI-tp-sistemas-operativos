@@ -6,9 +6,8 @@
 #include <string.h>
 #include "../../utils/include/config_inicializacion.h"
 
-t_log* cpuLogger;
-t_memoria_config* cpuConfig;
-
+t_log* memoriaLogger;
+t_memoria_config* memoriaConfig;
 
 struct t_memoria_config {
   
@@ -21,7 +20,8 @@ struct t_memoria_config {
     char* ALGORITMO_ASIGNACION;
 };
 
-static void __memoria_config_initializer(void* moduleConfig, t_config* tempCfg) {
+
+static void memoria_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_memoria_config* memoriaConfig = (t_memoria_config*)moduleConfig;
     memoriaConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
     memoriaConfig->TAM_MEMORIA = config_get_int_value(tempCfg, "TAM_MEMORIA");
@@ -32,9 +32,10 @@ static void __memoria_config_initializer(void* moduleConfig, t_config* tempCfg) 
     memoriaConfig->RETARDO_COMPACTACION = config_get_int_value(tempCfg, "RETARDO_COMPACTACION");
 }
 
-t_memoria_config* memoria_config_create(char* memoriaConfigPath, t_log* memoriaLogger) {
-    t_memoria_config* self = malloc(sizeof(*self));
-    config_iniciar(self, memoriaConfigPath, memoriaLogger, __memoria_config_initializer);
+t_memoria_config* memoria_config_crear(char* memoriaConfigPath, t_log* memoriaLogger) {
+    t_memoria_config * self  = (t_memoria_config *) malloc(sizeof(t_memoria_config));
+    //t_memoria_config* self = malloc(sizeof(*self));
+    config_iniciar(self, memoriaConfigPath, memoriaLogger, memoria_iniciar_config);
     return self;
 }
 

@@ -67,7 +67,9 @@ int conectar_a_servidor(char* ip, char* port) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE; // pone el ip random automaticamente
 
-    if (status = getaddrinfo(ip, port, &hints, &servidor) != 0) {
+    status = getaddrinfo(ip, port, &hints, &servidor);
+
+    if ( status != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         exit(1);
     }

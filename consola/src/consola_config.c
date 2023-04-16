@@ -1,4 +1,4 @@
-#include "../consola/include/consola_config.h"
+#include "../include/consola_config.h"
 
 
 struct t_consola_config {
@@ -7,7 +7,7 @@ struct t_consola_config {
 };
 void consola_iniciar_config(void* configurarModulo, t_config* tempCfg);
 
-static void consola_iniciar_config(void* configurarModulo, t_config* tempCfg) {
+void consola_iniciar_config(void* configurarModulo, t_config* tempCfg) {
     t_consola_config* consolaConfig = (t_consola_config*)configurarModulo;
     consolaConfig->IP_KERNEL = strdup(config_get_string_value(tempCfg, "IP_KERNEL"));
     consolaConfig->PUERTO_KERNEL = strdup(config_get_string_value(tempCfg, "PUERTO_KERNEL"));
@@ -15,7 +15,7 @@ static void consola_iniciar_config(void* configurarModulo, t_config* tempCfg) {
 
 t_consola_config* consola_crear_config(char* consolaConfigPath, t_log* consolaLogger) {
     t_consola_config* consola = malloc(sizeof(*consola));
-    config_init(consola, consolaConfigPath, consolaLogger, consola_iniciar_config);
+    config_iniciar(consola, consolaConfigPath, consolaLogger, consola_iniciar_config);
     return consola;
 }
 
