@@ -8,9 +8,5 @@ int config_iniciar(void* config, char* pathAlConfig, t_log* logger,void (*config
     }
     config_initializer(config, configTemp);
     log_info(logger, "Inicialización de campos correcta");
-    config_destroy(configTemp);
     return 1;
-    
-
-
 }

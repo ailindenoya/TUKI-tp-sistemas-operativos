@@ -1,4 +1,5 @@
 #include "../include/cpu_config.h"
+#include<string.h>
 
 t_log* cpuLogger;
 t_cpu_config* cpuConfig;
@@ -23,19 +24,18 @@ static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
 
 static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_cpu_config* cpuConfig = (t_cpu_config*)moduleConfig;
-    cpuConfig->IP = strdup(config_get_string_value(tempCfg, "IP"));
+    cpuConfig->IP = config_get_string_value(tempCfg, "IP");
     cpuConfig->RETARDO_INSTRUCCION = config_get_int_value(tempCfg, "RETARDO_INSTRUCCION");
-    cpuConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
+    cpuConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
     cpuConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
     cpuConfig->TAM_MAX_SEGMENTO = config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO");
     cpuConfig->SOCKET_MEMORIA = -1;
     cpuConfig->SOCKET_KERNEL = -1;
-    free(tempCfg);
 }
 
 
 t_cpu_config* cpu_config_crear(char* cpuConfigPath, t_log* cpuLogger) {
-    t_cpu_config* self = malloc(sizeof(*self));
+    t_cpu_config* self = malloc(sizeof(self));
     config_iniciar(self, cpuConfigPath, cpuLogger, cpu_iniciar_config);
     return self;
 }
