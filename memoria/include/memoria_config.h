@@ -20,13 +20,10 @@
 typedef struct t_memoria_config t_memoria_config;
 
 bool memoria_config_es_algoritmo_sustitucion_clock(t_memoria_config*);
-bool memoria_config_es_algoritmo_sustitucion_clock_modificado(t_memoria_config*);
-// char* memoria_config_get_path_swap(t_memoria_config*);
 char* memoria_config_obtener_puerto_escucha(t_memoria_config*);
-// int memoria_config_get_entradas_por_tabla(t_memoria_config*);
-// int memoria_config_get_marcos_por_proceso(t_memoria_config*);
 int memoria_config_obtener_retardo_memoria(t_memoria_config*);
 int memoria_config_obtener_retardo_compactacion(t_memoria_config*);
+int memoria_config_obtener_cantidad_de_segmentos(t_memoria_config*);
 int memoria_config_obtener_tamanio_memoria(t_memoria_config*);
 int memoria_config_obtener_tamanio_segmento(t_memoria_config*);
 t_memoria_config* memoria_config_crear(char* memoriaConfigPath, t_log*);
