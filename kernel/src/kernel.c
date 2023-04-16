@@ -4,6 +4,7 @@
 
 #define LOGS_KERNEL "bin/kernel.log"
 #define MODULO_KERNEL "Kernel"
+#define KERNEL_CONFIG "cfg/kernel_config_base.cfg"
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
@@ -52,10 +53,10 @@ void intentar_establecer_conexion(int socket, char* tipo){
     log_info(kernelLogger, "se establecio conexion con %s", tipo);
 }
 
-int main(int argc, char* argv[]){
+int main(){
     kernelLogger = log_create(LOGS_KERNEL, MODULO_KERNEL, true, LOG_LEVEL_DEBUG);
 
-    kernelConfig = kernel_config_crear(argv[0], kernelLogger);
+    kernelConfig = kernel_config_crear(KERNEL_CONFIG, kernelLogger);
 
     // conexion con CPU
 

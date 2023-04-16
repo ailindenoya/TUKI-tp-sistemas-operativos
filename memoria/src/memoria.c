@@ -76,7 +76,8 @@ int main(){
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA FILESYSTEM KERNEL CPU");
 
     // Aceptar conexion, manejarla con el socket que devuelve accept
-
+    log_info(memoriaLogger, "ESPERANDO CLIENTES");
+    
     int socketFilesystem = accept(socketESCUCHA, &cliente, &len);
 
     handshake_filesystem(socketFilesystem);

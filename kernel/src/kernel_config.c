@@ -31,16 +31,17 @@ static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg);
 
 static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
-    kernelConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
-    kernelConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
-    kernelConfig->IP_FILESYSTEM = strdup(config_get_string_value(tempCfg, "IP_FILESYSTEM"));
-    kernelConfig->PUERTO_FILESYSTEM = strdup(config_get_string_value(tempCfg, "PUERTO_FILESYSTEM"));
-    kernelConfig->IP_CPU = strdup(config_get_string_value(tempCfg, "IP_CPU"));
-    kernelConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
-    kernelConfig->ALGORITMO_PLANIFICACION = strdup(config_get_string_value(tempCfg, "ALGORITMO_PLANIFICACION"));
+    kernelConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
+    kernelConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
+    kernelConfig->IP_FILESYSTEM = config_get_string_value(tempCfg, "IP_FILESYSTEM");
+    kernelConfig->PUERTO_FILESYSTEM = config_get_string_value(tempCfg, "PUERTO_FILESYSTEM");
+    kernelConfig->IP_CPU = config_get_string_value(tempCfg, "IP_CPU");
+    kernelConfig->PUERTO_CPU = config_get_string_value(tempCfg, "PUERTO_CPU");
+    kernelConfig->PUERTO_ESCUCHA = config_get_string_value(tempCfg, "PUERTO_ESCUCHA");
+    kernelConfig->ALGORITMO_PLANIFICACION = config_get_string_value(tempCfg, "ALGORITMO_PLANIFICACION");
     kernelConfig->ESTIMACION_INICIAL = config_get_double_value(tempCfg, "ESTIMACION_INICIAL");
-    kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "ALFA");
-    kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MULTIPROGRAMACION");
+    kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "HRRN_ALFA");
+    kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MAX_MULTIPROGRAMACION");
   // kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
 //    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
 }
