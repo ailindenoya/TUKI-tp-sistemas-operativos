@@ -53,8 +53,6 @@ void avisar_si_hay_error(int socket, char* tipo){
 }
 
 int main(){
-    
-    memoriaConfig = malloc(100);
 
     memoriaLogger = log_create(LOGS_MEMORIA, MODULO_MEMORIA, true, LOG_LEVEL_INFO);
     /*if (argc != 1) {

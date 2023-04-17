@@ -33,8 +33,8 @@ static void memoria_iniciar_config(void* moduleConfig, t_config* tempCfg) {
 }
 
 t_memoria_config* memoria_config_crear(char* memoriaConfigPath, t_log* memoriaLogger) {
-    t_memoria_config * self  = (t_memoria_config *) malloc(sizeof(t_memoria_config));
-    //t_memoria_config* self = malloc(sizeof(*self));
+    //t_memoria_config * self  = (t_memoria_config *) malloc(sizeof(t_memoria_config));
+    t_memoria_config* self = malloc(sizeof(*self));
     config_iniciar(self, memoriaConfigPath, memoriaLogger, memoria_iniciar_config);
     return self;
 }
