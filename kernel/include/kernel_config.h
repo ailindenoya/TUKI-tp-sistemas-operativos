@@ -10,11 +10,14 @@
 #include "../../utils/include/flagsParaCommons.h"
 #include "../../utils/include/conexiones.h"
 #include "../../utils/include/stream.h"
+#include "../../utils/include/config_inicializacion.h"
 
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+
+
 
 typedef struct t_kernel_config t_kernel_config;
 
@@ -22,6 +25,8 @@ t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger
 void avisar_si_hay_error(int socket, char* tipo);
 void intentar_establecer_conexion(int socket, char* tipo);
 void kernel_config_destruir(t_kernel_config* self);
+void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLog);
+void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg);
 
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) ;
 char* kernel_config_obtener_puerto_memoria(t_kernel_config* self);

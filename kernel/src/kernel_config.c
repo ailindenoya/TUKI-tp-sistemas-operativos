@@ -1,11 +1,5 @@
 #include "../include/kernel_config.h"
 
-#include <commons/config.h>
-#include <commons/log.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../../utils/include/config_inicializacion.h"
-
 t_log* kernelLogger;
 t_kernel_config* kernelConfig;
 
@@ -22,14 +16,12 @@ struct t_kernel_config {
     double ESTIMACION_INICIAL;
     double HRRN_ALFA;
     int GRADO_MAX_MULTIPROGRAMACION;
-    t_list *RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
-    t_list *INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
+ //   t_list *RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
+    //t_list *INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
 };
 
-static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg);
-
-static void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
+void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
     kernelConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
     kernelConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
@@ -57,7 +49,7 @@ void kernel_config_destruir(t_kernel_config* self) {
     free(self->IP_MEMORIA);
     free(self->PUERTO_MEMORIA);
     free(self->IP_CPU);
-    free(self->PUERTO_FILESYSTEM);
+    free(self->PUERTO_CPU);
     free(self->IP_FILESYSTEM);
     free(self->PUERTO_FILESYSTEM);
     free(self->PUERTO_ESCUCHA);
@@ -100,10 +92,4 @@ double kernel_config_obtener_estimacion_inicial(t_kernel_config* self) {
 }
 double kernel_config_obtener_hrrn_alfa(t_kernel_config* self) {
     return self->HRRN_ALFA;
-}
-t_link_element* kernel_config_obtener_recursos(t_kernel_config self){
-    return self.RECURSOS->head; // retorna la cabeza de la lista.
-}
-t_link_element* kernel_config_obtener_instancias_recursos(t_kernel_config self){
-    return self.INSTANCIAS_RECURSOS->head; // retorna la cabeza de la lista.
 }

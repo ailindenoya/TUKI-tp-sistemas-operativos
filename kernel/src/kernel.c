@@ -9,10 +9,7 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
-static void kernel_acepta_conexion(int socketEscucha);
-static void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLogger);
-
-static void kernel_acepta_conexion(int socketEscucha) {
+ void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
     log_info(kernelLogger, "listo para escuchar nuevas conexiones %d", socketEscucha);
@@ -28,9 +25,9 @@ static void kernel_acepta_conexion(int socketEscucha) {
     }
 }
 
-static void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLogger) {
+void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLog) {
     kernel_config_destruir(kernelConfig);
-    log_destroy(kernelLogger);
+    log_destroy(kernelLog);
 }
 
 void avisar_si_hay_error(int socket, char* tipo){
@@ -48,6 +45,7 @@ void intentar_establecer_conexion(int socket, char* tipo){
     if (respuestaInterrupcion != HANDSHAKE_puede_continuar) {
         log_error(kernelLogger, "no se establecio conexion con %s", tipo);
         kernel_destruir(kernelConfig, kernelLogger);
+        log_destroy(kernelLogger);
         exit(-1);
     }
     log_info(kernelLogger, "se establecio conexion con %s", tipo);
