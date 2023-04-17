@@ -16,12 +16,10 @@
 typedef struct t_fileSystem_config t_fileSystem_config;
 
 t_fileSystem_config* fileSystem_config_crear(char*,t_log*);
-static void fileSystem_destruir(t_fileSystem_config*, t_log*);
-static void fileSystem_config_iniciar(void*, t_config*);
-
-
-// Prototipos funciones para obtener valores (getters)
-
+void fileSystem_destruir(t_fileSystem_config*, t_log*);
+ void fileSystem_config_iniciar(void*, t_config*);
+void fileSystem_destruir(t_fileSystem_config* , t_log* );
+void fileSystem_config_destruir(t_fileSystem_config* self);
 char* fileSystem_config_obtener_ip_memoria(t_fileSystem_config*);
 char* fileSystem_config_obtener_puerto_memoria(t_fileSystem_config*);
 char* fileSystem_config_obtener_puerto_escucha(t_fileSystem_config*);

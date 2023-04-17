@@ -7,7 +7,7 @@
 #include "../../utils/include/config_inicializacion.h"
 
 t_log* fileSystemLogger;
-
+t_fileSystem_config* fileSystemConfig;
 struct t_fileSystem_config{
 
     char* IP_MEMORIA;
@@ -20,16 +20,16 @@ struct t_fileSystem_config{
     int   RETARDO_ACCESO_BLOQUE;
 };
 
-static void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
+void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
 
-    t_fileSystem_config* fileSystemConfig = (t_fileSystem_config*)moduleConfig;
-    fileSystemConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
-    fileSystemConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
-    fileSystemConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
-    fileSystemConfig->PATH_SUPERBLOQUE = strdup(config_get_string_value(tempCfg, "PATH_SUPERBLOQUE"));
-    fileSystemConfig->PATH_BITMAP = strdup(config_get_string_value(tempCfg, "PATH_BITMAP"));
-    fileSystemConfig->PATH_BLOQUES = strdup(config_get_string_value(tempCfg, "PATH_BLOQUES"));
-    fileSystemConfig->PATH_FCB = strdup(config_get_string_value(tempCfg, "PATH_FCB"));
+    t_fileSystem_config* fileSystemConfig = (t_fileSystem_config*) moduleConfig;
+    fileSystemConfig->IP_MEMORIA = (config_get_string_value(tempCfg, "IP_MEMORIA"));
+    fileSystemConfig->PUERTO_MEMORIA = (config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
+    fileSystemConfig->PUERTO_ESCUCHA = (config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
+    fileSystemConfig->PATH_SUPERBLOQUE = (config_get_string_value(tempCfg, "PATH_SUPERBLOQUE"));
+    fileSystemConfig->PATH_BITMAP = (config_get_string_value(tempCfg, "PATH_BITMAP"));
+    fileSystemConfig->PATH_BLOQUES = (config_get_string_value(tempCfg, "PATH_BLOQUES"));
+    fileSystemConfig->PATH_FCB = (config_get_string_value(tempCfg, "PATH_FCB"));
     fileSystemConfig->RETARDO_ACCESO_BLOQUE = config_get_int_value(tempCfg, "RETARDO_ACCESO_BLOQUE");
 }
 
@@ -41,17 +41,17 @@ t_fileSystem_config* fileSystem_config_crear(char* fileSystemConfigPath, t_log* 
     return self;
 }
 
-// void fileSystem_config_destruir(t_fileSystem_config* self) {
-//     free(self->IP_MEMORIA);
-//     free(self->PUERTO_MEMORIA);
-//     free(self->PUERTO_ESCUCHA);
-//     free(self->PATH_SUPERBLOQUE);
-//     free(self->PATH_BITMAP);
-//     free(self->PATH_BLOQUES);
-//     free(self->PATH_FCB);
+void fileSystem_config_destruir(t_fileSystem_config* self) {
+     free(self->IP_MEMORIA);
+     free(self->PUERTO_MEMORIA);
+     free(self->PUERTO_ESCUCHA);
+     free(self->PATH_SUPERBLOQUE);
+     free(self->PATH_BITMAP);
+     free(self->PATH_BLOQUES);
+     free(self->PATH_FCB);
 //     free(self->RETARDO_ACCESO_BLOQUE);
-//     free(self);
-// }
+     free(self);
+ }
 
 char* fileSystem_config_obtener_ip_memoria(t_fileSystem_config* self){
     return self->IP_MEMORIA;
