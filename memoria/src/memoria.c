@@ -34,15 +34,27 @@ static void kernel_acepta_conexion(int socketEscucha) {
 */
 
 void handshake_filesystem(int socketFilesystem){
-    uint8_t respuestaKERNEL = stream_recibir_header(socketFilesystem);
+    uint8_t respuestaFILESYSTEM = stream_recibir_header(socketFilesystem);
     stream_recibir_buffer_vacio(socketFilesystem);
-    if (respuestaKERNEL != HANDSHAKE_filesystem) {
-        log_error(memoriaLogger, "error al intentar establecer HANDSHAKE inicial con kernel");
+    if (respuestaFILESYSTEM != HANDSHAKE_filesystem) {
+        log_error(memoriaLogger, "error al intentar establecer HANDSHAKE inicial con FILESYSTEM");
         log_destroy(memoriaLogger);
         exit(-1);
     }
     stream_enviar_buffer_vacio(socketFilesystem, HANDSHAKE_puede_continuar);
-    log_info(memoriaLogger, "conexion con kernel establecida");
+    log_info(memoriaLogger, "conexion con FILESYSTEM establecida");
+}
+
+void handshake_cpu(int socketCPU){
+    uint8_t respuestaCPU = stream_recibir_header(socketCPU);
+    stream_recibir_buffer_vacio(socketCPU);
+    if (respuestaCPU != HANDSHAKE_cpu) {
+        log_error(memoriaLogger, "error al intentar establecer HANDSHAKE inicial con socketCPU");
+        log_destroy(memoriaLogger);
+        exit(-1);
+    }
+    stream_enviar_buffer_vacio(socketCPU, HANDSHAKE_puede_continuar);
+    log_info(memoriaLogger, "conexion con CPU establecida");
 }
 
 void avisar_si_hay_error(int socket, char* tipo){
@@ -52,20 +64,18 @@ void avisar_si_hay_error(int socket, char* tipo){
     }
 }
 
-int main(){
-    
-    memoriaConfig = malloc(100);
+int main(int argc, char* argv[]){
 
     memoriaLogger = log_create(LOGS_MEMORIA, MODULO_MEMORIA, true, LOG_LEVEL_INFO);
-    /*if (argc != 1) {
+    if (argc != 2) {
         log_error(memoriaLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
         log_destroy(memoriaLogger);
         return -1;
-    }*/
+    }
 
     log_info(memoriaLogger, "hola :D");
 
-    memoriaConfig = memoria_config_crear(MEMORIA_CONFIG, memoriaLogger);
+    memoriaConfig = memoria_config_crear(argv[1], memoriaLogger);
 
     // inicializa servidor de escucha 
     int socketESCUCHA = iniciar_servidor(NULL, memoria_config_obtener_puerto_escucha(memoriaConfig));
@@ -77,6 +87,10 @@ int main(){
 
     // Aceptar conexion, manejarla con el socket que devuelve accept
     log_info(memoriaLogger, "ESPERANDO CLIENTES");
+
+    int socketCPU = accept(socketESCUCHA, &cliente, &len);
+
+    handshake_cpu(socketCPU);
     
     int socketFilesystem = accept(socketESCUCHA, &cliente, &len);
 

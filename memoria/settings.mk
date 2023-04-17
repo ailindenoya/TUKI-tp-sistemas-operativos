@@ -10,7 +10,7 @@ CDEBUG=-g -Wall -DDEBUG
 CRELEASE=-O3 -Wall -DNDEBUG
 
 # Arguments when executing with start, memcheck or helgrind
-ARGS=cfg/memoria_config_base.cfg
+ARGS=
 
 # Valgrind flags
 MEMCHECK_FLAGS=--track-origins=yes

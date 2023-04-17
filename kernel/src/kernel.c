@@ -60,6 +60,7 @@ int main(){
 
     const int socketCPU = conectar_a_servidor(kernel_config_obtener_ip_cpu(kernelConfig), kernel_config_obtener_puerto_cpu(kernelConfig));
     avisar_si_hay_error(socketCPU, "CPU");
+    
     intentar_establecer_conexion(socketCPU, "CPU");
 
     // conexion con MEMORIA

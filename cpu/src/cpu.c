@@ -33,8 +33,10 @@ int main(int argc, char* argv[]) {
         return -1;
     }    
 
+    log_info(cpuLogger, "hice el handshake con memoria");
+
     // aceptar conexion con kernel
-    int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
+    int socketKERNELESCUCHA= iniciar_servidor(NULL, cpu_config_obtener_puerto_escucha(cpuConfig));
         struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
