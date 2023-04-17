@@ -3,7 +3,7 @@
 
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
-#define CONFIG_CPU "cfg/cpu_config.cfg"
+#define NUMBER_OF_ARGS_REQUIRED 2 
 
 
 extern t_log* cpuLogger;
@@ -11,8 +11,12 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    log_info(cpuLogger, "hola :D");
-    cpuConfig = cpu_config_crear(CONFIG_CPU, cpuLogger);
+    if (argc != NUMBER_OF_ARGS_REQUIRED) {
+        log_error(cpuLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
+        log_destroy(cpuLogger);
+        return -1;
+    }
+    cpuConfig = cpu_config_crear(argv[1], cpuLogger);
 
     // conexion con MEMORIA
 

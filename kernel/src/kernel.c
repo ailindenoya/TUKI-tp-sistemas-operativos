@@ -4,7 +4,7 @@
 
 #define LOGS_KERNEL "bin/kernel.log"
 #define MODULO_KERNEL "Kernel"
-#define KERNEL_CONFIG "cfg/kernel_config_base.cfg"
+#define NUMBER_OF_ARGS_REQUIRED 2 
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
@@ -51,10 +51,14 @@ void intentar_establecer_conexion(int socket, char* tipo){
     log_info(kernelLogger, "se establecio conexion con %s", tipo);
 }
 
-int main(){
+int main(int argc, char* argv[]){
     kernelLogger = log_create(LOGS_KERNEL, MODULO_KERNEL, true, LOG_LEVEL_DEBUG);
-
-    kernelConfig = kernel_config_crear(KERNEL_CONFIG, kernelLogger);
+    if (argc != NUMBER_OF_ARGS_REQUIRED) {
+        log_error(kernelLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
+        log_destroy(kernelLogger);
+        return -1;
+    }
+    kernelConfig = kernel_config_crear(argv[1], kernelLogger);
 
     // conexion con CPU
 

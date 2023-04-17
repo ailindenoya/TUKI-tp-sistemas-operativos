@@ -2,6 +2,7 @@
 
 #define LOGS_FILESYSTEM "bin/fileSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
+#define NUMBER_OF_ARGS_REQUIRED 2
 
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
@@ -46,7 +47,12 @@ void intentar_establecer_conexion(int socket, char* tipo){
 int main(int argc, char* argv[]){
 
     fileSystemLogger = log_create(LOGS_FILESYSTEM, MODULO_FILESYSTEM, true, LOG_LEVEL_DEBUG);
-    fileSystemConfig = fileSystem_config_crear("cfg/fileSystem_config_base.cfg", fileSystemLogger);
+    if (argc != NUMBER_OF_ARGS_REQUIRED) {
+        log_error(fileSystemLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
+        log_destroy(fileSystemLogger);
+        return -1;
+    }
+    fileSystemConfig = fileSystem_config_crear(argv[1], fileSystemLogger);
 
     // Conexion Memoria, Cliente
 

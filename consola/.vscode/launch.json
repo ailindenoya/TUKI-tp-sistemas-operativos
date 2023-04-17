@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/consola.out",
-            "args": ["500", "./instrucciones/archivo1"],
+            "args": ["cfg/consola_config.cfg", "./instrucciones/archivo1"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

@@ -8,9 +8,7 @@
 
 #define LOGS_MEMORIA "bin/memoria.log"
 #define MODULO_MEMORIA "Memoria"
-
-// temporal
-#define MEMORIA_CONFIG "cfg/memoria_config_base.cfg"
+#define NUMBER_OF_ARGS_REQUIRED 2 
 
 extern t_log* memoriaLogger;
 extern t_memoria_config* memoriaConfig;
@@ -67,14 +65,11 @@ void avisar_si_hay_error(int socket, char* tipo){
 int main(int argc, char* argv[]){
 
     memoriaLogger = log_create(LOGS_MEMORIA, MODULO_MEMORIA, true, LOG_LEVEL_INFO);
-    if (argc != 2) {
+    if (argc != NUMBER_OF_ARGS_REQUIRED) {
         log_error(memoriaLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
         log_destroy(memoriaLogger);
         return -1;
     }
-
-    log_info(memoriaLogger, "hola :D");
-
     memoriaConfig = memoria_config_crear(argv[1], memoriaLogger);
 
     // inicializa servidor de escucha 

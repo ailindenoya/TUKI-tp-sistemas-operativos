@@ -3,7 +3,7 @@
 
 #define LOGS_CONSOLA "bin/consola.log"
 #define MODULO_CONSOLA "Consola"
-#define CONFIG_CONSOLA "cfg/consola_config.cfg"
+#define NUMBER_OF_ARGS_REQUIRED 3 
 
 
 static void consola_destruir(t_log *consolaLogger,t_consola_config *consolaConfig ){
@@ -15,7 +15,14 @@ static void consola_destruir(t_log *consolaLogger,t_consola_config *consolaConfi
 int main(int argc, char *argv[]) {
 
     t_log *consolaLogger = log_create(LOGS_CONSOLA, MODULO_CONSOLA, true, LOG_LEVEL_INFO);
-    t_consola_config *consolaConfig = consola_crear_config(CONFIG_CONSOLA, consolaLogger);
+    
+    t_consola_config *consolaConfig = consola_crear_config(argv[1], consolaLogger);
+
+    if (argc != NUMBER_OF_ARGS_REQUIRED) {
+        log_error(consolaLogger, "Cantidad de argumentos inválida.\nArgumentos: <tamañoProceso> <pathInstrucciones>");
+        consola_destruir(consolaLogger, consolaConfig);
+        return -1;
+    }
     
     // obtenemos IP y PUERTO de kernel
     char *kernelIP = consola_config_obtener_kernel_IP(consolaConfig);
