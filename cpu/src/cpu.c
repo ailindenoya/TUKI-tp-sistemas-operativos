@@ -3,7 +3,7 @@
 
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
-#define NUMBER_OF_ARGS_REQUIRED 2 
+#define CONFIG_CPU "cfg/cpu_config.cfg"
 
 
 extern t_log* cpuLogger;
@@ -11,12 +11,8 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    if (argc != NUMBER_OF_ARGS_REQUIRED) {
-        log_error(cpuLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
-        log_destroy(cpuLogger);
-        return -1;
-    }
-    cpuConfig = cpu_config_crear(argv[1], cpuLogger);
+    log_info(cpuLogger, "hola :D");
+    cpuConfig = cpu_config_crear(CONFIG_CPU, cpuLogger);
 
     // conexion con MEMORIA
 
@@ -37,10 +33,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }    
 
-    log_info(cpuLogger, "hice el handshake con memoria");
-
     // aceptar conexion con kernel
-    int socketKERNELESCUCHA= iniciar_servidor(NULL, cpu_config_obtener_puerto_escucha(cpuConfig));
+    int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
         struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
