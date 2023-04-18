@@ -28,6 +28,7 @@ static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     cpuConfig->RETARDO_INSTRUCCION = config_get_int_value(tempCfg, "RETARDO_INSTRUCCION");
     cpuConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
     cpuConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
+    cpuConfig->PUERTO_ESCUCHA = config_get_string_value(tempCfg, "PUERTO_ESCUCHA");
     cpuConfig->TAM_MAX_SEGMENTO = config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO");
     cpuConfig->SOCKET_MEMORIA = -1;
     cpuConfig->SOCKET_KERNEL = -1;

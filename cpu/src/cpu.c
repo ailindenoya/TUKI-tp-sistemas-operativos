@@ -39,13 +39,6 @@ int main(int argc, char* argv[]) {
     }
     // aceptar conexion con KERNEL
     int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
-    // error en la linea de arriba:  getaddrinfo error: Servname not supported for ai_socktype
-    // edit: cambie el malloc en cpu_config.c, que le faltaba un * como en el resto, y ahora tira segfault en getaddrinfo
-   
-    // nota: el seg fault SOLO ocurre luego de correr memoria, asi que ocurre exclusivamente en esa linea. 
-    //poner NULL en el 1er parametro no ayuda
-
-    // edit2: probe comentando lo de arriba por si era un tema de que la config quedaba con basura, pero no sirvio
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
