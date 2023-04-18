@@ -35,7 +35,7 @@ static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
 
 
 t_cpu_config* cpu_config_crear(char* cpuConfigPath, t_log* cpuLogger) {
-    t_cpu_config* self = malloc(sizeof(self));
+    t_cpu_config* self = malloc(sizeof(*self));
     config_iniciar(self, cpuConfigPath, cpuLogger, cpu_iniciar_config);
     return self;
 }

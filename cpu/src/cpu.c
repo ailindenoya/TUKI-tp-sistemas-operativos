@@ -22,27 +22,41 @@ int main(int argc, char* argv[]) {
         log_destroy(cpuLogger);
         return -1;
     }
+
+    cpu_config_setear_socket_memoria(cpuConfig,socketMEMORIA);
+
     stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_cpu);
-    uint8_t memoriaResponse = stream_recibir_header(socketMEMORIA);
+    uint8_t memoriaRespuesta = stream_recibir_header(socketMEMORIA);
     t_buffer* bufferMemoria = buffer_crear();
     stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig), bufferMemoria);
 
-    if (memoriaResponse != HANDSHAKE_puede_continuar) {
-        log_error(cpuLogger, "no se establecio conexion con Memoria");
+    if (memoriaRespuesta != HANDSHAKE_puede_continuar) {
+        log_error(cpuLogger, "no se establecio conexion con MEMORIA");
         log_destroy(cpuLogger);
         return -1;
-    }    
-
-    // aceptar conexion con kernel
+    }else{
+        log_info(cpuLogger, "se establecio conexion con MEMORIA");
+    }
+    // aceptar conexion con KERNEL
     int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
-        struct sockaddr cliente = {0};
+    // error en la linea de arriba:  getaddrinfo error: Servname not supported for ai_socktype
+    // edit: cambie el malloc en cpu_config.c, que le faltaba un * como en el resto, y ahora tira segfault en getaddrinfo
+   
+    // nota: el seg fault SOLO ocurre luego de correr memoria, asi que ocurre exclusivamente en esa linea. 
+    //poner NULL en el 1er parametro no ayuda
+
+    // edit2: probe comentando lo de arriba por si era un tema de que la config quedaba con basura, pero no sirvio
+    struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
+    sleep(5);
     int socketKERNEL = accept(socketKERNELESCUCHA, &cliente, &len);
     if (socketKERNEL == -1) {
         log_error(cpuLogger, "no se pudo establecer conexion inicial con KERNEL");
         log_destroy(cpuLogger);
         return -1;
+    }else{
+        log_info(cpuLogger, "se establecio conexion con KERNEL");
     }
     cpu_config_setear_socket_kernel(cpuConfig, socketKERNEL);
 

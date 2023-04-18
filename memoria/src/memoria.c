@@ -54,7 +54,21 @@ void handshake_cpu(int socketCPU){
     stream_enviar_buffer_vacio(socketCPU, HANDSHAKE_puede_continuar);
     log_info(memoriaLogger, "conexion con CPU establecida");
 }
+/* para probar cuando sepamos que ande: generalizacion de las 2 funciones de arriba 
 
+void handshake(int socket, (enum <unnamed>) HANDSHAKE_MODULO, char* tipo, t_log logger ){
+    uint8_t respuesta = stream_recibir_header(socket);
+    stream_recibir_buffer_vacio(socket);
+    if (respuestaCPU != HANDSHAKE_MODULO) {
+        log_error(logger, "error al intentar establecer HANDSHAKE inicial con %s", tipo);
+        log_destroy(logger);
+        exit(-1);
+    }
+    stream_enviar_buffer_vacio(socketCPU, HANDSHAKE_puede_continuar);
+    log_info(memoriaLogger, "conexion con CPU establecida");
+    
+}
+*/
 void avisar_si_hay_error(int socket, char* tipo){
     if (socket == -1) {
         log_error(memoriaLogger, "no se pudo establecer conexion inicial con %s", tipo);

@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "run Launch",
+            "name": "fileSystem",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/fileSystem.out",

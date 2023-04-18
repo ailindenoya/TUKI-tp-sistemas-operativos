@@ -9,9 +9,8 @@ int iniciar_servidor(char* ip, char* port) {
     memset(&hints, 0, sizeof(hints));
 
 
-    hints.ai_family = AF_UNSPEC; ///* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_INET ; ///* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
-    hints.ai_flags = AI_PASSIVE; //random  IP address */
 
     int rv = getaddrinfo(ip, port, &hints, &serverInfo);
     if (rv != 0) {
@@ -65,7 +64,6 @@ int conectar_a_servidor(char* ip, char* port) {
 
     hints.ai_family = AF_UNSPEC;  // ipv4 - ipv6 para usar uno en especifico:  AF_INET o AF_INET6
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE; // pone el ip random automaticamente
 
     status = getaddrinfo(ip, port, &hints, &servidor);
 
