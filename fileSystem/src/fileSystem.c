@@ -39,15 +39,6 @@ int main(int argc, char* argv[]){
     fileSystemConfig = fileSystem_config_crear(argv[1], fileSystemLogger);
 
 
-    int socketESCUCHA = iniciar_servidor(NULL, fileSystem_config_obtener_puerto_escucha(fileSystemConfig));
-       
-    struct sockaddr cliente = {0};
-    socklen_t len = sizeof(cliente);
-
-    avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA PARA KERNEL");
-
-    log_info(fileSystemLogger, "ESPERANDO CLIENTES");
-
     // iniciar conexion con MEMORIA
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
     if (socketMEMORIA == -1) {
@@ -69,6 +60,15 @@ int main(int argc, char* argv[]){
     log_info(fileSystemLogger, "se establecio conexion con FILESYSTEM");
 
     // acepta conexion con KERNEL
+
+    int socketESCUCHA = iniciar_servidor(NULL, fileSystem_config_obtener_puerto_escucha(fileSystemConfig));
+       
+    struct sockaddr cliente = {0};
+    socklen_t len = sizeof(cliente);
+
+    avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA PARA KERNEL");
+
+    log_info(fileSystemLogger, "ESPERANDO CLIENTES");
     int socketKERNEL = accept(socketESCUCHA, &cliente, &len);
     handshake_kernel(socketKERNEL);
     
