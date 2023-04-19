@@ -53,34 +53,81 @@ void intentar_establecer_conexion(int socket, char* tipo){
 
 int main(int argc, char* argv[]){
     kernelLogger = log_create(LOGS_KERNEL, MODULO_KERNEL, true, LOG_LEVEL_DEBUG);
-    if (argc != NUMBER_OF_ARGS_REQUIRED) {
-        log_error(kernelLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
-        log_destroy(kernelLogger);
-        return -1;
-    }
+
     kernelConfig = kernel_config_crear(argv[1], kernelLogger);
 
     // conexion con CPU
+    const int socketCPU = conectar_a_servidor(kernel_config_obtener_ip_cpu(kernelConfig), kernel_config_obtener_puerto_cpu(kernelConfig));
+    if (socketCPU == -1) {
+        log_error(kernelLogger, "Error al intentar conectar con CPU");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    kernel_config_setear_socket_cpu(kernelConfig, socketCPU);
 
+    stream_enviar_buffer_vacio(socketCPU, HANDSHAKE_kernel);
+    
+    uint8_t CPURespuesta = stream_recibir_header(socketCPU);
+    stream_recibir_buffer_vacio(socketCPU);
+    if (CPURespuesta != HANDSHAKE_puede_continuar) {
+        log_error(kernelLogger, "no se pudo conectar con CPU");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    log_info(kernelLogger, "se establecio conexion con CPU");
+
+/*
     const int socketCPU = conectar_a_servidor(kernel_config_obtener_ip_cpu(kernelConfig), kernel_config_obtener_puerto_cpu(kernelConfig));
     avisar_si_hay_error(socketCPU, "CPU");
     
     intentar_establecer_conexion(socketCPU, "CPU");
-
+*/
     // conexion con MEMORIA
-
     const int socketMEMORIA = conectar_a_servidor(kernel_config_obtener_ip_memoria(kernelConfig), kernel_config_obtener_puerto_memoria(kernelConfig));
-    avisar_si_hay_error(socketMEMORIA, "MEMORIA");
-    intentar_establecer_conexion(socketMEMORIA, "MEMORIA");
+    if (socketMEMORIA == -1) {
+        log_error(kernelLogger, "Error al intentar conectar con MEMORIA");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    kernel_config_setear_socket_memoria(kernelConfig, socketMEMORIA);
+
+    stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_kernel);
+    
+    uint8_t MEMORIARespuesta = stream_recibir_header(socketMEMORIA);
+    stream_recibir_buffer_vacio(socketMEMORIA);
+    if (MEMORIARespuesta != HANDSHAKE_puede_continuar) {
+        log_error(kernelLogger, "no se pudo conectar con MEMORIA");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    log_info(kernelLogger, "se establecio conexion con MEMORIA");
 
 
     // conexion con FILESYSTEM
 
     const int socketFILESYSTEM = conectar_a_servidor(kernel_config_obtener_ip_filesystem(kernelConfig), kernel_config_obtener_puerto_filesystem(kernelConfig));
-    avisar_si_hay_error(socketFILESYSTEM, "FILESYSTEM");
-    intentar_establecer_conexion(socketFILESYSTEM, "FILESYSTEM");
+    if (socketFILESYSTEM == -1) {
+        log_error(kernelLogger, "Error al intentar conectar con FILESYSTEM");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    kernel_config_setear_socket_filesystem(kernelConfig, socketFILESYSTEM);
 
-    // inicializa servidor de instancias CONSOLA
+    stream_enviar_buffer_vacio(socketFILESYSTEM, HANDSHAKE_kernel);
+    
+    uint8_t FILESYSTEMRespuesta = stream_recibir_header(socketFILESYSTEM);
+    stream_recibir_buffer_vacio(socketFILESYSTEM);
+    if (FILESYSTEMRespuesta != HANDSHAKE_puede_continuar) {
+        log_error(kernelLogger, "no se pudo conectar con FILESYSTEM");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
+    
+
+
+
+    // inicializa servidor de instancias CONSOLA /// ARREGLAR 
     int socketESCUCHA = iniciar_servidor(kernel_config_obtener_puerto_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 

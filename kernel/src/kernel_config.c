@@ -16,6 +16,10 @@ struct t_kernel_config {
     double ESTIMACION_INICIAL;
     double HRRN_ALFA;
     int GRADO_MAX_MULTIPROGRAMACION;
+    int SOCKET_CPU;
+    int SOCKET_MEMORIA;
+    int SOCKET_FILESYSTEM;
+
  //   t_list *RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
     //t_list *INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
@@ -34,6 +38,11 @@ void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->ESTIMACION_INICIAL = config_get_double_value(tempCfg, "ESTIMACION_INICIAL");
     kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "HRRN_ALFA");
     kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MAX_MULTIPROGRAMACION");
+    kernelConfig->SOCKET_CPU = -1;
+    kernelConfig->SOCKET_MEMORIA = -1;
+    kernelConfig->SOCKET_FILESYSTEM = -1;
+
+
   // kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
 //    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
 }
@@ -93,3 +102,15 @@ double kernel_config_obtener_estimacion_inicial(t_kernel_config* self) {
 double kernel_config_obtener_hrrn_alfa(t_kernel_config* self) {
     return self->HRRN_ALFA;
 }
+int kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
+    return self->SOCKET_CPU = socket;
+}
+int kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
+    return self->SOCKET_MEMORIA = socket;
+}
+
+int kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
+    return self->SOCKET_FILESYSTEM = socket;
+}
+
+

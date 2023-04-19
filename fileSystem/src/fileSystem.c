@@ -32,59 +32,12 @@ void handshake_kernel(int socketKernel){
     log_info(fileSystemLogger, "conexion con kernel establecida");
 }
 
-void intentar_establecer_conexion(int socket, char* tipo){
-    stream_enviar_buffer_vacio(socket, HANDSHAKE_interrupcion);
-    uint8_t respuestaInterrupcion = stream_recibir_header(socket);
-    stream_recibir_buffer_vacio(respuestaInterrupcion);
-    if (respuestaInterrupcion != HANDSHAKE_puede_continuar) {
-        log_error(fileSystemLogger, "no se establecio conexion con %s", tipo);
-        fileSystem_destruir(fileSystemConfig, fileSystemLogger);
-        exit(-1);
-    }
-    log_info(fileSystemLogger, "se establecio conexion con %s", tipo);
-}
-
 int main(int argc, char* argv[]){
 
     fileSystemLogger = log_create(LOGS_FILESYSTEM, MODULO_FILESYSTEM, true, LOG_LEVEL_DEBUG);
-    if (argc != NUMBER_OF_ARGS_REQUIRED) {
-        log_error(fileSystemLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
-        log_destroy(fileSystemLogger);
-        return -1;
-    }
+
     fileSystemConfig = fileSystem_config_crear(argv[1], fileSystemLogger);
 
-    // Conexion Memoria, Cliente
-
-    const int socketMemoria = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
-    avisar_si_hay_error(socketMemoria, "Memoria");
-    intentar_establecer_conexion(socketMemoria, "Memoria");
-
-    // Conexion Kernel, Servidor
-
-    // Conexion Inicial
-
-    int socketKernelEscucha = iniciar_servidor(NULL, fileSystem_config_obtener_puerto_escucha(fileSystemConfig));
-
-    struct sockaddr cliente = {0};
-    socklen_t len = sizeof(cliente);
-
-    avisar_si_hay_error(socketKernelEscucha, "SERVIDOR DE KERNEL DEL FILESYSTEM");
-
-    // Aceptar conexion, manejarla con el socket que devuelve accept
-
-    int socketKernel = accept(socketKernelEscucha, &cliente, &len);
-
-    if (socketKernel == -1){
-        log_error(fileSystemLogger, "No se conectó Kernel al servidor");
-        exit(-1);
-    }
-
-    // Handshake
-
-    handshake_kernel(socketKernel);
-
-    // Empezar a desarrollar funciones de FileSystem
-
+    // intentar establecer conexion estaba MAL xq hacia handshake con algo que nqv, hay que rehacer esta parte
 }
 

@@ -54,6 +54,20 @@ void handshake_cpu(int socketCPU){
     stream_enviar_buffer_vacio(socketCPU, HANDSHAKE_puede_continuar);
     log_info(memoriaLogger, "conexion con CPU establecida");
 }
+
+
+
+void handshake_kernel(int socketKERNEL){
+    uint8_t respuestaKERNEL = stream_recibir_header(socketKERNEL);
+    stream_recibir_buffer_vacio(socketKERNEL);
+    if (respuestaKERNEL != HANDSHAKE_kernel) {
+        log_error(memoriaLogger, "error al intentar establecer HANDSHAKE inicial con socketKERNEL");
+        log_destroy(memoriaLogger);
+        exit(-1);
+    }
+    stream_enviar_buffer_vacio(socketKERNEL, HANDSHAKE_puede_continuar);
+    log_info(memoriaLogger, "conexion con KERNEL establecida");
+}
 /* para probar cuando sepamos que ande: generalizacion de las 2 funciones de arriba 
 
 void handshake(int socket, (enum <unnamed>) HANDSHAKE_MODULO, char* tipo, t_log logger ){
@@ -94,13 +108,21 @@ int main(int argc, char* argv[]){
 
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA FILESYSTEM KERNEL CPU");
 
-    // Aceptar conexion, manejarla con el socket que devuelve accept
     log_info(memoriaLogger, "ESPERANDO CLIENTES");
 
+    // acepta conexion con CPU
     int socketCPU = accept(socketESCUCHA, &cliente, &len);
 
     handshake_cpu(socketCPU);
-    
+
+    // acepta conexion con KERNEL
+
+    int socketKernel = accept(socketESCUCHA, &cliente, &len);
+
+    handshake_kernel(socketKernel);
+
+    // acepta conexion con FILESYSTEM .... ESTO es lo que hay que arreglar (del lado de FILESYSTEM)
+
     int socketFilesystem = accept(socketESCUCHA, &cliente, &len);
 
     handshake_filesystem(socketFilesystem);

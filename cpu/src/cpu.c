@@ -42,7 +42,6 @@ int main(int argc, char* argv[]) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 
-    sleep(5);
     int socketKERNEL = accept(socketKERNELESCUCHA, &cliente, &len);
     if (socketKERNEL == -1) {
         log_error(cpuLogger, "no se pudo establecer conexion inicial con KERNEL");
