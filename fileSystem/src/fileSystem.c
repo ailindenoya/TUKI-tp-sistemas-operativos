@@ -2,14 +2,14 @@
 
 #define LOGS_FILESYSTEM "bin/fileSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
-#define NUMBER_OF_ARGS_REQUIRED 2
+#define NUMERO_DE_ARGUMENTOS_NECESARIOS 2
 
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 
 void fileSystem_destruir(t_fileSystem_config* fileSystemConfig, t_log* fileSystemLogger) {
-  fileSystem_config_destruir(fileSystemConfig);
- log_destroy(fileSystemLogger);
+    fileSystem_config_destruir(fileSystemConfig);
+    log_destroy(fileSystemLogger);
 }
 
 void avisar_si_hay_error(int socket, char* tipo){
@@ -29,7 +29,7 @@ void handshake_kernel(int socketKernel){
         exit(-1);
     }
     stream_enviar_buffer_vacio(socketKernel, HANDSHAKE_puede_continuar);
-    log_info(fileSystemLogger, "conexion con KERNEL establecida");
+    log_info(fileSystemLogger, "se establecio conexion con KERNEL");
 }
 
 int main(int argc, char* argv[]){
@@ -38,8 +38,14 @@ int main(int argc, char* argv[]){
 
     fileSystemConfig = fileSystem_config_crear(argv[1], fileSystemLogger);
 
+    if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
+        log_error(fileSystemLogger, "Cantidad de argumentos inválida.\nArgumentos: <tamañoProceso> <pathInstrucciones>");
+        fileSystem_destruir(fileSystemConfig,fileSystemLogger );
+        return -1;
+    }
+    
+    // conexion con MEMORIA
 
-    // iniciar conexion con MEMORIA
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
     if (socketMEMORIA == -1) {
         log_error(fileSystemLogger, "Error al intentar conectar con MEMORIA");

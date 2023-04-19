@@ -4,7 +4,7 @@
 
 #define LOGS_KERNEL "bin/kernel.log"
 #define MODULO_KERNEL "Kernel"
-#define NUMBER_OF_ARGS_REQUIRED 2 
+#define NUMERO_DE_ARGUMENTOS_NECESARIOS 2 
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
@@ -57,6 +57,14 @@ int main(int argc, char* argv[]){
 
     kernelConfig = kernel_config_crear(argv[1], kernelLogger);
 
+    if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
+        log_error(kernelLogger, "Cantidad de argumentos inválida.\nArgumentos: <tamañoProceso> <pathInstrucciones>");
+        kernel_destruir(kernelConfig, kernelLogger);
+        return -1;
+    }
+    
+
+
     // conexion con CPU
     const int socketCPU = conectar_a_servidor(kernel_config_obtener_ip_cpu(kernelConfig), kernel_config_obtener_puerto_cpu(kernelConfig));
     if (socketCPU == -1) {
@@ -77,12 +85,7 @@ int main(int argc, char* argv[]){
     }
     log_info(kernelLogger, "se establecio conexion con CPU");
 
-/*
-    const int socketCPU = conectar_a_servidor(kernel_config_obtener_ip_cpu(kernelConfig), kernel_config_obtener_puerto_cpu(kernelConfig));
-    avisar_si_hay_error(socketCPU, "CPU");
-    
-    intentar_establecer_conexion(socketCPU, "CPU");
-*/
+
     // conexion con MEMORIA
     const int socketMEMORIA = conectar_a_servidor(kernel_config_obtener_ip_memoria(kernelConfig), kernel_config_obtener_puerto_memoria(kernelConfig));
     if (socketMEMORIA == -1) {
@@ -126,7 +129,7 @@ int main(int argc, char* argv[]){
     log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
 
     // inicializa servidor de instancias CONSOLA /// ARREGLAR 
-    int socketESCUCHA = iniciar_servidor(NULL, kernel_config_obtener_puerto_escucha(kernelConfig));
+    int socketESCUCHA = iniciar_servidor(kernel_config_obtener_ip_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 
 

@@ -4,7 +4,7 @@ t_log* kernelLogger;
 t_kernel_config* kernelConfig;
 
 struct t_kernel_config {
-  
+    char* IP_ESCUCHA;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* IP_FILESYSTEM;
@@ -27,6 +27,7 @@ struct t_kernel_config {
 
 void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
+    kernelConfig->IP_ESCUCHA = config_get_string_value(tempCfg, "IP_ESCUCHA");
     kernelConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
     kernelConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
     kernelConfig->IP_FILESYSTEM = config_get_string_value(tempCfg, "IP_FILESYSTEM");
@@ -66,6 +67,9 @@ void kernel_config_destruir(t_kernel_config* self) {
     free(self);
 }
 
+char* kernel_config_obtener_ip_escucha(t_kernel_config* self) {
+    return self->IP_ESCUCHA;
+}
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) {
     return self->IP_MEMORIA;
 }

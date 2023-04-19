@@ -4,6 +4,7 @@
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
 #define CONFIG_CPU "cfg/cpu_config.cfg"
+#define NUMERO_DE_ARGUMENTOS_NECESARIOS 2
 
 
 extern t_log* cpuLogger;
@@ -11,7 +12,11 @@ extern t_cpu_config* cpuConfig;
 
 int main(int argc, char* argv[]) {
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
-    log_info(cpuLogger, "hola :D");
+    if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
+        log_error(cpuLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
+        log_destroy(cpuLogger);
+        return -1;
+    }    
     cpuConfig = cpu_config_crear(CONFIG_CPU, cpuLogger);
 
     // conexion con MEMORIA
@@ -37,7 +42,9 @@ int main(int argc, char* argv[]) {
     }else{
         log_info(cpuLogger, "se establecio conexion con MEMORIA");
     }
+
     // aceptar conexion con KERNEL
+
     int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
@@ -47,8 +54,6 @@ int main(int argc, char* argv[]) {
         log_error(cpuLogger, "no se pudo establecer conexion inicial con KERNEL");
         log_destroy(cpuLogger);
         return -1;
-    }else{
-        log_info(cpuLogger, "se establecio conexion con KERNEL");
     }
     cpu_config_setear_socket_kernel(cpuConfig, socketKERNEL);
 
@@ -60,6 +65,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     stream_enviar_buffer_vacio(socketKERNEL, HANDSHAKE_puede_continuar);
-    log_info(cpuLogger, "conexion con kernel establecida");
+    log_info(cpuLogger, "se establecio conexion con KERNEL");
 
 }
