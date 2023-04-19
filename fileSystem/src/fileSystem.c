@@ -46,18 +46,18 @@ int main(int argc, char* argv[]){
         fileSystem_destruir(fileSystemConfig, fileSystemLogger);
         exit(-1);
     }
+    
     fileSystem_config_setear_socket_memoria(fileSystemConfig, socketMEMORIA);
 
     stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_memoria);
-    
     uint8_t MEMORIARespuesta = stream_recibir_header(socketMEMORIA);
     stream_recibir_buffer_vacio(socketMEMORIA);
     if (MEMORIARespuesta != HANDSHAKE_puede_continuar) {
-        log_error(fileSystemLogger, "no se pudo conectar con FILESYSTEM");
+        log_error(fileSystemLogger, "no se pudo conectar con MEMORIA");
         fileSystem_destruir(fileSystemConfig, fileSystemLogger);
         exit(-1);
     }
-    log_info(fileSystemLogger, "se establecio conexion con FILESYSTEM");
+    log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
     // acepta conexion con KERNEL
 
