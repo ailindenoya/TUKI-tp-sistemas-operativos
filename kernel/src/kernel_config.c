@@ -105,15 +105,6 @@ double kernel_config_obtener_estimacion_inicial(t_kernel_config* self) {
 double kernel_config_obtener_hrrn_alfa(t_kernel_config* self) {
     return self->HRRN_ALFA;
 }
-int kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
-    return self->SOCKET_CPU = socket;
-}
-int kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
-    return self->SOCKET_MEMORIA = socket;
-}
-int kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
-    return self->SOCKET_FILESYSTEM = socket;
-}
 int kernel_config_obtener_socket_cpu(t_kernel_config* self) {
     return self->SOCKET_CPU;
 }
@@ -128,4 +119,13 @@ char** kernel_config_obtener_recursos(t_kernel_config* self){
 }
 char** kernel_config_obtener_instancias_recursos(t_kernel_config* self){
     return self->INSTANCIAS_RECURSOS;
+}
+void kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
+     self->SOCKET_CPU = socket;
+}
+void kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
+     self->SOCKET_MEMORIA = socket;
+}
+void kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
+     self->SOCKET_FILESYSTEM = socket;
 }

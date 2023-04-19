@@ -18,17 +18,14 @@ t_consola_config* consola_crear_config(char* consolaConfigPath, t_log* consolaLo
     config_iniciar(consola, consolaConfigPath, consolaLogger, consola_iniciar_config);
     return consola;
 }
-
-char* consola_config_obtener_kernel_IP(t_consola_config* self) {
-    return self->IP_KERNEL;
-}
-
-char* consola_config_obtener_kernel_PUERTO(t_consola_config* self) {
-    return self->PUERTO_KERNEL;
-}
-
 void consola_config_destruir(t_consola_config* consola_config) {
     free(consola_config->IP_KERNEL);
     free(consola_config->PUERTO_KERNEL);
     free(consola_config);
+}
+char* consola_config_obtener_kernel_IP(t_consola_config* self) {
+    return self->IP_KERNEL;
+}
+char* consola_config_obtener_kernel_PUERTO(t_consola_config* self) {
+    return self->PUERTO_KERNEL;
 }

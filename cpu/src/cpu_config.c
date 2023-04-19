@@ -9,7 +9,7 @@ t_log* cpuLogger;
 
 struct t_cpu_config {
     char* IP;
-    uint32_t RETARDO_INSTRUCCION; // deberia ser uint32_t?
+    uint32_t RETARDO_INSTRUCCION;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA;
@@ -63,10 +63,12 @@ char* cpu_config_obtener_tam_max_segmento(t_cpu_config* self) {
 int cpu_config_obtener_socket_memoria(t_cpu_config* self) {
     return self->SOCKET_MEMORIA;
 }
-int cpu_config_setear_socket_memoria(t_cpu_config* self, int socket) {
-    return self->SOCKET_MEMORIA = socket;
+int cpu_config_obtener_socket_kernel(t_cpu_config* self) {
+    return self->SOCKET_KERNEL;
+}
+void cpu_config_setear_socket_memoria(t_cpu_config* self, int socket) {
+     self->SOCKET_MEMORIA = socket;
 }
 void cpu_config_setear_socket_kernel(t_cpu_config* self, int socket) {
     self->SOCKET_KERNEL = socket;
 }
-

@@ -28,4 +28,5 @@ char* fileSystem_config_obtener_path_bitmap(t_fileSystem_config*);
 char* fileSystem_config_obtener_path_bloques(t_fileSystem_config*);
 char* fileSystem_config_obtener_path_fcb(t_fileSystem_config*);
 int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config*);
-int fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket);
+int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) ;
+void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket);

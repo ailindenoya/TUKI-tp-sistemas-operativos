@@ -43,25 +43,23 @@ t_memoria_config* memoria_config_crear(char* memoriaConfigPath, t_log* memoriaLo
 char* memoria_config_obtener_puerto_escucha(t_memoria_config* self) {
     return self->PUERTO_ESCUCHA;
 }
-
 int memoria_config_obtener_tamanio_memoria(t_memoria_config* self) {
     return self->TAM_MEMORIA;
 }
-
 int memoria_config_obtener_tamanio_segmento(t_memoria_config* self) {
     return self->TAM_SEGMENTO;
 }
-
 int memoria_config_obtener_cantidad_de_segmentos(t_memoria_config* self) {
     return self->CANT_SEGMENTOS;
 }
-
 int memoria_config_obtener_retardo_compactacion(t_memoria_config* self) {
     return self->RETARDO_COMPACTACION;
 }
-
 int memoria_config_obtener_retardo_memoria(t_memoria_config* self) {
     return self->RETARDO_MEMORIA;
+}
+bool memoria_config_es_algoritmo_asignacion(t_memoria_config* self) {
+    return strcmp(self->ALGORITMO_ASIGNACION, "BEST") == 0;
 }
 
 /*
@@ -69,7 +67,3 @@ int memoria_config_obtener_procesos_totales(t_memoria_config* self) {
     return self->TAM_MEMORIA / (self->TAM_PAGINA * self->MARCOS_POR_PROCESO);
 }*/
 
-
-bool memoria_config_es_algoritmo_asignacion(t_memoria_config* self) {
-    return strcmp(self->ALGORITMO_ASIGNACION, "BEST") == 0;
-}

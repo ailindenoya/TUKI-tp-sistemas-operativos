@@ -80,6 +80,9 @@ char* fileSystem_config_obtener_path_fcb(t_fileSystem_config* self){
 int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config* self){
     return self->RETARDO_ACCESO_BLOQUE;
 }
-int fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket) {
-    return self->SOCKET_MEMORIA = socket;
+void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket) {
+     self->SOCKET_MEMORIA = socket;
+}
+int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) {
+     return self->SOCKET_MEMORIA;
 }
