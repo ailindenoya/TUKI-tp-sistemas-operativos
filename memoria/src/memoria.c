@@ -115,18 +115,18 @@ int main(int argc, char* argv[]){
 
     handshake_cpu(socketCPU);
 
-    // acepta conexion con KERNEL
-
-    int socketKernel = accept(socketESCUCHA, &cliente, &len);
-
-    handshake_kernel(socketKernel);
-
     // acepta conexion con FILESYSTEM .... ESTO es lo que hay que arreglar (del lado de FILESYSTEM)
 
     int socketFilesystem = accept(socketESCUCHA, &cliente, &len);
 
     handshake_filesystem(socketFilesystem);
     
+
+    // acepta conexion con KERNEL
+
+    int socketKernel = accept(socketESCUCHA, &cliente, &len);
+
+    handshake_kernel(socketKernel);
     // ver como recibir varias conexiones (hilos o select()/poll())
 }
 

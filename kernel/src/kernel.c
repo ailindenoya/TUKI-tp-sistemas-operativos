@@ -9,7 +9,7 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
- void kernel_acepta_conexion(int socketEscucha) {
+ /*void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
     log_info(kernelLogger, "listo para escuchar nuevas conexiones %d", socketEscucha);
@@ -24,7 +24,7 @@ extern t_kernel_config* kernelConfig;
         }
     }
 }
-
+*/
 void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLog) {
     kernel_config_destruir(kernelConfig);
     log_destroy(kernelLog);
@@ -123,9 +123,6 @@ int main(int argc, char* argv[]){
         exit(-1);
     }
     log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
-    
-
-
 
     // inicializa servidor de instancias CONSOLA /// ARREGLAR 
     int socketESCUCHA = iniciar_servidor(kernel_config_obtener_puerto_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
@@ -135,6 +132,6 @@ int main(int argc, char* argv[]){
     // inicializar estructuras 
     // TODO
 
-    kernel_acepta_conexion(socketESCUCHA);
+    //kernel_acepta_conexion(socketESCUCHA);
 
 }

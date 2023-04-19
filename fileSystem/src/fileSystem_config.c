@@ -83,4 +83,3 @@ int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config* self){
 int fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket) {
     return self->SOCKET_MEMORIA = socket;
 }
-

@@ -42,16 +42,17 @@ int main(int argc, char* argv[]){
     // iniciar conexion con MEMORIA
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
     if (socketMEMORIA == -1) {
-        log_error(fileSystemLogger, "Error al intentar conectar con FILESYSTEM");
+        log_error(fileSystemLogger, "Error al intentar conectar con MEMORIA");
         fileSystem_destruir(fileSystemConfig, fileSystemLogger);
         exit(-1);
     }
     
     fileSystem_config_setear_socket_memoria(fileSystemConfig, socketMEMORIA);
 
-    stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_memoria);
+    stream_enviar_buffer_vacio(socketMEMORIA, HANDSHAKE_filesystem);
     uint8_t MEMORIARespuesta = stream_recibir_header(socketMEMORIA);
     stream_recibir_buffer_vacio(socketMEMORIA);
+
     if (MEMORIARespuesta != HANDSHAKE_puede_continuar) {
         log_error(fileSystemLogger, "no se pudo conectar con MEMORIA");
         fileSystem_destruir(fileSystemConfig, fileSystemLogger);
