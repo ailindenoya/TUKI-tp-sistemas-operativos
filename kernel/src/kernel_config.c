@@ -114,6 +114,15 @@ int kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
 int kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
     return self->SOCKET_FILESYSTEM = socket;
 }
+int kernel_config_obtener_socket_cpu(t_kernel_config* self) {
+    return self->SOCKET_CPU;
+}
+int kernel_config_obtener_socket_memoria(t_kernel_config* self) {
+    return self->SOCKET_MEMORIA;
+}
+int kernel_config_obtener_socket_filesystem(t_kernel_config* self) {
+    return self->SOCKET_FILESYSTEM;
+}
 char** kernel_config_obtener_recursos(t_kernel_config* self){
     return self->RECURSOS;
 }
