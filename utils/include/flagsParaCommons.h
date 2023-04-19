@@ -4,6 +4,7 @@
 
 typedef enum {
     HANDSHAKE_consola,
+    HANDSHAKE_memoria,
     HANDSHAKE_cpu,
     HANDSHAKE_filesystem,
     HANDSHAKE_kernel,

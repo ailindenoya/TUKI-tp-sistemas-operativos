@@ -18,6 +18,7 @@ struct t_fileSystem_config{
     char* PATH_BLOQUES;
     char* PATH_FCB;
     int   RETARDO_ACCESO_BLOQUE;
+    int SOCKET_MEMORIA;
 };
 
 void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
@@ -31,6 +32,8 @@ void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
     fileSystemConfig->PATH_BLOQUES = (config_get_string_value(tempCfg, "PATH_BLOQUES"));
     fileSystemConfig->PATH_FCB = (config_get_string_value(tempCfg, "PATH_FCB"));
     fileSystemConfig->RETARDO_ACCESO_BLOQUE = config_get_int_value(tempCfg, "RETARDO_ACCESO_BLOQUE");
+    fileSystemConfig->SOCKET_MEMORIA = -1;
+
 }
 
 
@@ -76,5 +79,8 @@ char* fileSystem_config_obtener_path_fcb(t_fileSystem_config* self){
 }
 int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config* self){
     return self->RETARDO_ACCESO_BLOQUE;
+}
+int fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket) {
+    return self->SOCKET_MEMORIA = socket;
 }
 
