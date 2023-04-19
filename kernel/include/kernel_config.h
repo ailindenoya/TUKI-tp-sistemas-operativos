@@ -45,9 +45,6 @@ int kernel_config_setear_socket_cpu(t_kernel_config* self, int socket);
 int kernel_config_setear_socket_memoria(t_kernel_config* self, int socket);
 int kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket);
 char* kernel_config_obtener_ip_escucha(t_kernel_config* self);
-/*
-t_link_element* kernel_config_obtener_recursos(t_kernel_config self);
-t_link_element* kernel_config_obtener_instancias_recursos(t_kernel_config self);
-t_kernel_config* kernel_config_crear(char* kernelConfigPath, t_log* kernelLogger) ;
-*/
+char** kernel_config_obtener_recursos(t_kernel_config* self);
+char** kernel_config_obtener_instancias_recursos(t_kernel_config* self);
 #endif

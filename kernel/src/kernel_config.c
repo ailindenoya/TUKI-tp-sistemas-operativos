@@ -19,9 +19,8 @@ struct t_kernel_config {
     int SOCKET_CPU;
     int SOCKET_MEMORIA;
     int SOCKET_FILESYSTEM;
-
- //   t_list *RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
-    //t_list *INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
+    char** RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
+    char** INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
 };
 
@@ -42,10 +41,8 @@ void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->SOCKET_CPU = -1;
     kernelConfig->SOCKET_MEMORIA = -1;
     kernelConfig->SOCKET_FILESYSTEM = -1;
-
-
-  // kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
-//    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
+    kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
+    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
 }
 
 
@@ -64,6 +61,8 @@ void kernel_config_destruir(t_kernel_config* self) {
     free(self->PUERTO_FILESYSTEM);
     free(self->PUERTO_ESCUCHA);
     free(self->ALGORITMO_PLANIFICACION);
+    free(self->RECURSOS);
+    free(self->INSTANCIAS_RECURSOS);
     free(self);
 }
 
@@ -112,9 +111,12 @@ int kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
 int kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
     return self->SOCKET_MEMORIA = socket;
 }
-
 int kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
     return self->SOCKET_FILESYSTEM = socket;
 }
-
-
+char** kernel_config_obtener_recursos(t_kernel_config* self){
+    return self->RECURSOS;
+}
+char** kernel_config_obtener_instancias_recursos(t_kernel_config* self){
+    return self->INSTANCIAS_RECURSOS;
+}
