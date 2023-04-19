@@ -9,22 +9,23 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
- /*void kernel_acepta_conexion(int socketEscucha) {
+ void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
-    log_info(kernelLogger, "listo para escuchar nuevas conexiones %d", socketEscucha);
+    log_info(kernelLogger, "listo para escuchar nuevas conexiones");
     for (;;) {
         int clienteAceptado = accept(socketEscucha, &cliente, &len);
         if (clienteAceptado > -1) {
             int* socketCliente = malloc(sizeof(*socketCliente));
             *socketCliente = clienteAceptado;
 //        crear hilo por cada conexion entrante???
+        log_info(kernelLogger, "Se conecto una consola");
         } else {
             log_error(kernelLogger, "error al aceptar conexión: %s", strerror(errno));
         }
     }
 }
-*/
+
 void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLog) {
     kernel_config_destruir(kernelConfig);
     log_destroy(kernelLog);
@@ -125,13 +126,13 @@ int main(int argc, char* argv[]){
     log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
 
     // inicializa servidor de instancias CONSOLA /// ARREGLAR 
-    int socketESCUCHA = iniciar_servidor(kernel_config_obtener_puerto_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
+    int socketESCUCHA = iniciar_servidor(NULL, kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 
 
     // inicializar estructuras 
     // TODO
 
-    //kernel_acepta_conexion(socketESCUCHA);
+    kernel_acepta_conexion(socketESCUCHA);
 
 }
