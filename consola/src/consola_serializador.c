@@ -12,6 +12,6 @@ void consola_serializador_empaquetar_dos_parametros(t_buffer* buffer, uint8_t in
     buffer_empaquetar(buffer, &parametro2, sizeof(parametro2));
 }
 void consola_serializador_empaquetar_tres_parametros(t_buffer* buffer, uint8_t instruccion,uint32_t parametro1,uint32_t parametro2, uint32_t parametro3) {
-consola_serializador_empaquetar_dos_parametros(t_buffer* buffer,instruccion,parametro1,parametro2);
+consola_serializador_empaquetar_dos_parametros( buffer,instruccion,parametro1,parametro2);
     buffer_empaquetar(buffer, &parametro3, sizeof(parametro3));
 }
