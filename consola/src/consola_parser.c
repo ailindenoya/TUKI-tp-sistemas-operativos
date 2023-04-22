@@ -5,6 +5,11 @@
 bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstrucciones, t_log *consolaLogger) {
     bool parseSuccess = false;
     FILE *archivoInstrucciones = fopen(pathInstrucciones, "r");
+    if(archivoInstrucciones== NULL){
+        log_error(consolaLogger, "archivo no reconocido");
+        return false;
+
+    }
     uint32_t parametro1 = -1;
     uint32_t parametro2 = -1;
     uint32_t parametro3 = -1;
