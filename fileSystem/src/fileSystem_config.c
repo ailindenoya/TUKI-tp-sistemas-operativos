@@ -52,7 +52,7 @@ void fileSystem_config_destruir(t_fileSystem_config* self) {
      free(self->PATH_BITMAP);
      free(self->PATH_BLOQUES);
      free(self->PATH_FCB);
-/// free(self->RETARDO_ACCESO_BLOQUE);
+     //free(self->RETARDO_ACCESO_BLOQUE);
      free(self);
  }
 
