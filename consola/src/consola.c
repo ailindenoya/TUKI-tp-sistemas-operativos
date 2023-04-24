@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     // envio de instrucciones a KERNEL
 
     t_buffer *buffer = buffer_crear();
-    uint32_t tamanioProceso = atoi(argv[1]);
+    uint32_t tamanioProceso = atoi(500);
     buffer_empaquetar(buffer, &tamanioProceso, sizeof(tamanioProceso));
     stream_enviar_buffer(kernelSocket, HANDSHAKE_consola, buffer);
     buffer_destruir(buffer);

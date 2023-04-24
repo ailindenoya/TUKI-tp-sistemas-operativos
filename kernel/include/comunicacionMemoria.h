@@ -3,5 +3,3 @@
 #include <pthread.h>
 #include "../include/estado.h"
 #include "kernel_config.c"
-
-
