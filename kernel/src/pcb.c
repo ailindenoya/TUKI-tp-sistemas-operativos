@@ -10,6 +10,7 @@ struct t_pcb {
     // tabla de segmentos
     double estimacionProximaRafaga;
     uint8_t estado;
+    uint32_t tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
     int* socketConsola; // para saber a que consola pertenece
     pthread_mutex_t* mutex;
@@ -26,6 +27,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacion) {
     self->estado = NEW;
     self->socketConsola = NULL;
     self->instrucciones = NULL;
+    self->tiempoDeBloqueo = 0;
     self->mutex = malloc(sizeof(*(self->mutex)));
     pthread_mutex_init(self->mutex, NULL);
     return self;
@@ -43,7 +45,15 @@ void pcb_destruir(t_pcb* self) {
     free(self->mutex);
     free(self);
 }
-
+pthread_mutex_t* pcb_obtener_mutex(t_pcb* self) {
+    return self->mutex;
+}
+uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self){
+    return self->tiempoDeBloqueo;
+}
+void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo) {
+    self->tiempoDeBloqueo = tiempoDeBloqueo;
+}
 uint32_t pcb_obtener_tamanio(t_pcb* self){
     return self->tamanio;
 }
@@ -80,6 +90,9 @@ void pcb_setear_estimado_prox_rafaga(t_pcb* self, double estimacionActual) {
 uint8_t pcb_obtener_estimado_prox_rafaga(t_pcb* self) {
     return self->estado;
 }
-void pcb_setear_estado_actual(t_pcb* self, uint8_t estadoNuevo) {
+void pcb_obtener_estado(t_pcb* self) {
+    self->estado;
+}
+void pcb_setear_estado(t_pcb* self, uint8_t estadoNuevo) {
     self->estado = estadoNuevo;
 }
