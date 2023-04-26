@@ -8,7 +8,7 @@ struct t_pcb {
     time_t tiempoDellegadaAReady;
     // registros de uso gral de cpu (??? )
     // tabla de segmentos
-    double estimacionProximaRafaga;
+    double rafaga;
     uint8_t estado;
     uint32_t tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
@@ -18,15 +18,15 @@ struct t_pcb {
 };
 
 
-t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacion) {
+t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio) {
     t_pcb* self = malloc(sizeof(*self));
     self->pid = pid;
     self->tamanio = tamanio;
     self->programCounter = 0;;
-    self->estimacionProximaRafaga = estimacion;
     self->estado = NEW;
     self->socketConsola = NULL;
     self->instrucciones = NULL;
+    self->rafaga = 0.0;
     self->tiempoDeBloqueo = 0;
     self->mutex = malloc(sizeof(*(self->mutex)));
     pthread_mutex_init(self->mutex, NULL);
@@ -50,6 +50,12 @@ pthread_mutex_t* pcb_obtener_mutex(t_pcb* self) {
 }
 uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self){
     return self->tiempoDeBloqueo;
+}
+double pcb_obtener_rafaga(t_pcb* self){
+    return self->rafaga;
+}
+void pcb_setear_rafaga(t_pcb* self,double rafagaNueva){
+    return self->rafaga = rafagaNueva;
 }
 void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo) {
     self->tiempoDeBloqueo = tiempoDeBloqueo;

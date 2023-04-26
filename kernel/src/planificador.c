@@ -6,6 +6,7 @@ extern t_kernel_config* kernelConfig;
 
 
 uint32_t siguientePID;
+static double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
 
 //faltan semaforos
 sem_t gradoDeMultiprogramacion;
@@ -45,8 +46,39 @@ t_pcb* iniciar_fifo(t_estado* estado){
     pthread_mutex_unlock(estado_obtener_mutex(estado));
     return pcb;
 }
+/*                            HRRN                                          */
+double response_ratio(double rafaga){
+    return alfa *(1/rafaga);
+}
+
+t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
+    double responseRatioDeUno = response_ratio(pcb_obtener_rafaga(unPcb) );
+    double responseRatioDeOtro = response_ratio(pcb_obtener_rafaga(otroPcb));
+
+    if(responseRatioDeUno > responseRatioDeOtro){
+        return responseRatioDeUno;
+    }
+    else{
+        return responseRatioDeOtro;
+    }
+}
+
+t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
+    t_pcb* pcbElegido = NULL;
+    pthread_mutex_lock(estado_obtener_mutex(estado));
+    int cantidadPcbsEnLista = list_size(estado_obtener_lista(estado));
+    if (cantidadPcbsEnLista == 1) {
+        pcbElegido = estado_desencolar_primer_pcb(estado);
+    } else if (cantidadPcbsEnLista > 1) {
+        pcbElegido = list_get_maximum(estado_obtener_lista(estado), (void*)mayor_response_ratio);
+        estado_remover_pcb_de_cola(estado, pcbElegido);
+    }
+    pthread_mutex_unlock(estado_obtener_mutex(estado));
+    return pcbElegido;
+}
 
 /*                          FINALIZADOR DE PCBs                        */
+
  void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
@@ -141,6 +173,7 @@ void iniciar_planificadores(void){
 
     pthread_mutex_init(&mutexSocketMemoria, NULL);
     siguientePID = 1;
+    sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
 
 
 if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
