@@ -1,0 +1,7 @@
+#include "../include/pcb.h"
+
+//t_pcb* contextoDeEjecucion;
+
+t_pcb* set(registro, valor){
+
+}

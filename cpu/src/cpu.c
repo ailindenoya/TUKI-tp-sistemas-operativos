@@ -67,4 +67,5 @@ int main(int argc, char* argv[]) {
     stream_enviar_buffer_vacio(socketKERNEL, HANDSHAKE_puede_continuar);
     log_info(cpuLogger, "se establecio conexion con KERNEL");
 
+    //recibir
 }
