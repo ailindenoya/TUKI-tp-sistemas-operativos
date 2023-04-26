@@ -1,7 +1,24 @@
-#include "../include/pcb.h"
-
+#include "../../kernel/include/pcb.h"
+#include "../include/cpu_config.h"
 //t_pcb* contextoDeEjecucion;
 
-t_pcb* set(registro, valor){
+void set(registro, valor){
+    sleep(cpu_obt);
+    //Ver tamanio del registropara determinar iteraciones para llenar registro.
+    switch(sizeof(valor)){
+        case 4:
+        break;
+        case 8:
+        break;
+        case 16:
+        break;
+        default:
+        //Mensaje de tamaño incorrecto o incopatibilidad con el registro.
+    }
+}
+
+t_pcb* yield(){
 
 }
+
+void exit()

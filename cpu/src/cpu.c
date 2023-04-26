@@ -9,8 +9,9 @@
 
 extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
-
+t_pcb* contexteto_ejecucion;
 int main(int argc, char* argv[]) {
+   
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
         log_error(cpuLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
