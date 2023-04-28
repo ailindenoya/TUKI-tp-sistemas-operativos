@@ -145,15 +145,12 @@ static void  planificador_largo_plazo(void) {
     pthread_t atenderPCBHilo;
    // falta hacer el atender pcb - estaria bueno verlo nosotros 3 juntos
    // pthread_create(&atenderPCBHilo, NULL, (void*)__atender_pcb, NULL);
-    pthread_detach(atenderPCBHilo);
+   // pthread_detach(atenderPCBHilo);
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoReady));
         log_info(kernelLogger, "Se toma una instancia de READY");
-    // ver que hacer con esta parte - nosotros no tenemos el elegir_pcb xq no tenemos punteros a funciones, trabajamos
-    // todo separado. 
-
-  //      t_pcb* pcbToDispatch = elegir_pcb(estadoReady, kernel_config_get_alfa(kernelConfig));
+        t_pcb* pcbToDispatch = iniciar_fifo(estadoReady);
 
         estado_encolar_pcb_con_semaforo(estadoExec, pcbToDispatch);
         sem_post(estado_obtener_sem(estadoExec));
@@ -202,7 +199,7 @@ if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
     
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL);
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_FIFO, NULL);
     pthread_detach(cortoPlazoHilo);
 
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
