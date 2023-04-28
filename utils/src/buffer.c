@@ -24,6 +24,12 @@ void buffer_empaquetar(t_buffer* self, void* streamToAdd, int size) {
     self->size += size;
 }
 
+void buffer_empaquetar_string(t_buffer* self, void* string) {
+    int largoString = strlen(string);
+    buffer_empaquetar(self, &largoString, sizeof(largoString));
+    buffer_empaquetar(self, string, largoString + 1);
+}
+
 void buffer_desempaquetar(t_buffer* self, void* dest, int size) {
     if (self->stream == NULL || self->size == 0) {
         puts("\e[0;31mbuffer_unpack: Error en el desempaquetado del buffer\e[0m");
@@ -35,3 +41,8 @@ void buffer_desempaquetar(t_buffer* self, void* dest, int size) {
     self->stream = realloc(self->stream, self->size);
 }
 
+void buffer_desempaquetar_string(t_buffer* self, void* dest) {
+    int largoString;
+    buffer_desempaquetar(self, &largoString, sizeof(largoString));
+    buffer_desempaquetar(self, dest, largoString + 1)
+}
