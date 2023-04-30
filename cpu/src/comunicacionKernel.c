@@ -1,7 +1,9 @@
-#include "../include/contextoDeEjecucion.h"
+#include "../include/comunicacionKernel.h"
 
 extern t_log* cpuLogger;
+//extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
 
+// Registros
 
 char AX[4];
 char BX[4];
@@ -54,7 +56,24 @@ void ejecutar_SET(char* reg, char* param) {
     }
 }
 
- bool __cpu_exec_instruction(t_cpu_pcb* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3  ) {
+void ejecutar_YIELD(){
+    // Devolver contexto a Kernel
+    
+    // Enviar proceso a lista READY en Planificador
+
+    t_list listaReady = estado_obtener_lista(READY);
+    // Encolar Proceso
+}
+
+void ejecutar_EXIT(){
+    // Devolver contexto a Kernel
+    // Finalizar Proceso, enviar a lista EXIT en Planificador
+
+    t_list listaExit = estado_obtener_lista(EXIT);
+    // Agregar proceso a Lista
+}
+
+ bool __cpu_exec_instruction(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3  ) {
 
     switch (tipoInstruccion)
     {
@@ -62,6 +81,12 @@ void ejecutar_SET(char* reg, char* param) {
         ejecutar_SET(parametro1, parametro2);
         break;
 
+    case INSTRUCCION_yield:
+
+        break;
+    case INSTRUCCION_exit:
+
+        break;
     default:
         break;
     }

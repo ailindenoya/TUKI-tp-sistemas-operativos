@@ -16,7 +16,7 @@ struct t_estado {
 int obtener_indice_de_pcb(t_list* list, t_pcb* otroPCB) {
     for (int i = 0; i < list_size(list); i++) {
         t_pcb* unPCB = list_get(list, i);
-        if (pcb_get_pid(unPCB) == pcb_get_pid(otroPCB)) { 
+        if (pcb_obtener_pid(unPCB) == pcb_obtener_pid(otroPCB)) { 
             return i;
         }
     }
@@ -47,7 +47,7 @@ void estado_destroy(t_estado* self) {
     if (list_is_empty(self->listaProcesos)) {
         list_destroy(self->listaProcesos);
     } else {
-        list_destroy_and_destroy_elements(self->listaProcesos, (void*)pcb_destroy);
+        list_destroy_and_destroy_elements(self->listaProcesos, (void*)pcb_destruir);
     }
     pthread_mutex_destroy(self->mutexEstado);
     sem_destroy(self->semaforoEstado);

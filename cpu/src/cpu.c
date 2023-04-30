@@ -9,7 +9,6 @@
 
 extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
-t_pcb* contexteto_ejecucion;
 
 
 int main(int argc, char* argv[]) {

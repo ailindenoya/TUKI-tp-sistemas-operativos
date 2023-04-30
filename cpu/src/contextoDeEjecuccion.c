@@ -3,8 +3,6 @@
 #include <stdint.h>
 
 extern t_log* cpuLogger;
-
-
 struct t_contexto {
     uint32_t pid;
     uint32_t programCounter;

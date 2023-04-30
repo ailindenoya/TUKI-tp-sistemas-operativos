@@ -1,16 +1,18 @@
+#include <stdlib.h>
+#include <string.h>
+#include <commons/log.h>
+#include <commons/config.h>
+#include <commons/collections/list.h>
+#include <sys/socket.h>
 #include "../../utils/include/flagsParaCommons.h"
 #include "../../utils/include/stream.h"
 #include "../../utils/include/conexiones.h"
 #include "../../utils/include/config_inicializacion.h"
-#include <sys/socket.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <commons/collections/list.h>
-#include <stdlib.h>
-#include <string.h>
 
 
 typedef struct t_cpu_config t_cpu_config;
+
+static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
 
 void cpu_config_setear_socket_memoria(t_cpu_config* self, int socket);
 void cpu_config_setear_socket_kernel(t_cpu_config* self, int socket);

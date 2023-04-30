@@ -56,10 +56,10 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
     double responseRatioDeOtro = response_ratio(pcb_obtener_rafaga(otroPcb));
 
     if(responseRatioDeUno > responseRatioDeOtro){
-        return responseRatioDeUno;
+        return unPcb;
     }
     else{
-        return responseRatioDeOtro;
+        return otroPcb;
     }
 }
 

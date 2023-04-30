@@ -1,5 +1,5 @@
-#include "../include/cpu_config.h"
-#include<string.h>
+#include <"../include/cpu_config.h">
+#include <string.h>
 
 t_log* cpuLogger;
 t_cpu_config* cpuConfig;
@@ -20,7 +20,6 @@ struct t_cpu_config {
 };
 
 t_cpu_config* cpuConfig;
-static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
 
 static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_cpu_config* cpuConfig = (t_cpu_config*)moduleConfig;
