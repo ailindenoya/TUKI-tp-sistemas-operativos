@@ -5,6 +5,7 @@ typedef enum {
 
     HEADER_lista_de_instrucciones,
     HEADER_pid,
+    HEADER_proceso_bloqueado,
     HEADER_proceso_terminado
 } t_header;
 

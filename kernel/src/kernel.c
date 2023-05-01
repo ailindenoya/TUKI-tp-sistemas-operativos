@@ -133,7 +133,9 @@ int main(int argc, char* argv[]){
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 
 
-    // inicializar estructuras 
+    // inicializar 
+
+    iniciar_planificadores();
     // TODO
 
     kernel_acepta_conexion(socketESCUCHA);

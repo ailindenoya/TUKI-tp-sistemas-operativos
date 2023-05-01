@@ -2,30 +2,16 @@
 
 extern t_log* cpuLogger;
 //extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
+extern t_contexto t_contexto;
 
-// Registros
 
-char AX[4];
-char BX[4];
-char CX[4];
-char DX[4];
-
-char EAX[8];
-char EBX[8];
-char ECX[8];
-char EDX[8];
-
-char RAX[16];
-char RBX[16];
-char RCX[16];
-char RDX[16];
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
     for(int i = 0; i < tamanioDeRegistro; i++)
         vector[i] = (string+i);
 }
 
-void ejecutar_SET(char* reg, char* param) {
+void ejecutar_SET(char* reg, char* param, t_contexto contexto) {
 
     if(strcmp(reg,"AX") == 0){
         copiarStringAVector(param, AX, 4);
@@ -85,6 +71,7 @@ void ejecutar_EXIT(){
 
         break;
     case INSTRUCCION_exit:
+        log_info(cpuLogger, "EXEC: PCB <ID %d> EXIT", _obtener_pid(pcb));
 
         break;
     default:

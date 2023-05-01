@@ -13,12 +13,10 @@ struct t_contexto {
     char BX[4];
     char CX[4];
     char DX[4];
-
     char EAX[8];
     char EBX[8];
     char ECX[8];
     char EDX[8];
-
     char RAX[16];
     char RBX[16];
     char RCX[16];
@@ -33,6 +31,16 @@ t_contexto* crear_contexto(uint32_t pid, uint32_t programCounter){
    return contexto;
 }
 
+uint32_t contexto_obtener_pid(t_contexto* self) {
+    return self->pid;
+}
+uint32_t contexto_obtener_program_counter(t_contexto* self) {
+    return self->programCounter;
+}
+
+void contexto_setear_program_counter(t_contexto* self, uint32_t programCounter) {
+    self->programCounter = programCounter;
+}
 
 void contexto_destruir(t_contexto* self) {
     list_destroy_and_destroy_elements(self->instrucciones, instruccion_destroy);
