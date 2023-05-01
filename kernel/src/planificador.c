@@ -141,6 +141,64 @@ static void  planificador_largo_plazo(void) {
 /*                  PLANIFICADOR A CORTO PLAZO                             */
 
 
+
+
+void atender_pcb(void) {
+    for (;;) {
+        sem_wait(estado_obtener_sem(estadoExec)); 
+        
+        pthread_mutex_lock(estado_obtener_mutex(estadoExec));
+        
+        t_pcb* pcb = list_get(estado_obtener_lista(estadoExec), 0); // saca el primer pcb de la lista
+        pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
+        
+        loggear_cambio_estado("READY", "EXEC", pcb_obtener_pid(pcb));
+
+        struct timespec start;  
+        __set_timespec(&start);
+    
+        kernel_enviar_pcb_a_cpu(pcb, kernelConfig, kernelLogger, HEADER_pcb_a_ejecutar);
+        uint8_t cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+
+        struct timespec end;
+        __set_timespec(&end);
+
+        pthread_mutex_lock(estado_get_mutex(estadoExec));
+        pcb = cpu_adapter_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
+        list_remove(estado_get_list(estadoExec), 0);
+        pthread_mutex_unlock(estado_get_mutex(estadoExec));
+__obtener_diferencial_de_tiempo_en_milisegundos(end, start);
+        log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d miliseconds", pcb_get_pid(pcb), realEjecutado);
+
+        switch (cpuResponse) {
+            case HEADER_proceso_desalojado:
+                actualizar_pcb_por_desalojo(pcb, realEjecutado);
+                pcb_set_estado_actual(pcb, READY);
+                estado_encolar_pcb_atomic(estadoReady, pcb);
+                __log_transition("EXEC", "READY", pcb_get_pid(pcb));
+                sem_post(estado_get_sem(estadoReady));
+                break;
+            case HEADER_proceso_terminado:
+                pcb_set_estado_actual(pcb, EXIT);
+                estado_encolar_pcb_atomic(estadoExit, pcb);
+                __log_transition("EXEC", "EXIT", pcb_get_pid(pcb));
+                stream_send_empty_buffer(pcb_get_socket(pcb), HEADER_proceso_terminado);
+                sem_post(estado_get_sem(estadoExit));
+                break;
+            case HEADER_proceso_bloqueado:
+                actualizar_pcb_por_bloqueo(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig));
+                __atender_bloqueo(pcb);
+                break;
+            default:
+                log_error(kernelLogger, "Error al recibir mensaje de CPU");
+                break;
+        }
+
+        sem_post(&dispatchPermitido);
+    }
+}
+
+
  void planificador_corto_plazo_FIFO(void) {
     pthread_t atenderPCBHilo;
    // falta hacer el atender pcb - estaria bueno verlo nosotros 3 juntos
@@ -156,6 +214,10 @@ static void  planificador_largo_plazo(void) {
         sem_post(estado_obtener_sem(estadoExec));
     }
 }
+
+
+
+
 
 void iniciar_planificadores(void){
     
