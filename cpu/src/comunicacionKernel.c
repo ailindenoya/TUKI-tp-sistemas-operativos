@@ -2,8 +2,6 @@
 
 extern t_log* cpuLogger;
 //extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
-extern t_contexto t_contexto;
-
 
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
@@ -42,37 +40,117 @@ void ejecutar_SET(char* reg, char* param, t_contexto contexto) {
     }
 }
 
-void ejecutar_YIELD(){
-    // Devolver contexto a Kernel
+void ejecutar_YIELD(t_contexto* pcb,uint32_t programCounterActualizado){ // Devolver contexto a Kernel
     
     // Enviar proceso a lista READY en Planificador
 
     t_list listaReady = estado_obtener_lista(READY);
     // Encolar Proceso
 }
+void ejecutar_F_CLOSE(t_contexto* pcb,uint32_t programCounterActualizado){
 
-void ejecutar_EXIT(){
-    // Devolver contexto a Kernel
-    // Finalizar Proceso, enviar a lista EXIT en Planificador
+}
+void ejecutar_F_OPEN(t_contexto* pcb,uint32_t programCounterActualizado){
 
-    t_list listaExit = estado_obtener_lista(EXIT);
-    // Agregar proceso a Lista
+}
+void ejecutar_F_READ(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_F_WRITE(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_F_SEEK(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_F_TRUNCATE(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_MOV_OUT(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado){
+
+}
+void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado){
+
 }
 
- bool __cpu_exec_instruction(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3  ) {
+void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PCB de ID con I/O de %d milisegundos", pid, tiempoDeBloqueo);
+    t_buffer *bufferIO = buffer_crear();
+    buffer_empaquetar(bufferIO, &pid, sizeof(pid));
+    buffer_empaquetar(bufferIO, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar(bufferIO, &tiempoDeBloqueo, sizeof(tiempoDeBloqueo));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_bloqueado, bufferIO);
+    buffer_destruir(bufferIO);
+}
+
+
+void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
+    log_info(cpuLogger, "PCB de ID %d ejecuta EXIT", contexto_obtener_pid(pcb));
+    uint32_t pid = contexto_obtener_pid(pcb);
+    t_buffer *bufferExit = buffer_crear();
+    buffer_empaquetar(bufferExit, &pid, sizeof(pid));
+    buffer_empaquetar(bufferExit, &programCounterActualizado, sizeof(programCounterActualizado));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado, bufferExit);
+    buffer_destruir(bufferExit);
+}
+
+
+
+ bool cpu_ejecutar_instrucciones(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
+    contexto_setear_program_counter(pcb, contexto_obtener_program_counter(pcb) + 1);
+    uint32_t programCounterActualizado = contexto_obtener_program_counter(pcb);
+    bool pararDeEjecutar = false;
 
     switch (tipoInstruccion)
     {
     case INSTRUCCION_set:
         ejecutar_SET(parametro1, parametro2);
         break;
-
+    case INSTRUCCION_f_close:
+        break;
+    case INSTRUCCION_f_open:
+        break;
+    case INSTRUCCION_f_write:
+        break;
+    case INSTRUCCION_f_read:
+        break;
+    case INSTRUCCION_f_seek:
+        break;
+    case INSTRUCCION_f_truncate:
+        break;
+    case INSTRUCCION_mov_in:
+        break;
+    case INSTRUCCION_mov_out:
+        break;
+    case INSTRUCCION_create_segment:
+        break;
+    case INSTRUCCION_delete_segment:
+        break;
+    case INSTRUCCION_wait:
+        break;
+    case INSTRUCCION_signal:
+        break;
     case INSTRUCCION_yield:
-
+        break;
+    case INSTRUCCION_io:
+        ejecutar_IO(parametro1, pcb, programCounterActualizado); // parametro1 es tiempoDeBloqueo
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_exit:
-        log_info(cpuLogger, "EXEC: PCB <ID %d> EXIT", _obtener_pid(pcb));
-
+        ejecutar_EXIT(pcb,programCounterActualizado);
+        pararDeEjecutar = true;
         break;
     default:
         break;

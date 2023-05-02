@@ -1,5 +1,5 @@
-#ifndef COMMON_FLAGS_H_INCLUDED
-#define COMMON_FLAGS_H_INCLUDED
+#ifndef FLAGSPARACOMMONS_H_INCLUDED
+#define FLAGSPARACOMMONS_H_INCLUDED
 
 typedef enum {
 
@@ -28,7 +28,7 @@ typedef enum {
     INSTRUCCION_mov_out,
     INSTRUCCION_f_truncate,
     INSTRUCCION_f_seek,
-    INSTRUCCION_f_create_segment,
+    INSTRUCCION_create_segment,
     INSTRUCCION_io,
     INSTRUCCION_wait,
     INSTRUCCION_signal,

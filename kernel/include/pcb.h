@@ -1,3 +1,7 @@
+#ifndef PCB_H_INCLUDED
+#define PCB_H_INCLUDED
+
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -26,3 +30,7 @@ void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo);
 
 double pcb_obtener_rafaga(t_pcb* self);
 void pcb_setear_rafaga(t_pcb* self,double rafagaNueva);
+
+
+
+#endif

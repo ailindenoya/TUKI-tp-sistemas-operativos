@@ -1,6 +1,5 @@
 #include "../include/contextoDeEjecucion.h"
 
-#include <stdint.h>
 
 extern t_log* cpuLogger;
 

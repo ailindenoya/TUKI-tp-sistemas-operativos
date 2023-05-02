@@ -1,3 +1,6 @@
+#ifndef CPU_CONFIG_H_INCLUDED
+#define CPU_CONFIG_H_INCLUDED
+
 #include <stdlib.h>
 #include <string.h>
 #include <commons/log.h>
@@ -26,3 +29,6 @@ char* cpu_config_obtener_tam_max_segmento(t_cpu_config* self) ;
 int cpu_config_obtener_socket_memoria(t_cpu_config* self);
 void cpu_config_setear_socket_kernel(t_cpu_config* self, int socket) ;
 int cpu_config_obtener_socket_kernel(t_cpu_config* self);
+
+
+#endif

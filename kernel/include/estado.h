@@ -1,5 +1,5 @@
-#ifndef ESTADOS_H_INCLUDED
-#define ESTADOS_H_INCLUDED
+#ifndef ESTADO_H_INCLUDED
+#define ESTADO_H_INCLUDED
 
 #include <commons/collections/list.h>
 #include <semaphore.h>
@@ -33,6 +33,5 @@ void estado_encolar_pcb_con_semaforo(t_estado* estadoDest, t_pcb* targetPcb);
 bool estado_contiene_pcb_con_semaforo(t_estado* self, t_pcb* targetPcb);
 t_pcb* estado_remover_pcb_de_cola_con_semaforo(t_estado* self, t_pcb* targetPcb);
 
-
-
 #endif
+
