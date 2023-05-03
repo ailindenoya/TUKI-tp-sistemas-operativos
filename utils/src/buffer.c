@@ -24,7 +24,7 @@ void buffer_empaquetar(t_buffer* self, void* streamToAdd, int size) {
     self->size += size;
 }
 
-void buffer_empaquetar_string(t_buffer* self, void* string) {
+void buffer_empaquetar_string(t_buffer* self, char* string) {
     int largoString = strlen(string) + 1; //Se tiene en cuenta el '\0', del otro lado va a copiarse también
     buffer_empaquetar(self, &largoString, sizeof(largoString));
     buffer_empaquetar(self, string, largoString);
@@ -41,8 +41,7 @@ void buffer_desempaquetar(t_buffer* self, void* dest, int size) {
     self->stream = realloc(self->stream, self->size);
 }
 
-void buffer_desempaquetar_string(t_buffer* self, void* dest) {
-	char** pString = (char**) dest;
+void buffer_desempaquetar_string(t_buffer* self, char** pString) {
     int largoString;
     buffer_desempaquetar(self, &largoString, sizeof(largoString));
     *pString = realloc(*pString, largoString);
