@@ -2,6 +2,7 @@
 #define BUFFER_H_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 
 typedef struct {
     uint32_t size;

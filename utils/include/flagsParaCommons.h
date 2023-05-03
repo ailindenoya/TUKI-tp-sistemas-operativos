@@ -21,22 +21,22 @@ typedef enum {
 
 
 typedef enum {
-    INSTRUCCION_f_read,
-    INSTRUCCION_f_write,
     INSTRUCCION_set,
     INSTRUCCION_mov_in,
     INSTRUCCION_mov_out,
-    INSTRUCCION_f_truncate,
-    INSTRUCCION_f_seek,
-    INSTRUCCION_create_segment,
     INSTRUCCION_io,
-    INSTRUCCION_wait,
-    INSTRUCCION_signal,
     INSTRUCCION_f_open,
     INSTRUCCION_f_close,
+    INSTRUCCION_f_seek,
+    INSTRUCCION_f_read,
+    INSTRUCCION_f_write,
+    INSTRUCCION_f_truncate,
+    INSTRUCCION_wait,
+    INSTRUCCION_signal,
+    INSTRUCCION_create_segment,
     INSTRUCCION_delete_segment,
-    INSTRUCCION_exit,
-    INSTRUCCION_yield
+    INSTRUCCION_yield,
+    INSTRUCCION_exit
 } t_tipo_instruccion;
 
 

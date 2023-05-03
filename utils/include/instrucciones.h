@@ -17,4 +17,7 @@ t_tipo_instruccion instruccion_obtener_tipo_instruccion(t_instruccion* self);
 char* instruccion_obtener_parametro1(t_instruccion* self);
 char* instruccion_obtener_parametro2(t_instruccion* self);
 char* instruccion_obtener_parametro3(t_instruccion* self);
+void instrucciones_desempaquetar_un_parametro(t_buffer* buffer, char** pParametro1);
+void instrucciones_desempaquetar_dos_parametros(t_buffer* buffer, char** pParametro1, char** pParametro2);
+void instrucciones_desempaquetar_tres_parametros(t_buffer* buffer, char** pParametro1, char** pParametro2, char** pParametro3);
 #endif
