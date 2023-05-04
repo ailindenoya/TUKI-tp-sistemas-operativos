@@ -48,67 +48,66 @@ t_list* instruccion_lista_crear_desde_buffer(t_buffer* bufferConInstrucciones, t
     bool esEXIT = false;
     while (!esEXIT) {
         buffer_desempaquetar(bufferConInstrucciones, &instruccion, sizeof(instruccion));
-        char* parametro1 = "";
-        char* parametro2 = "";
-        char* parametro3 = "";
-        switch (instruccion)
-        {
-        case INSTRUCCION_set:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_mov_in:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_mov_out:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_io:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_f_open:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_f_close:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_f_seek:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_f_read:
-            instrucciones_desempaquetar_tres_parametros(bufferConInstrucciones, &parametro1, &parametro2, &parametro3);
-            break;
-        case INSTRUCCION_f_write:
-            instrucciones_desempaquetar_tres_parametros(bufferConInstrucciones, &parametro1, &parametro2, &parametro3);
-            break;
-        case INSTRUCCION_f_truncate:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_wait:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_signal:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_create_segment:
-            instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
-            break;
-        case INSTRUCCION_delete_segment:
-            instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
-            break;
-        case INSTRUCCION_yield:
-            //No lleva ningun parametro
-            break;
-        case INSTRUCCION_exit:
-            esEXIT = true;
-            break;
-        default:
-            log_error(logger, "Error al intentar desempaquetar una instrucción");
-            exit(-1);
+        char* parametro1 = malloc(1); // Lo pongo por las dudas, quizas despues sirva o quizas no
+        strncpy(parametro1, "", 1);
+        char* parametro2 = malloc(1);
+        strncpy(parametro2, "", 1);
+        char* parametro3 = malloc(1);
+        strncpy(parametro3, "", 1);
+        switch (instruccion) {
+            case INSTRUCCION_set:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_mov_in:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_mov_out:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_io:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_f_open:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_f_close:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_f_seek:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_f_read:
+                instrucciones_desempaquetar_tres_parametros(bufferConInstrucciones, &parametro1, &parametro2, &parametro3);
+                break;
+            case INSTRUCCION_f_write:
+                instrucciones_desempaquetar_tres_parametros(bufferConInstrucciones, &parametro1, &parametro2, &parametro3);
+                break;
+            case INSTRUCCION_f_truncate:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_wait:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_signal:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_create_segment:
+                instrucciones_desempaquetar_dos_parametros(bufferConInstrucciones, &parametro1, &parametro2);
+                break;
+            case INSTRUCCION_delete_segment:
+                instrucciones_desempaquetar_un_parametro(bufferConInstrucciones, &parametro1);
+                break;
+            case INSTRUCCION_yield:
+                //No lleva ningun parametro
+                break;
+            case INSTRUCCION_exit:
+                esEXIT = true;
+                break;
+            default:
+                log_error(logger, "Error al intentar desempaquetar una instrucción");
+                exit(-1);
         }
         t_instruccion* instruccionActual = instruccion_crear(instruccion, parametro1, parametro2, parametro3);
-        free(parametro1);
-        free(parametro2);
-        free(parametro3);
         list_add(instrucciones, instruccionActual);
     }
     log_info(logger, "Se desempaquetan %d instrucciones", list_size(instrucciones));
