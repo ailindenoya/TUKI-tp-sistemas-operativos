@@ -140,7 +140,13 @@ static void  planificador_largo_plazo(void) {
 }
 /*                  PLANIFICADOR A CORTO PLAZO                             */
 
-
+uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec start) {
+    const uint32_t SECS_TO_MILISECS = 1000;
+    const uint32_t NANOSECS_TO_MILISECS = 1000000;
+    return (end.tv_sec - start.tv_sec) * SECS_TO_MILISECS + (end.tv_nsec - start.tv_nsec) / NANOSECS_TO_MILISECS;
+} /// segs * segstomili
+    //----------------
+    // nanosecstomilisecs
 
 
 void atender_pcb(void) {
@@ -153,7 +159,7 @@ void atender_pcb(void) {
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
         
         loggear_cambio_estado("READY", "EXEC", pcb_obtener_pid(pcb));
-
+        // tiempo real ejecutado - rafaga
         struct timespec start;  
         __set_timespec(&start);
     
@@ -162,32 +168,33 @@ void atender_pcb(void) {
 
         struct timespec end;
         __set_timespec(&end);
+        // tiempo real ejecutado - rafaga
 
-        pthread_mutex_lock(estado_get_mutex(estadoExec));
-        pcb = cpu_adapter_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
-        list_remove(estado_get_list(estadoExec), 0);
+        pthread_mutex_lock(estado_obtener_mutex(estadoExec));
+        pcb = kernel_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
+        
+        list_remove(estado_get_list(estadoExec), 0); // saca de ejec el proceso
+
         pthread_mutex_unlock(estado_get_mutex(estadoExec));
-__obtener_diferencial_de_tiempo_en_milisegundos(end, start);
-        log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d miliseconds", pcb_get_pid(pcb), realEjecutado);
 
-        switch (cpuResponse) {
-            case HEADER_proceso_desalojado:
-                actualizar_pcb_por_desalojo(pcb, realEjecutado);
-                pcb_set_estado_actual(pcb, READY);
-                estado_encolar_pcb_atomic(estadoReady, pcb);
-                __log_transition("EXEC", "READY", pcb_get_pid(pcb));
-                sem_post(estado_get_sem(estadoReady));
-                break;
+        uint32_t realEjecutado = 0;
+        realEjecutado = obtener_tiempo_en_milisegundos(end, start); // obtener_es
+
+        log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d milisegundos", pcb_obtener_pid(pcb), realEjecutado);       
+
+        switch (cpuRespuesta) {
             case HEADER_proceso_terminado:
-                pcb_set_estado_actual(pcb, EXIT);
-                estado_encolar_pcb_atomic(estadoExit, pcb);
-                __log_transition("EXEC", "EXIT", pcb_get_pid(pcb));
-                stream_send_empty_buffer(pcb_get_socket(pcb), HEADER_proceso_terminado);
-                sem_post(estado_get_sem(estadoExit));
+                pcb_setear_estado(pcb, EXIT);
+                estado_encolar_pcb_con_semaforo(estadoExit, pcb);
+                loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
+                stream_enviar_buffer_vacio(pcb_get_socket(pcb), HEADER_proceso_terminado);
+                sem_post(estado_obtener_sem(estadoExit));
                 break;
             case HEADER_proceso_bloqueado:
                 actualizar_pcb_por_bloqueo(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig));
                 __atender_bloqueo(pcb);
+                break;
+            case HEADER_proceso_yield:
                 break;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");

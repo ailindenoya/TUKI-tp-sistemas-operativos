@@ -36,7 +36,8 @@ t_pcb* kernel_recibir_pcb_actualizado_de_cpu(t_pcb* pcbAActualizar, uint8_t cpuR
     if (pidRecibido == pcb_obtener_pid(pcbAActualizar)) { /// si es el mismo al que tenes en kernel
         if (cpuResponse == HEADER_proceso_bloqueado) {
             buffer_desempaquetar(bufferPcb, &tiempoDeBloqActualizado, sizeof(tiempoDeBloqActualizado)); // desempaqueta tiempo que se bloqueo
-            pcb_obtener_tiempo_bloqueo(pcbAActualizar, tiempoDeBloqActualizado);
+            pcb_setear_tiempo_bloqueo(pcbAActualizar, tiempoDeBloqActualizado);
+            // solo para instruccion de io
         } // cpu le devuelve a kernel el contexto y el tiempo (nro al lado de IO o parametro) que se va a bloquear el proceso
      
         pcb_setear_program_counter(pcbAActualizar, programCounterActualizado);

@@ -90,12 +90,12 @@ t_pcb* estado_desencolar_primer_pcb_con_semaforo(t_estado* self) {
 
 void estado_encolar_pcb_con_semaforo(t_estado* estadoDest, t_pcb* targetPcb) {
     pthread_mutex_lock(estado_get_mutex(estadoDest));
-    list_add(estado_get_list(estadoDest), targetPcb);
+    list_add(estado_obtener_lista(estadoDest), targetPcb);
     pthread_mutex_unlock(estado_get_mutex(estadoDest));
 }
 
 bool estado_contiene_pcb_con_semaforo(t_estado* self, t_pcb* targetPcb) {
-    pthread_mutex_lock(estado_get_mutex(self));
+    pthread_mutex_lock(estado_obtener_mutex(self));
     bool contienePCB = false;
     uint32_t index = obtener_indice_de_pcb(estado_get_list(self), targetPcb);
     if (index != -1) {
