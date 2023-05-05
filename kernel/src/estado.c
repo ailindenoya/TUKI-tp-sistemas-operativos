@@ -82,32 +82,32 @@ pthread_mutex_t* estado_obtener_mutex(t_estado* self) {
 }
 
 t_pcb* estado_desencolar_primer_pcb_con_semaforo(t_estado* self) {
-    pthread_mutex_lock(estado_get_mutex(self));
+    pthread_mutex_lock(estado_obtener_mutex(self));
     t_pcb* pcb = estado_desencolar_primer_pcb(self);
-    pthread_mutex_unlock(estado_get_mutex(self));
+    pthread_mutex_unlock(estado_obtener_mutex(self));
     return pcb;
 }
 
 void estado_encolar_pcb_con_semaforo(t_estado* estadoDest, t_pcb* targetPcb) {
-    pthread_mutex_lock(estado_get_mutex(estadoDest));
+    pthread_mutex_lock(estado_obtener_mutex(estadoDest));
     list_add(estado_obtener_lista(estadoDest), targetPcb);
-    pthread_mutex_unlock(estado_get_mutex(estadoDest));
+    pthread_mutex_unlock(estado_obtener_mutex(estadoDest));
 }
 
 bool estado_contiene_pcb_con_semaforo(t_estado* self, t_pcb* targetPcb) {
     pthread_mutex_lock(estado_obtener_mutex(self));
     bool contienePCB = false;
-    uint32_t index = obtener_indice_de_pcb(estado_get_list(self), targetPcb);
+    uint32_t index = obtener_indice_de_pcb(estado_obtener_lista(self), targetPcb);
     if (index != -1) {
         contienePCB = true;
     }
-    pthread_mutex_unlock(estado_get_mutex(self));
+    pthread_mutex_unlock(estado_obtener_mutex(self));
     return contienePCB;
 }
 
 t_pcb* estado_remover_pcb_de_cola_con_semaforo(t_estado* self, t_pcb* targetPcb) {
-    pthread_mutex_lock(estado_get_mutex(self));
+    pthread_mutex_lock(estado_obtener_mutex(self));
     t_pcb* pcb = estado_remover_pcb_de_cola(self, targetPcb);
-    pthread_mutex_unlock(estado_get_mutex(self));
+    pthread_mutex_unlock(estado_obtener_mutex(self));
     return pcb;
 }

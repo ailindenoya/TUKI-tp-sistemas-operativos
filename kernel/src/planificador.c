@@ -85,7 +85,7 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_atomic(estadoExit);
      // avisar a memoria que finalizo   mem_adapter_finalizar_proceso(pcbALiberar, kernelConfig, kernelLogger);
         log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
-        stream_enviar_buffer_vacio(pcb_obtener_socket(pcbALiberar), HANDSHAKE_puede_continuar);
+        stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HANDSHAKE_puede_continuar);
         pcb_destruir(pcbALiberar);
         sem_post(&gradoDeMultiprogramacion);
     }
@@ -187,14 +187,17 @@ void atender_pcb(void) {
                 pcb_setear_estado(pcb, EXIT);
                 estado_encolar_pcb_con_semaforo(estadoExit, pcb);
                 loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
-                stream_enviar_buffer_vacio(pcb_get_socket(pcb), HEADER_proceso_terminado);
+                stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
                 sem_post(estado_obtener_sem(estadoExit));
                 break;
-            case HEADER_proceso_bloqueado:
-                actualizar_pcb_por_bloqueo(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig));
-                __atender_bloqueo(pcb);
-                break;
+            case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
+                actualizar_pcb_por_bloqueo(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)); //TODO implementar puntero a funcion
+                atender_bloqueo(pcb);  
+                break;        // VER COMO ATENDER POR I/O (SIN COLAS) Y POR RECURSOS (UNA COLA POR RECURSO)
             case HEADER_proceso_yield:
+                pcb_setear_estado(pcb, READY);
+                estado_encolar_pcb_con_semaforo(estadoReady, pcb);
+                loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
                 break;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
@@ -252,7 +255,7 @@ if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
     
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL);
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_HRRN, NULL);
     pthread_detach(cortoPlazoHilo);
 
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);

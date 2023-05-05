@@ -4,18 +4,10 @@
 #include <commons/collections/list.h>
 #include <semaphore.h>
 
-#include <pcb.h>
+#include "pcb.h"
+#include "nombre_estados.h"
 
 typedef struct t_estado t_estado;
-
-typedef enum {
-    NEW,
-    READY,
-    EXEC,
-    EXIT,
-    BLOCKED,
-    //PCBS_ESPERANDO_PARA_IO
-} t_nombre_estado;
 
 
 int obtener_indice_de_pcb(t_list *,  t_pcb* );

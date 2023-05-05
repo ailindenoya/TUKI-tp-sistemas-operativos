@@ -1,20 +1,16 @@
-
-
-#include <stdlib.h>
 #include "../include/comunicacionCPU.h"
-#include "../include/kernel_config.h"
-#include "../include/pcb.h"
-#include "../../utils/include/flagsParaCommons.h"
-#include "../../utils/include/stream.h"
+
 
 
 void kernel_enviar_pcb_a_cpu(t_pcb* pcbAEnviar, t_kernel_config* kernelConfig, t_log* kernelLogger, uint8_t header) {
     uint32_t pidAEnviar = pcb_obtener_pid(pcbAEnviar);
     uint32_t pcAEnviar = pcb_obtener_program_counter(pcbAEnviar);
+    // FALTA LO DE SEGMENTOS DE MEMORIA DEL PROCESO
 
     t_buffer* bufferPcbAEjecutar = buffer_crear();
     buffer_empaquetar(bufferPcbAEjecutar, &pidAEnviar, sizeof(pidAEnviar));
     buffer_empaquetar(bufferPcbAEjecutar, &pcAEnviar, sizeof(pcAEnviar));
+    // FALTA LO DE SEGMENTOS DE MEMORIA DEL PROCESO ACA TAMBIEN
 
     stream_enviar_buffer(kernel_config_obtener_socket_cpu(kernelConfig), header, bufferPcbAEjecutar);
     stream_enviar_buffer(kernel_config_obtener_socket_cpu(kernelConfig), HEADER_lista_de_instrucciones, pcb_obtener_buffer_de_instrucciones(pcbAEnviar));
