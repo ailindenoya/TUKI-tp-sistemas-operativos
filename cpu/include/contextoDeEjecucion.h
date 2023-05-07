@@ -3,7 +3,7 @@
 
 #include <commons/collections/list.h>
 #include <stdint.h>
-#include <cpu_config.h>
+#include "cpu_config.h"
 #include <commons/log.h>
 
 typedef struct t_contexto t_contexto;

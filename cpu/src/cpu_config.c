@@ -1,4 +1,4 @@
-#include <"../include/cpu_config.h">
+#include "../include/cpu_config.h"
 #include <string.h>
 
 t_log* cpuLogger;

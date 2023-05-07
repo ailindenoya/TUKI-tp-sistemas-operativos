@@ -46,6 +46,90 @@ void contexto_destruir(t_contexto* self) {
     free(self);
 }
 
-t_list contexto_obtener_instrucciones(t_contexto* self){
+t_list* contexto_obtener_instrucciones(t_contexto* self){
     return self->instrucciones;
+}
+
+char* contexto_obtener_AX(t_contexto* self){
+   return  self->AX;
+}
+
+void contexto_setear_AX(t_contexto* self, char* string){
+   return  self->AX = string;
+}
+
+char* contexto_obtener_BX(t_contexto* self){
+   return  self->BX;
+}
+void contexto_setear_BX(t_contexto* self, char* string){
+   return  self->BX = string;
+}
+
+char* contexto_obtener_CX(t_contexto* self){
+   return  self->CX;
+}
+
+void contexto_setear_CX(t_contexto* self, char* string){
+   return  self->CX = string;
+}
+
+char* contexto_obtener_DX(t_contexto* self){
+   return  self->DX;
+}
+
+void contexto_setear_AX(t_contexto* self, char* string){
+   return  self->DX = string;
+}
+
+char* contexto_obtener_EAX(t_contexto* self){
+   return  self->EAX;
+}
+
+void contexto_setear_EAX(t_contexto* self, char* string){
+   return  self->EAX = string;
+}
+char* contexto_obtener_EBX(t_contexto* self){
+   return  self->EBX;
+}
+
+void contexto_setear_EBX(t_contexto* self, char* string){
+   return  self->EBX = string;
+}
+char* contexto_obtener_ECX(t_contexto* self){
+   return  self->ECX;
+}
+
+void contexto_setear_ECX(t_contexto* self, char* string){
+   return  self->ECX = string;
+}
+char* contexto_obtener_EDX(t_contexto* self){
+   return  self->EDX;
+}
+
+void contexto_setear_EDX(t_contexto* self, char* string){
+   return  self->EDX = string;
+}
+char* contexto_obtener_RAX(t_contexto* self){
+   return  self->RAX;
+}
+void contexto_setear_RAX(t_contexto* self, char* string){
+   return  self->RAX = string;
+}
+char* contexto_obtener_RBX(t_contexto* self){
+   return  self->RBX;
+}
+void contexto_setear_RBX(t_contexto* self, char* string){
+   return  self->RBX = string;
+}
+char* contexto_obtener_RCX(t_contexto* self){
+   return  self->RCX;
+}
+void contexto_setear_RCX(t_contexto* self, char* string){
+   return  self->RCX = string;
+}
+char* contexto_obtener_RDX(t_contexto* self){
+   return  self->RAX;
+}
+void contexto_setear_RDX(t_contexto* self, char* string){
+   return  self->RAX = string;
 }
