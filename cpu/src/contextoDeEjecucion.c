@@ -46,3 +46,6 @@ void contexto_destruir(t_contexto* self) {
     free(self);
 }
 
+t_list contexto_obtener_instrucciones(t_contexto* self){
+    return self->instrucciones;
+}

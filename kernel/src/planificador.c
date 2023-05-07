@@ -98,7 +98,7 @@ void iniciar_io(void) {
         sem_wait(estado_obtener_sem(pcbsEsperandoParaIO));
         t_pcb* pcbAEjecutarRafagasIO = estado_desencolar_primer_pcb_con_semaforo(pcbsEsperandoParaIO);
         log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %d milisegundos", pcb_obtener_pid(pcbAEjecutarRafagasIO), pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
-      //  pcb_test_and_set_tiempo_final_bloqueado(pcbAEjecutarRafagasIO); ???
+      //  pcb_test_and_set_tiempo_final_bloqueado(pcbAEjecutarRafagasIO); supuestamente para SUSPENDED BLOCKED
 
         intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
         pthread_mutex_lock(pcb_obtener_mutex(pcbAEjecutarRafagasIO));
@@ -112,7 +112,7 @@ void iniciar_io(void) {
             loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbAEjecutarRafagasIO));
             sem_post(estado_obtener_sem(estadoReady));
         } 
-       // pcb_marcar_tiempo_final_como_no_establecido(pcbAEjecutarRafagasIO); bool para saber si esta bloqueado?
+       // pcb_marcar_tiempo_final_como_no_establecido(pcbAEjecutarRafagasIO); supuestamente para SUSPENDED BLOCKED
         pthread_mutex_unlock(pcb_obtener_mutex(pcbAEjecutarRafagasIO));
     }
 }
@@ -211,9 +211,8 @@ void atender_pcb(void) {
 
  void planificador_corto_plazo_FIFO(void) {
     pthread_t atenderPCBHilo;
-   // falta hacer el atender pcb - estaria bueno verlo nosotros 3 juntos
-   // pthread_create(&atenderPCBHilo, NULL, (void*)__atender_pcb, NULL);
-   // pthread_detach(atenderPCBHilo);
+    pthread_create(&atenderPCBHilo, NULL, (void*)__atender_pcb, NULL);
+    pthread_detach(atenderPCBHilo);
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoReady));
@@ -255,8 +254,8 @@ if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
     
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_HRRN, NULL);
-    pthread_detach(cortoPlazoHilo);
+   // pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_HRRN, NULL);
+ //   pthread_detach(cortoPlazoHilo);
 
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
     pthread_detach(dispositivoIOHilo);
@@ -265,8 +264,8 @@ if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
 
 
 } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
-    
-    iniciar_fifo(estadoReady);
+
+
 
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);

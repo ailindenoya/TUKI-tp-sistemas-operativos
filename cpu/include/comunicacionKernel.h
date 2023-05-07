@@ -9,6 +9,8 @@
 #include <pthread.h>
 #include "../../utils/include/flagsParaCommons.h"
 #include "../../utils/include/stream.h"
+#include "../../utils/include/instrucciones.h"
+
 #include "../../kernel/include/estado.h"
 #include "../include/cpu_config.h"
 #include "contextoDeEjecucion.h"

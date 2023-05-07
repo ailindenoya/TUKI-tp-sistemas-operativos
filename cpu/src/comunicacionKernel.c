@@ -1,15 +1,29 @@
 #include "../include/comunicacionKernel.h"
 
 extern t_log* cpuLogger;
+extern t_cpu_config* cpuConfig;
 //extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
 
+
+t_instruccion* cpu_fetch_instruccion(t_contexto* pcb) {
+    t_list* listaInstrucciones = contexto_obtener_instrucciones(pcb);
+    uint32_t programCounter = contexto_obtener_program_counter(pcb);
+    t_instruccion* instruccionSig = list_get(listaInstrucciones, programCounter);
+    log_info(cpuLogger, "FETCH INSTRUCCION: PCB <ID %d>", contexto_obtener_pid(pcb));
+    return instruccionSig;
+}
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
     for(int i = 0; i < tamanioDeRegistro; i++)
         vector[i] = (string+i);
 }
 
+
+
 void ejecutar_SET(char* reg, char* param, t_contexto contexto) {
+
+    uint32_t retardo = (cpu_config_obtener_retardo_instruccion(cpuConfig))/1000;
+    sleep(retardo);
 
     if(strcmp(reg,"AX") == 0){
         copiarStringAVector(param, AX, 4);

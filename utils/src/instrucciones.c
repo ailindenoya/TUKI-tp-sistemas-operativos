@@ -41,7 +41,6 @@ char* instruccion_obtener_parametro3(t_instruccion* self) {
 }
 
 
-// CAMBIAR ESTO 
 t_list* instruccion_lista_crear_desde_buffer(t_buffer* bufferConInstrucciones, t_log* logger) {
     t_list* instrucciones = list_create();
     uint8_t instruccion = -1;
