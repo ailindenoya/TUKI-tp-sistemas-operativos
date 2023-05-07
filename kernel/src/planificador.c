@@ -6,22 +6,29 @@ extern t_kernel_config* kernelConfig;
 
 
 uint32_t siguientePID;
-static double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
+ double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
 
 //faltan semaforos
 sem_t gradoDeMultiprogramacion;
 sem_t hayPcbsParaAgregarAlSistema;
+sem_t dispatchPermitido;
 
 
-static pthread_mutex_t siguientePIDmutex;
 
+pthread_mutex_t siguientePIDmutex;
+
+
+typedef enum {
+    ALGORITMO_FIFO,
+    ALGORITMO_HRRN
+} t_algoritmo;
 
 t_estado* estadoBlocked;
 t_estado* estadoExec;
 t_estado* estadoExit;
 t_estado* estadoNew;
 t_estado* estadoReady; 
-//t_estado* pcbsEsperandoParaIO;
+t_estado* pcbsEsperandoParaIO;
 
 void loggear_cambio_estado(const char* prev, const char* post, int pid) {
     char* cambioDeEstado = string_from_format("\e[1;93m%s->%s\e[0m", prev, post);
@@ -118,7 +125,7 @@ void iniciar_io(void) {
 }
 /*                  PLANIFICADOR A LARGO PLAZO                              */
 
-static void  planificador_largo_plazo(void) {
+void  planificador_largo_plazo(void) {
     pthread_t liberarPcbsEnExitHilo;
     pthread_create(&liberarPcbsEnExitHilo, NULL, (void*)finalizar_pcbs_en_hilo_con_exit, NULL);
     pthread_detach(liberarPcbsEnExitHilo);
@@ -144,12 +151,25 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
     const uint32_t SECS_TO_MILISECS = 1000;
     const uint32_t NANOSECS_TO_MILISECS = 1000000;
     return (end.tv_sec - start.tv_sec) * SECS_TO_MILISECS + (end.tv_nsec - start.tv_nsec) / NANOSECS_TO_MILISECS;
-} /// segs * segstomili
-    //----------------
-    // nanosecstomilisecs
+} 
 
 
-void atender_pcb(void) {
+
+void actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)){
+    //TODO implementar
+}
+
+void atender_bloqueo(t_pcb* pcb) {
+  //  pcb_marcar_tiempo_inicial_bloqueado(pcb); PREGUNTA
+    estado_encolar_pcb_con_semaforo(pcbsEsperandoParaIO, pcb);
+    loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+    log_info(kernelLogger, "PCB <ID %d> ingresa a la cola de espera de I/O", pcb_get_pid(pcb));
+    sem_post(estado_obtener_sem(pcbsEsperandoParaIO));
+    pcb_setear_estado(pcb, BLOCKED);
+    estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
+}
+
+void atender_pcb(int algoritmoUsado) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
         
@@ -191,8 +211,12 @@ void atender_pcb(void) {
                 sem_post(estado_obtener_sem(estadoExit));
                 break;
             case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
-                actualizar_pcb_por_bloqueo(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)); //TODO implementar puntero a funcion
-                atender_bloqueo(pcb);  
+                if(algoritmoUsado == ALGORITMO_HRRN ){
+                actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)) 
+                }else{ 
+                    //EN FIFO NO SE HACE NADA
+                }
+                atender_bloqueo(pcb);   // en ambos se atiende el bloqueo
                 break;        // VER COMO ATENDER POR I/O (SIN COLAS) Y POR RECURSOS (UNA COLA POR RECURSO)
             case HEADER_proceso_yield:
                 pcb_setear_estado(pcb, READY);
@@ -209,15 +233,23 @@ void atender_pcb(void) {
 }
 
 
- void planificador_corto_plazo_FIFO(void) {
+ void planificador_corto_plazo(int tipoDeAlgoritmo) {
     pthread_t atenderPCBHilo;
-    pthread_create(&atenderPCBHilo, NULL, (void*)__atender_pcb, NULL);
+    pthread_create(&atenderPCBHilo, NULL, (void*)atender_pcb(tipoDeAlgoritmo), NULL);
     pthread_detach(atenderPCBHilo);
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoReady));
         log_info(kernelLogger, "Se toma una instancia de READY");
-        t_pcb* pcbToDispatch = iniciar_fifo(estadoReady);
+        t_pcb* pcbToDispatch;
+        if(tipoDeAlgoritmo == ALGORITMO_FIFO){
+       
+        pcbToDispatch = iniciar_fifo(estadoReady);
+
+        }else{
+
+            // HRRN
+        }
 
         estado_encolar_pcb_con_semaforo(estadoExec, pcbToDispatch);
         sem_post(estado_obtener_sem(estadoExec));
@@ -235,6 +267,8 @@ void iniciar_planificadores(void){
     estadoExec = estado_create(EXEC);
     estadoExit = estado_create(EXIT);
     estadoBlocked = estado_create(BLOCKED);
+    pcbsEsperandoParaIO = estado_create(PCBS_ESPERANDO_PARA_IO);
+
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;
     pthread_t dispositivoIOHilo;
@@ -242,46 +276,34 @@ void iniciar_planificadores(void){
     pthread_mutex_init(&mutexSocketMemoria, NULL);
     siguientePID = 1;
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
-
-
-if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
-    //iniciar_hrrn(estado,kernel_config_obtener_hrrn_alfa(kernelConfig));
-      
-        //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
-        //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
-
         
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
-    
-   // pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_HRRN, NULL);
- //   pthread_detach(cortoPlazoHilo);
 
-    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-    pthread_detach(dispositivoIOHilo);
+if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
+      
+        //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
+        //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_HRRN), NULL);
+    pthread_detach(cortoPlazoHilo);
 
     log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
 
 
 } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
 
-
-
-    pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
-    pthread_detach(largoPlazoHilo);
-    
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo_FIFO, NULL);
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_FIFO), NULL);
     pthread_detach(cortoPlazoHilo);
 
-    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-    pthread_detach(dispositivoIOHilo);
-    
     log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
 
 } else {
         log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
         exit(-1);
 }
+
+    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
+    pthread_detach(dispositivoIOHilo);
 
     
 }

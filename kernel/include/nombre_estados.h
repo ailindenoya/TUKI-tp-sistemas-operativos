@@ -6,8 +6,8 @@ typedef enum {
     READY,
     EXEC,
     EXIT,
-    BLOCKED
-    //PCBS_ESPERANDO_PARA_IO
+    BLOCKED,
+    PCBS_ESPERANDO_PARA_IO
 } t_nombre_estado;
 
 #endif
