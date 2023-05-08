@@ -307,3 +307,47 @@ void iniciar_planificadores(void){
 
     
 }
+/*
+void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
+    int* socketProceso = (int*)socket;
+    uint32_t tamanio = 0;
+
+    uint8_t response = stream_recibir_header(*socketProceso);
+    if (response == HANDSHAKE_consola) {
+        t_buffer* bufferHandshakeInicial = buffer_crear();
+        stream_recibir_buffer(*socketProceso, bufferHandshakeInicial);
+        buffer_desempaquetar(bufferHandshakeInicial, &tamanio, sizeof(tamanio));
+        buffer_destruir(bufferHandshakeInicial);
+        stream_enviar_buffer_vacio(*socketProceso, HANDSHAKE_ok_continue);
+
+        uint8_t consolaResponse = stream_recibir_header(*socketProceso);
+        if (consolaResponse != HEADER_lista_instrucciones) {
+            log_error(kernelLogger, "Error al intentar recibir lista de instrucciones del proceso mediante <socket %d>", *socketProceso);
+            return NULL;
+        }
+
+        t_buffer* instructionsBuffer = buffer_crear();
+        stream_recibir_buffer(*socketProceso, instructionsBuffer);
+        t_buffer* instructionsBufferCopy = buffer_crear_copia(instructionsBuffer);
+
+        uint32_t newPid = __obtener_siguiente_pid();
+        t_pcb* newPcb = pcb_crear(newPid, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
+        pcb_setear_socket(newPcb, socketProceso);
+        pcb_setear_buffer_de_instrucciones(newPcb, instructionsBufferCopy);
+
+        log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(newPcb), tamanio, *socketProceso);
+
+        t_buffer* bufferPID = buffer_crear();
+        buffer_empaquetar(bufferPID, &newPid, sizeof(newPid));
+        stream_enviar_buffer(*socketProceso, HEADER_pid, bufferPID);
+        buffer_destruir(bufferPID);
+
+        estado_encolar_pcb_con_semaforo(estadoNew, newPcb);
+        __log_transition("NULL", "NEW", pcb_obtener_pid(newPcb));
+        sem_post(&hayPcbsParaAgregarAlSistema);
+        buffer_destruir(instructionsBuffer);
+    } else {
+        log_error(kernelLogger, "Error al intentar establecer conexión con proceso mediante <socket %d>", *socketProceso);
+    }
+    return NULL;
+}*/

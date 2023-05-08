@@ -18,7 +18,12 @@ extern t_kernel_config* kernelConfig;
         if (clienteAceptado > -1) {
             int* socketCliente = malloc(sizeof(*socketCliente));
             *socketCliente = clienteAceptado;
-//        crear hilo por cada conexion entrante???
+            //crear hilo por cada conexion entrante
+            /*
+            pthread_t threadSuscripcion;
+            pthread_create(&threadSuscripcion, NULL, encolar_en_new_a_nuevo_pcb_entrante, (void*)socketCliente);
+            pthread_detach(threadSuscripcion);
+            */
         log_info(kernelLogger, "Se conecto una consola");
         } else {
             log_error(kernelLogger, "error al aceptar conexión: %s", strerror(errno));

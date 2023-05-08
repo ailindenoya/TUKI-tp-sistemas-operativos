@@ -10,6 +10,7 @@ typedef struct {
 } t_buffer;
 
 t_buffer* buffer_crear(void);
+t_buffer* buffer_crear_copia(t_buffer*);
 void buffer_destruir(t_buffer* self);
 void buffer_empaquetar(t_buffer* self, void* streamToAdd, int size);
 void buffer_empaquetar_string(t_buffer* self, char* string);
