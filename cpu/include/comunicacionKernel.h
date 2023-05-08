@@ -21,10 +21,6 @@ extern t_log* cpuLogger;
 
 bool cpu_ejecutar_instrucciones(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3);
 
-
-
-
-
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro);
 void ejecutar_SET(char* reg, char* param, t_contexto* pcb );
 void ejecutar_YIELD(t_contexto* pcb,uint32_t programCounterActualizado);
@@ -41,6 +37,7 @@ void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado)
 void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado);
+void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado);
 
 t_instruccion* cpu_fetch_instruccion(t_contexto* pcb);
 

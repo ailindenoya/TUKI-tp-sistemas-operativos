@@ -15,7 +15,7 @@
 
 typedef struct t_cpu_config t_cpu_config;
 
-static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
+void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);
 
 void cpu_config_setear_socket_memoria(t_cpu_config* self, int socket);
 void cpu_config_setear_socket_kernel(t_cpu_config* self, int socket);

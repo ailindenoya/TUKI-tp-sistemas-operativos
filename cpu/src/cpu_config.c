@@ -21,7 +21,7 @@ struct t_cpu_config {
 
 t_cpu_config* cpuConfig;
 
-static void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
+void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_cpu_config* cpuConfig = (t_cpu_config*)moduleConfig;
     cpuConfig->IP = config_get_string_value(tempCfg, "IP");
     cpuConfig->RETARDO_INSTRUCCION = config_get_int_value(tempCfg, "RETARDO_INSTRUCCION");

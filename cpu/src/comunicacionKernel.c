@@ -104,7 +104,7 @@ void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado){
 
 void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado){
     uint32_t pid = contexto_obtener_pid(pcb);
-    log_info(cpuLogger, "PCB de ID con I/O de %d milisegundos", pid, tiempoDeBloqueo);
+    log_info(cpuLogger, "PCB de ID %d con I/O de %s milisegundos", pid, tiempoDeBloqueo);
     t_buffer *bufferIO = buffer_crear();
     buffer_empaquetar(bufferIO, &pid, sizeof(pid));
     buffer_empaquetar(bufferIO, &programCounterActualizado, sizeof(programCounterActualizado));
@@ -122,6 +122,16 @@ void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
     buffer_empaquetar(bufferExit, &programCounterActualizado, sizeof(programCounterActualizado));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado, bufferExit);
     buffer_destruir(bufferExit);
+}
+
+void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PCB de ID %d ejecuta YIELD", pid);
+    t_buffer* bufferSalida = buffer_crear();
+    buffer_empaquetar(bufferSalida, &pid, sizeof(pid));
+    buffer_empaquetar(bufferSalida, &programCounterActualizado, sizeof(programCounterActualizado));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_yield, bufferSalida);
+    buffer_destruir(bufferSalida);
 }
 
 
@@ -161,6 +171,9 @@ void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
     case INSTRUCCION_signal:
         break;
     case INSTRUCCION_yield:
+        ejecutar_YIELD(pcb, programCounterActualizado);
+        pararDeEjecutar = true;
+        return pararDeEjecutar;
         break;
     case INSTRUCCION_io:
         ejecutar_IO(parametro1, pcb, programCounterActualizado); // parametro1 es tiempoDeBloqueo
@@ -175,4 +188,6 @@ void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
     default:
         break;
     }
+
+    return pararDeEjecutar;
 }
