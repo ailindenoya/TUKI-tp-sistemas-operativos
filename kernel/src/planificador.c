@@ -280,30 +280,30 @@ void iniciar_planificadores(void){
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
 
-if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
-      
-        //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
-        //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_HRRN), NULL);
-    pthread_detach(cortoPlazoHilo);
+    if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
+        
+            //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
+            //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
+        pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_HRRN), NULL);
+        pthread_detach(cortoPlazoHilo);
 
-    log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
+        log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
 
 
-} else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
+    } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
 
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_FIFO), NULL);
-    pthread_detach(cortoPlazoHilo);
+        pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_FIFO), NULL);
+        pthread_detach(cortoPlazoHilo);
 
-    log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
+        log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
 
-} else {
-        log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
-        exit(-1);
-}
+    } else {
+            log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
+            exit(-1);
+    }
 
-    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-    pthread_detach(dispositivoIOHilo);
+        pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
+        pthread_detach(dispositivoIOHilo);
 
     
 }

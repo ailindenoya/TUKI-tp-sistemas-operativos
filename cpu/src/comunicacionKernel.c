@@ -4,6 +4,18 @@ extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
 //extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
 
+char AX[4];
+char BX[4];
+char CX[4];
+char DX[4];
+char EAX[8];
+char EBX[8];
+char ECX[8];
+char EDX[8];
+char RAX[16];
+char RBX[16];
+char RCX[16];
+char RDX[16];
 
 t_instruccion* cpu_fetch_instruccion(t_contexto* pcb) {
     t_list* listaInstrucciones = contexto_obtener_instrucciones(pcb);
@@ -15,7 +27,7 @@ t_instruccion* cpu_fetch_instruccion(t_contexto* pcb) {
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
     for(int i = 0; i < tamanioDeRegistro; i++)
-        vector[i] = (string+i);
+        vector[i] = string[i];
 }
 
 void ejecutar_SET(char* reg, char* param, t_contexto* pcb ) {
@@ -23,54 +35,31 @@ void ejecutar_SET(char* reg, char* param, t_contexto* pcb ) {
 
     uint32_t retardo = (cpu_config_obtener_retardo_instruccion(cpuConfig))/1000;
     sleep(retardo);
-    char regDeCuatro[4];
-    char regDeOcho[8];
-    char regDeDieciseis[16];
-
 
     if(strcmp(reg,"AX") == 0){
-
-        copiarStringAVector(param, regDeCuatro, 4);
-        contexto_setear_AX(pcb, regDeCuatro);
-
+        copiarStringAVector(param, AX, 4);
     }else if (strcmp(reg,"BX") == 0){
-        copiarStringAVector(param, regDeCuatro, 4);
-        contexto_setear_BX(pcb, regDeCuatro);
-
+        copiarStringAVector(param, BX, 4);
     }else if (strcmp(reg,"CX") == 0){
-        copiarStringAVector(param, regDeCuatro, 4);
-        contexto_setear_CX(pcb, regDeCuatro);
+        copiarStringAVector(param, CX, 4);
     }else if (strcmp(reg,"DX") == 0){
-        copiarStringAVector(param, regDeCuatro, 4);
-        contexto_setear_DX(pcb, regDeCuatro);
+        copiarStringAVector(param, DX, 4);
     }else if (strcmp(reg,"EAX") == 0){
-        copiarStringAVector(param, regDeOcho, 8);
-        contexto_setear_EAX(pcb, regDeOcho);
+        copiarStringAVector(param, EAX, 8);
     }else if (strcmp(reg,"EBX") == 0){
-        copiarStringAVector(param, regDeOcho, 8);
-        contexto_setear_EBX(pcb, regDeOcho);
+        copiarStringAVector(param, EBX, 8);
     }else if (strcmp(reg,"ECX") == 0){
-        copiarStringAVector(param, regDeOcho, 8);
-        contexto_setear_ECX(pcb, regDeOcho);
+        copiarStringAVector(param, ECX, 8);
     }else if (strcmp(reg,"EDX") == 0){
-        copiarStringAVector(param, regDeOcho, 8);
-        contexto_setear_EDX(pcb, regDeOcho);
+        copiarStringAVector(param, EDX, 8);
     }else if (strcmp(reg,"RAX") == 0){
-        copiarStringAVector(param, regDeDieciseis, 16);
-        contexto_setear_RAX(pcb, regDeDieciseis);
-
+        copiarStringAVector(param, RAX, 16);
     }else if (strcmp(reg,"RBX") == 0){
-        copiarStringAVector(param, regDeDieciseis, 16);
-        contexto_setear_RBX(pcb, regDeDieciseis);
-
+        copiarStringAVector(param, RBX, 16);
     }else if (strcmp(reg,"RCX") == 0){
-        copiarStringAVector(param, regDeDieciseis, 16);
-        contexto_setear_RCX(pcb, regDeDieciseis);
-
+        copiarStringAVector(param, RCX, 16);
     }else if (strcmp(reg,"RDX") == 0){
-        copiarStringAVector(param, regDeDieciseis, 16);
-        contexto_setear_RDX(pcb, regDeDieciseis);
-
+        copiarStringAVector(param, RDX, 16);
     }else {
         log_info(cpuLogger, "error al ejecutar SET");
     }
