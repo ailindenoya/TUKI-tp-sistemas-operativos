@@ -273,39 +273,32 @@ void iniciar_planificadores(void){
     pthread_t cortoPlazoHilo;
     pthread_t dispositivoIOHilo;
 
-    pthread_mutex_init(&mutexSocketMemoria, NULL);
+    //pthread_mutex_init(&mutexSocketMemoria, NULL);
+    
     siguientePID = 1;
+
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
-        
-    pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
-    pthread_detach(largoPlazoHilo);
 
-    if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {
-        
-            //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
-            //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
-        pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_HRRN), NULL);
-        pthread_detach(cortoPlazoHilo);
-
+    t_algoritmo algoritmoConfigurado; 
+    if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
+        //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
+        //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
+        algoritmoConfigurado = ALGORITMO_HRRN;
         log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
-
-
     } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
-
-        pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(ALGORITMO_FIFO), NULL);
-        pthread_detach(cortoPlazoHilo);
-
+        algoritmoConfigurado = ALGORITMO_FIFO;
         log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
-
     } else {
-            log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
-            exit(-1);
+        log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
+        exit(-1);
     }
 
-        pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-        pthread_detach(dispositivoIOHilo);
-
-    
+    pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
+    pthread_detach(largoPlazoHilo);
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(algoritmoConfigurado), NULL); //No debería pasarse el algoritmo como 4to parametro???
+    pthread_detach(cortoPlazoHilo);
+    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
+    pthread_detach(dispositivoIOHilo);
 }
 /*
 void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
