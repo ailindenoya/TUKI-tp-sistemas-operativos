@@ -1,6 +1,6 @@
 
 #include "../include/kernel_config.h"
-
+#include "../include/planificador.h"
 
 #define LOGS_KERNEL "bin/kernel.log"
 #define MODULO_KERNEL "Kernel"
@@ -12,21 +12,17 @@ extern t_kernel_config* kernelConfig;
  void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
-    log_info(kernelLogger, "listo para escuchar nuevas conexiones");
+    log_info(kernelLogger, "Listo para escuchar nuevas conexiones");
     for (;;) {
         int clienteAceptado = accept(socketEscucha, &cliente, &len);
         if (clienteAceptado > -1) {
             int* socketCliente = malloc(sizeof(*socketCliente));
             *socketCliente = clienteAceptado;
-            //crear hilo por cada conexion entrante
-            /*
             pthread_t threadSuscripcion;
-            pthread_create(&threadSuscripcion, NULL, encolar_en_new_a_nuevo_pcb_entrante, (void*)socketCliente);
+            pthread_create(&threadSuscripcion, NULL, encolar_en_new_nuevo_pcb_entrante, (void*)socketCliente);
             pthread_detach(threadSuscripcion);
-            */
-        log_info(kernelLogger, "Se conecto una consola");
         } else {
-            log_error(kernelLogger, "error al aceptar conexión: %s", strerror(errno));
+            log_error(kernelLogger, "Error al aceptar conexión: %s", strerror(errno));
         }
     }
 }

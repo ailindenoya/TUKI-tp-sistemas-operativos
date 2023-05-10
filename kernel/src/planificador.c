@@ -300,47 +300,48 @@ void iniciar_planificadores(void){
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
     pthread_detach(dispositivoIOHilo);
 }
-/*
+
 void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
     int* socketProceso = (int*)socket;
     uint32_t tamanio = 0;
 
-    uint8_t response = stream_recibir_header(*socketProceso);
-    if (response == HANDSHAKE_consola) {
+    uint8_t respuestaDeConsola = stream_recibir_header(*socketProceso);
+    if (respuestaDeConsola == HANDSHAKE_consola) {
+        log_info(kernelLogger, "Se conecto una consola");
         t_buffer* bufferHandshakeInicial = buffer_crear();
         stream_recibir_buffer(*socketProceso, bufferHandshakeInicial);
         buffer_desempaquetar(bufferHandshakeInicial, &tamanio, sizeof(tamanio));
         buffer_destruir(bufferHandshakeInicial);
-        stream_enviar_buffer_vacio(*socketProceso, HANDSHAKE_ok_continue);
+        stream_enviar_buffer_vacio(*socketProceso, HANDSHAKE_puede_continuar);
 
-        uint8_t consolaResponse = stream_recibir_header(*socketProceso);
-        if (consolaResponse != HEADER_lista_instrucciones) {
+        uint8_t respuestaDeConsola2 = stream_recibir_header(*socketProceso);
+        if (respuestaDeConsola2 != HEADER_lista_de_instrucciones) {
             log_error(kernelLogger, "Error al intentar recibir lista de instrucciones del proceso mediante <socket %d>", *socketProceso);
             return NULL;
         }
 
-        t_buffer* instructionsBuffer = buffer_crear();
-        stream_recibir_buffer(*socketProceso, instructionsBuffer);
-        t_buffer* instructionsBufferCopy = buffer_crear_copia(instructionsBuffer);
+        t_buffer* bufferDeInstrucciones = buffer_crear();
+        stream_recibir_buffer(*socketProceso, bufferDeInstrucciones);
+        t_buffer* bufferDeInstruccionesCopia = buffer_crear_copia(bufferDeInstrucciones);
 
-        uint32_t newPid = __obtener_siguiente_pid();
-        t_pcb* newPcb = pcb_crear(newPid, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
-        pcb_setear_socket(newPcb, socketProceso);
-        pcb_setear_buffer_de_instrucciones(newPcb, instructionsBufferCopy);
+        uint32_t nuevoPID = __obtener_siguiente_pid();
+        t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
+        pcb_setear_socket(nuevoPCB, socketProceso);
+        pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
 
         log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(newPcb), tamanio, *socketProceso);
 
         t_buffer* bufferPID = buffer_crear();
-        buffer_empaquetar(bufferPID, &newPid, sizeof(newPid));
+        buffer_empaquetar(bufferPID, &nuevoPID, sizeof(nuevoPID));
         stream_enviar_buffer(*socketProceso, HEADER_pid, bufferPID);
         buffer_destruir(bufferPID);
 
-        estado_encolar_pcb_con_semaforo(estadoNew, newPcb);
-        __log_transition("NULL", "NEW", pcb_obtener_pid(newPcb));
+        estado_encolar_pcb_con_semaforo(estadoNew, nuevoPCB);
+        __log_transition("NULL", "NEW", pcb_obtener_pid(nuevoPCB));
         sem_post(&hayPcbsParaAgregarAlSistema);
-        buffer_destruir(instructionsBuffer);
+        buffer_destruir(bufferDeInstrucciones);
     } else {
         log_error(kernelLogger, "Error al intentar establecer conexión con proceso mediante <socket %d>", *socketProceso);
     }
     return NULL;
-}*/
+}
