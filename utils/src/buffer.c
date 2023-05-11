@@ -14,9 +14,9 @@ t_buffer* buffer_crear(void) {
 
 t_buffer* buffer_crear_copia(t_buffer* bufferACopiar) {
     t_buffer* self = malloc(sizeof(*self));
-    self->size = bufferToCopy->size;
+    self->size = bufferACopiar->size;
     self->stream = malloc(self->size);
-    memcpy(self->stream, bufferToCopy->stream, self->size);
+    memcpy(self->stream, bufferACopiar->stream, self->size);
     return self;
 }
 

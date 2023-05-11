@@ -4,6 +4,10 @@ extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
 //extern t_contexto contextoEjecucion = crear_contexto(...);   Obtener contexto enviado por Kernel y definirlo acá
 
+
+static int pidProcesoEnExec;
+ // me parece bien dejarlas como static por las dudas
+
 char AX[4];
 char BX[4];
 char CX[4];
@@ -23,6 +27,14 @@ t_instruccion* cpu_fetch_instruccion(t_contexto* pcb) {
     t_instruccion* instruccionSig = list_get(listaInstrucciones, programCounter);
     log_info(cpuLogger, "FETCH INSTRUCCION: PCB <ID %d>", contexto_obtener_pid(pcb));
     return instruccionSig;
+}
+
+uint32_t cpu_fetch_parametros(t_instruccion* nextInstruction, t_contexto* pcb) {
+    char* direccionLogicaOrigen = instruccion_obtener_parametro1(nextInstruction);
+    printf("CPU tabla página primer nivel en CPU_fetch_operands: %d\n", cpu_pcb_get_tabla_pagina_primer_nivel(pcb));
+    uint32_t fetchedValue = cpu_leer_en_memoria(tlb, cpu_config_get_socket_memoria(cpuConfig), direccionLogicaOrigen, cpu_pcb_get_tabla_pagina_primer_nivel(pcb));
+    log_info(cpuLogger, "FETCH OPERANDS: PCB <ID %d> COPY <DL Destino: %d> <DL Origen: %d> => Fetched Value: %d", cpu_pcb_get_pid(pcb), instruccion_get_operando1(nextInstruction), direccionLogicaOrigen, fetchedValue);
+    return fetchedValue;
 }
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
@@ -191,3 +203,106 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
 
     return pararDeEjecutar;
 }
+
+
+bool cpu_ejecutar_ciclos_de_instruccion(t_contexto* pcb) {
+    t_instruccion* siguienteInstruccion = cpu_fetch_instruccion(pcb);
+
+    ///hacerFetchDeParametros =  instruccion_obtener_tipo_instruccion(siguienteInstruccion);
+
+    instruccion_obtener_tipo_instruccion(siguienteInstruccion);
+    t_tipo_instruccion tipoInstruccion = instruccion_obtener_tipo_instruccion(siguienteInstruccion);
+    char* parametro1 = instruccion_obtener_parametro1(siguienteInstruccion);
+    char* parametro2 = instruccion_obtener_parametro2(siguienteInstruccion);
+    char* parametro3 = instruccion_obtener_parametro3(siguienteInstruccion);
+
+/*
+    if (hacerFetchDeParametros) {
+        A COMPLETAR CUANDO VEAMOS MEMORIA 
+        hacer la interpretacion de memoria logica a fisica decodeando los parametros
+        parametro2 = cpu_fetch_parametros(siguienteInstruccion, pcb);
+    }*/
+
+    return cpu_ejecutar_instrucciones(pcb, tipoInstruccion, parametro1, parametro2,parametro3);
+}
+
+
+/*/
+NO tenemos kernel interrupt. por lo tanto, hay que atender interrupciones? 
+static bool cpu_atender_interrupcion(t_contexto* pcb) {
+    pthread_mutex_lock(&mutexInterrupcion);
+    bool pararDeEjecutar = false;
+    if (hayInterrupcion) {
+        uint32_t pid = contexto_obtener_pid(pcb);
+        uint32_t programCounterActualizado = contexto_obtener_program_counter(pcb);
+        //segmentacion - ver como actualizar tema memoria
+        t_buffer* bufferInt = buffer_crear();
+        buffer_empaquetar(bufferInt, &pid, sizeof(pid));
+        buffer_empaquetar(bufferInt, &programCounterActualizado, sizeof(programCounterActualizado));
+        //empaquetado memoria
+
+     //  desalojo?
+     //stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_desalojado, bufferInt);
+        buffer_destruir(bufferInt);
+        hayInterrupcion = false;
+        pararDeEjecutar = true;
+        log_info(cpuLogger, "INT: Se envía a Kernel <PID %d> con <PC %d>", pid, programCounterActualizado);
+    }
+    pthread_mutex_unlock(&mutexInterrupcion);
+    return pararDeEjecutar;
+}
+
+*/
+
+void dispatch_peticiones_de_kernel(void) {
+    uint32_t pidRecibido = 0;
+    uint32_t programCounter = 0;
+    for (;;) {
+        uint8_t kernelRespuesta = stream_recv_header(cpu_config_obtener_socket_kernel(cpuConfig));
+        t_buffer* bufferPcb = NULL;
+        t_contexto* pcb = NULL;
+        if (kernelRespuesta == HEADER_pcb_a_ejecutar) {
+            bufferPcb = buffer_crear();
+            stream_recibir_buffer(cpu_config_obtener_socket_kernel(cpuConfig), bufferPcb);
+            buffer_desempaquetar(bufferPcb, &pidRecibido, sizeof(pidRecibido));
+            buffer_desempaquetar(bufferPcb, &programCounter, sizeof(programCounter));
+            buffer_destruir(bufferPcb);
+            if (pidRecibido != pidProcesoEnExec) {
+                // flush de entradas (?) memoria
+                pidProcesoEnExec = pidRecibido;
+            }
+            pcb = crear_contexto(pidRecibido, programCounter);
+            kernelResponse = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
+            if (kernelResponse == HEADER_lista_de_instrucciones) {
+                t_buffer* bufferInstrucciones = buffer_crear();
+                stream_recibir_buffer(cpu_config_obtener_socket_kernel(cpuConfig), bufferInstrucciones);
+                t_list* listaInstrucciones = instruccion_lista_crear_desde_buffer(bufferInstrucciones, cpuLogger);
+                contexto_setear_instrucciones(pcb, listaInstrucciones);
+                buffer_destruir(bufferInstrucciones);
+            } else {
+                log_error(cpuLogger, "Error al intentar recibir las instrucciones de Kernel");
+                exit(-1);
+            }
+            bool pararDeEjecutar = false;
+            while (!pararDeEjecutar) {
+                pararDeEjecutar = cpu_ejecutar_ciclos_de_instruccion(pcb);
+           /*   no tenemos socket interrupt:
+             if (!pararDeEjecutar) {
+                    pararDeEjecutar = cpu_atender_interrupcion(pcb);
+                }*/ 
+            }
+            contexto_destruir(pcb);
+        } else {
+            log_error(cpuLogger, "Error al intentar recibir el PCB de Kernel");
+            exit(-1);
+        }
+    }
+}
+
+void atender_peticiones_de_kernel(void) {
+    pidProcesoEnExec = -1;
+    log_info(cpuLogger, "Listo para atender peticiones de Kernel");
+    dispatch_peticiones_de_kernel();
+}
+
+

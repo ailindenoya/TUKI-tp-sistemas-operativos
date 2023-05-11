@@ -20,6 +20,9 @@
 extern t_log* cpuLogger;
 
 bool cpu_ejecutar_instrucciones(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3);
+bool cpu_ejecutar_ciclos_de_instruccion(t_contexto* pcb) ;
+void dispatch_peticiones_de_kernel(void) ;
+void atender_peticiones_de_kernel(void);
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro);
 void ejecutar_SET(char* reg, char* param, t_contexto* pcb );

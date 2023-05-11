@@ -4,9 +4,9 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
+static int algoritmoConfigurado;
 
 uint32_t siguientePID;
- double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
 
 //faltan semaforos
 sem_t gradoDeMultiprogramacion;
@@ -54,10 +54,8 @@ t_pcb* iniciar_fifo(t_estado* estado){
     return pcb;
 }
 /*                            HRRN                                          */
-double response_ratio(double rafaga){
-    return alfa *(1/rafaga);
-}
 
+/*
 t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
     double responseRatioDeUno = response_ratio(pcb_obtener_rafaga(unPcb) );
     double responseRatioDeOtro = response_ratio(pcb_obtener_rafaga(otroPcb));
@@ -69,7 +67,9 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
         return otroPcb;
     }
 }
+*/
 
+/*
 t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     t_pcb* pcbElegido = NULL;
     pthread_mutex_lock(estado_obtener_mutex(estado));
@@ -83,13 +83,14 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     pthread_mutex_unlock(estado_obtener_mutex(estado));
     return pcbElegido;
 }
+*/
 
 /*                          FINALIZADOR DE PCBs                        */
 
  void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
-        t_pcb* pcbALiberar = estado_desencolar_primer_pcb_atomic(estadoExit);
+        t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
      // avisar a memoria que finalizo   mem_adapter_finalizar_proceso(pcbALiberar, kernelConfig, kernelLogger);
         log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
         stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HANDSHAKE_puede_continuar);
@@ -155,7 +156,7 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
 
 
 
-void actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)){
+void actualizar_pcb_por_bloqueo_HRRN(){
     //TODO implementar
 }
 
@@ -163,13 +164,13 @@ void atender_bloqueo(t_pcb* pcb) {
   //  pcb_marcar_tiempo_inicial_bloqueado(pcb); PREGUNTA
     estado_encolar_pcb_con_semaforo(pcbsEsperandoParaIO, pcb);
     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-    log_info(kernelLogger, "PCB <ID %d> ingresa a la cola de espera de I/O", pcb_get_pid(pcb));
+    log_info(kernelLogger, "PCB <ID %d> ingresa a la cola de espera de I/O", pcb_obtener_pid(pcb));
     sem_post(estado_obtener_sem(pcbsEsperandoParaIO));
     pcb_setear_estado(pcb, BLOCKED);
     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
 }
 
-void atender_pcb(int algoritmoUsado) {
+void atender_pcb() {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
         
@@ -193,9 +194,9 @@ void atender_pcb(int algoritmoUsado) {
         pthread_mutex_lock(estado_obtener_mutex(estadoExec));
         pcb = kernel_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
         
-        list_remove(estado_get_list(estadoExec), 0); // saca de ejec el proceso
+        list_remove(estado_obtener_lista(estadoExec), 0); // saca de ejec el proceso
 
-        pthread_mutex_unlock(estado_get_mutex(estadoExec));
+        pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
 
         uint32_t realEjecutado = 0;
         realEjecutado = obtener_tiempo_en_milisegundos(end, start); // obtener_es
@@ -211,8 +212,8 @@ void atender_pcb(int algoritmoUsado) {
                 sem_post(estado_obtener_sem(estadoExit));
                 break;
             case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
-                if(algoritmoUsado == ALGORITMO_HRRN ){
-                actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)) 
+                if(algoritmoConfigurado == ALGORITMO_HRRN ){
+             //  actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)) 
                 }else{ 
                     //EN FIFO NO SE HACE NADA
                 }
@@ -233,16 +234,17 @@ void atender_pcb(int algoritmoUsado) {
 }
 
 
- void planificador_corto_plazo(int tipoDeAlgoritmo) {
+ void planificador_corto_plazo() {
     pthread_t atenderPCBHilo;
-    pthread_create(&atenderPCBHilo, NULL, (void*)atender_pcb(tipoDeAlgoritmo), NULL);
+
+    pthread_create(&atenderPCBHilo, NULL, (void*)atender_pcb, NULL);
     pthread_detach(atenderPCBHilo);
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoReady));
         log_info(kernelLogger, "Se toma una instancia de READY");
         t_pcb* pcbToDispatch;
-        if(tipoDeAlgoritmo == ALGORITMO_FIFO){
+        if(algoritmoConfigurado == ALGORITMO_FIFO){
        
         pcbToDispatch = iniciar_fifo(estadoReady);
 
@@ -262,12 +264,12 @@ void atender_pcb(int algoritmoUsado) {
 
 void iniciar_planificadores(void){
     
-    estadoNew = estado_create(NEW);
-    estadoReady = estado_create(READY);
-    estadoExec = estado_create(EXEC);
-    estadoExit = estado_create(EXIT);
-    estadoBlocked = estado_create(BLOCKED);
-    pcbsEsperandoParaIO = estado_create(PCBS_ESPERANDO_PARA_IO);
+    estadoNew = estado_crear(NEW);
+    estadoReady = estado_crear(READY);
+    estadoExec = estado_crear(EXEC);
+    estadoExit = estado_crear(EXIT);
+    estadoBlocked = estado_crear(BLOCKED);
+    pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
 
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;
@@ -279,7 +281,6 @@ void iniciar_planificadores(void){
 
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
 
-    t_algoritmo algoritmoConfigurado; 
     if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
         //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
         //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
@@ -295,7 +296,7 @@ void iniciar_planificadores(void){
 
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo(algoritmoConfigurado), NULL); //No debería pasarse el algoritmo como 4to parametro???
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); //No debería pasarse el algoritmo como 4to parametro???
     pthread_detach(cortoPlazoHilo);
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
     pthread_detach(dispositivoIOHilo);
@@ -324,12 +325,12 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         stream_recibir_buffer(*socketProceso, bufferDeInstrucciones);
         t_buffer* bufferDeInstruccionesCopia = buffer_crear_copia(bufferDeInstrucciones);
 
-        uint32_t nuevoPID = __obtener_siguiente_pid();
-        t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
+        uint32_t nuevoPID = obtener_siguiente_pid();
+        t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio);
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
 
-        log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(newPcb), tamanio, *socketProceso);
+        log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(nuevoPCB), tamanio, *socketProceso);
 
         t_buffer* bufferPID = buffer_crear();
         buffer_empaquetar(bufferPID, &nuevoPID, sizeof(nuevoPID));
@@ -337,7 +338,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         buffer_destruir(bufferPID);
 
         estado_encolar_pcb_con_semaforo(estadoNew, nuevoPCB);
-        __log_transition("NULL", "NEW", pcb_obtener_pid(nuevoPCB));
+        loggear_cambio_estado("NULL", "NEW", pcb_obtener_pid(nuevoPCB));
         sem_post(&hayPcbsParaAgregarAlSistema);
         buffer_destruir(bufferDeInstrucciones);
     } else {

@@ -36,3 +36,7 @@ void contexto_destruir(t_contexto* self) {
 t_list* contexto_obtener_instrucciones(t_contexto* self){
     return self->instrucciones;
 }
+
+void contexto_setear_instrucciones(t_contexto* self, t_list* instrucciones) {
+    self->instrucciones = instrucciones;
+}

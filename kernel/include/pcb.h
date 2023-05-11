@@ -29,7 +29,7 @@ time_t pcb_obtener_tiempoDellegadaAReady(t_pcb* self);
 double pcb_obtener_estimacion_prox_rafaga(t_pcb* self);
 void pcb_setear_estado(t_pcb* self, uint8_t estadoNuevo);
 void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo);
-
+uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self);
 
 
 
