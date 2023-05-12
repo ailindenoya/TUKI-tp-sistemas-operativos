@@ -29,13 +29,14 @@ t_instruccion* cpu_fetch_instruccion(t_contexto* pcb) {
     return instruccionSig;
 }
 
-uint32_t cpu_fetch_parametros(t_instruccion* nextInstruction, t_contexto* pcb) {
-    char* direccionLogicaOrigen = instruccion_obtener_parametro1(nextInstruction);
-    printf("CPU tabla página primer nivel en CPU_fetch_operands: %d\n", cpu_pcb_get_tabla_pagina_primer_nivel(pcb));
+/*uint32_t cpu_fetch_parametros(t_instruccion* siguienteInstruccion, t_contexto* pcb) {
+    char* direccionLogicaOrigen = instruccion_obtener_parametro1(siguienteInstruccion);
+    printf("CPU tabla página primer nivel en CPU_fetch_operands: %d\n", cpu_pcb_get_tabla_pagina_primer_nivel(pcb));  
     uint32_t fetchedValue = cpu_leer_en_memoria(tlb, cpu_config_get_socket_memoria(cpuConfig), direccionLogicaOrigen, cpu_pcb_get_tabla_pagina_primer_nivel(pcb));
-    log_info(cpuLogger, "FETCH OPERANDS: PCB <ID %d> COPY <DL Destino: %d> <DL Origen: %d> => Fetched Value: %d", cpu_pcb_get_pid(pcb), instruccion_get_operando1(nextInstruction), direccionLogicaOrigen, fetchedValue);
+    log_info(cpuLogger, "FETCH OPERANDS: PCB: %d COPY <DL Destino: %d> <DL Origen: %d> => Fetched Value: %d", contexto_obtener_pid(pcb), instruccion_obtener_parametro1(siguienteInstruccion), direccionLogicaOrigen, fetchedValue);
     return fetchedValue;
-}
+}*/   
+// Hay que ver mejor esto cuando veamos MEMORIA, y tengamos que hacer instrucciones con direcciones lógicas como parámetros
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
     for(int i = 0; i < tamanioDeRegistro; i++)
@@ -116,7 +117,7 @@ void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado){
 
 void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado){
     uint32_t pid = contexto_obtener_pid(pcb);
-    log_info(cpuLogger, "PCB de ID %d con I/O de %s milisegundos", pid, tiempoDeBloqueo);
+    log_info(cpuLogger, "PID: %d - Ejecutando: I/O - de %s milisegundos", pid, tiempoDeBloqueo);
     t_buffer *bufferIO = buffer_crear();
     buffer_empaquetar(bufferIO, &pid, sizeof(pid));
     buffer_empaquetar(bufferIO, &programCounterActualizado, sizeof(programCounterActualizado));
@@ -127,7 +128,7 @@ void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterA
 
 
 void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
-    log_info(cpuLogger, "PCB de ID %d ejecuta EXIT", contexto_obtener_pid(pcb));
+    log_info(cpuLogger, "PID: %d - Ejecutando: EXIT", contexto_obtener_pid(pcb));
     uint32_t pid = contexto_obtener_pid(pcb);
     t_buffer *bufferExit = buffer_crear();
     buffer_empaquetar(bufferExit, &pid, sizeof(pid));
@@ -138,7 +139,7 @@ void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado){
 
 void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     uint32_t pid = contexto_obtener_pid(pcb);
-    log_info(cpuLogger, "PCB de ID %d ejecuta YIELD", pid);
+    log_info(cpuLogger, "PID: %d - Ejecutando: YIELD", pid);
     t_buffer* bufferSalida = buffer_crear();
     buffer_empaquetar(bufferSalida, &pid, sizeof(pid));
     buffer_empaquetar(bufferSalida, &programCounterActualizado, sizeof(programCounterActualizado));
@@ -210,7 +211,6 @@ bool cpu_ejecutar_ciclos_de_instruccion(t_contexto* pcb) {
 
     ///hacerFetchDeParametros =  instruccion_obtener_tipo_instruccion(siguienteInstruccion);
 
-    instruccion_obtener_tipo_instruccion(siguienteInstruccion);
     t_tipo_instruccion tipoInstruccion = instruccion_obtener_tipo_instruccion(siguienteInstruccion);
     char* parametro1 = instruccion_obtener_parametro1(siguienteInstruccion);
     char* parametro2 = instruccion_obtener_parametro2(siguienteInstruccion);
@@ -258,7 +258,7 @@ void dispatch_peticiones_de_kernel(void) {
     uint32_t pidRecibido = 0;
     uint32_t programCounter = 0;
     for (;;) {
-        uint8_t kernelRespuesta = stream_recv_header(cpu_config_obtener_socket_kernel(cpuConfig));
+        uint8_t kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
         t_buffer* bufferPcb = NULL;
         t_contexto* pcb = NULL;
         if (kernelRespuesta == HEADER_pcb_a_ejecutar) {
@@ -272,8 +272,8 @@ void dispatch_peticiones_de_kernel(void) {
                 pidProcesoEnExec = pidRecibido;
             }
             pcb = crear_contexto(pidRecibido, programCounter);
-            kernelResponse = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
-            if (kernelResponse == HEADER_lista_de_instrucciones) {
+            kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
+            if (kernelRespuesta == HEADER_lista_de_instrucciones) {
                 t_buffer* bufferInstrucciones = buffer_crear();
                 stream_recibir_buffer(cpu_config_obtener_socket_kernel(cpuConfig), bufferInstrucciones);
                 t_list* listaInstrucciones = instruccion_lista_crear_desde_buffer(bufferInstrucciones, cpuLogger);

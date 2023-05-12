@@ -20,4 +20,5 @@ char* instruccion_obtener_parametro3(t_instruccion* self);
 void instrucciones_desempaquetar_un_parametro(t_buffer* buffer, char** pParametro1);
 void instrucciones_desempaquetar_dos_parametros(t_buffer* buffer, char** pParametro1, char** pParametro2);
 void instrucciones_desempaquetar_tres_parametros(t_buffer* buffer, char** pParametro1, char** pParametro2, char** pParametro3);
+t_list* instruccion_lista_crear_desde_buffer(t_buffer* bufferConInstrucciones, t_log* logger);
 #endif
