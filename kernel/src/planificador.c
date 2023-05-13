@@ -170,6 +170,14 @@ void atender_bloqueo(t_pcb* pcb) {
     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
 }
 
+static void __set_timespec(struct timespec* timespec) {
+    int retVal = clock_gettime(CLOCK_REALTIME, timespec);
+    if (retVal == -1) {
+        perror("clock_gettime");
+        exit(-1);
+    }
+}
+
 void atender_pcb() {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 

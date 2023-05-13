@@ -32,7 +32,7 @@ void intervalo_de_pausa(uint32_t duracionEnMilisegundos) {
     nanosleep(&timeSpec, &timeSpec);
 }
 
-t_estado* estado_create(t_nombre_estado nombre) {
+t_estado* estado_crear(t_nombre_estado nombre) {
     t_estado* self = malloc(sizeof(*self));
     self->listaProcesos = list_create();
     self->mutexEstado = malloc(sizeof(*(self->mutexEstado)));
@@ -43,7 +43,7 @@ t_estado* estado_create(t_nombre_estado nombre) {
     return self;
 }
 
-void estado_destroy(t_estado* self) {
+void estado_destruir(t_estado* self) {
     if (list_is_empty(self->listaProcesos)) {
         list_destroy(self->listaProcesos);
     } else {
