@@ -25,7 +25,7 @@ void dispatch_peticiones_de_kernel(void) ;
 void atender_peticiones_de_kernel(void);
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro);
-void ejecutar_SET(char* reg, char* param, t_contexto* pcb );
+void ejecutar_SET(t_contexto* pcb, char* reg, char* param);
 void ejecutar_YIELD(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_F_CLOSE(t_contexto* pcb,uint32_t programCounterActualizado);
@@ -40,7 +40,7 @@ void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado)
 void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado);
-void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado);
+void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueo);
 
 t_instruccion* cpu_fetch_instruccion(t_contexto* pcb);
 

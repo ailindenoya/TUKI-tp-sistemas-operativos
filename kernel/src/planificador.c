@@ -231,6 +231,7 @@ void atender_pcb() {
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                 loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
+                sem_post(estado_obtener_sem(estadoReady));
                 break;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");

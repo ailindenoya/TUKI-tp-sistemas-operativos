@@ -43,8 +43,7 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
         vector[i] = string[i];
 }
 
-void ejecutar_SET(char* reg, char* param, t_contexto* pcb ) {
-    
+void ejecutar_SET(t_contexto* pcb, char* reg, char* param) {
 
     uint32_t retardo = (cpu_config_obtener_retardo_instruccion(cpuConfig))/1000;
     sleep(retardo);
@@ -115,7 +114,7 @@ void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
 
-void ejecutar_IO(char* tiempoDeBloqueo,t_contexto* pcb, uint32_t programCounterActualizado){
+void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueo){
     uint32_t pid = contexto_obtener_pid(pcb);
     log_info(cpuLogger, "PID: %d - Ejecutando: I/O - de %s milisegundos", pid, tiempoDeBloqueo);
     t_buffer *bufferIO = buffer_crear();
@@ -157,7 +156,7 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     switch (tipoInstruccion)
     {
     case INSTRUCCION_set:
-        ejecutar_SET(parametro1, parametro2,pcb);
+        ejecutar_SET(pcb, parametro1, parametro2);
         break;
     case INSTRUCCION_f_close:
         break;
