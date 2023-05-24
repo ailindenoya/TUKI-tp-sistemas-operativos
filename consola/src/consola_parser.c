@@ -10,9 +10,9 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
         return false;
 
     }
-    char* parametro1;
-    char* parametro2;
-    char* parametro3;
+    char* parametro1 = malloc(sizeof(*parametro1));
+    char* parametro2 = malloc(sizeof(*parametro2));
+    char* parametro3 = malloc(sizeof(*parametro3));
 
 
     char *instruccion = malloc(MAX_LENGTH_INSTRUCTION);
@@ -25,7 +25,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
             bool hayTresParametros = false;
             bool hayError = false;
             if (strcmp(instruccion, "F_READ") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s %s", &parametro1, &parametro2, &parametro3)) {
+                if (fscanf(archivoInstrucciones, "%s %s %s", parametro1, parametro2, parametro3)) {
                    consola_serializador_empaquetar_tres_parametros(buffer,INSTRUCCION_f_read, parametro1, parametro2, parametro3);
                    hayTresParametros = true;
                 } else {
@@ -33,7 +33,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_READ: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "F_WRITE") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s %s", &parametro1, &parametro2, &parametro3)) {
+                if (fscanf(archivoInstrucciones, "%s %s %s", parametro1, parametro2, parametro3)) {
                    consola_serializador_empaquetar_tres_parametros(buffer,INSTRUCCION_f_write, parametro1, parametro2, parametro3);
                    hayTresParametros = true;
                 } else {
@@ -41,7 +41,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_WRITE: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "SET") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
                    consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_set, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
@@ -49,7 +49,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de SET: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "MOV_IN") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
                    consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_mov_in, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
@@ -57,7 +57,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de MOV_IN: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "MOV_OUT") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
                    consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_mov_out, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
@@ -65,7 +65,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de MOV_OUT: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "F_TRUNCATE") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
                    consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_f_truncate, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
@@ -73,7 +73,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_TRUNCATE: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "F_SEEK") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
                    consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_f_seek, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
@@ -81,15 +81,15 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_SEEK: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "CREATE_SEGMENT") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", &parametro1, &parametro2)) {
-                   consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_f_create_segment, parametro1, parametro2);
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
+                   consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_create_segment, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
                     hayError = true;
                     string_from_format(fscanfError, "%s argumentos de CREATE_SEGMENT: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "I/O") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_io, parametro1);
                    hayUnParametro = true;
                 } else {
@@ -97,15 +97,15 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de I/O: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "WAIT") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_wait, parametro1);
                    hayUnParametro = true;
                 } else {
-                    shouldFail = true;
+                    hayError = true;
                     string_from_format(fscanfError, "%s argumentos de WAIT: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "SIGNAL") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_signal, parametro1);
                    hayUnParametro = true;
                 } else {
@@ -113,7 +113,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de SIGNAL: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "F_OPEN") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_f_open, parametro1);
                    hayUnParametro = true;
                 } else {
@@ -121,7 +121,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_OPEN: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "F_CLOSE") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_f_close, parametro1);
                    hayUnParametro = true;
                 } else {
@@ -129,7 +129,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de F_CLOSE: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "DELETE_SEGMENT") == 0) {
-                if (fscanf(archivoInstrucciones, "%s", &parametro1)) {
+                if (fscanf(archivoInstrucciones, "%s", parametro1)) {
                    consola_serializador_empaquetar_un_parametro(buffer,INSTRUCCION_delete_segment, parametro1);
                    hayUnParametro = true;
                 } else {
