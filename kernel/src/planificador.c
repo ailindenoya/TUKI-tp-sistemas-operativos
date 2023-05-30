@@ -115,7 +115,7 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
      // avisar a memoria que finalizo   mem_adapter_finalizar_proceso(pcbALiberar, kernelConfig, kernelLogger);
         log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
-        stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HANDSHAKE_puede_continuar);
+        stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HEADER_proceso_terminado);
         pcb_destruir(pcbALiberar);
         sem_post(&gradoDeMultiprogramacion);
     }
@@ -291,7 +291,6 @@ void atender_pcb() {
                 pcb_setear_estado(pcb, EXIT);
                 estado_encolar_pcb_con_semaforo(estadoExit, pcb);
                 loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
-                stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
                 sem_post(estado_obtener_sem(estadoExit));
                 break;
             case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
