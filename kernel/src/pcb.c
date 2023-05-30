@@ -8,7 +8,15 @@ struct t_pcb {
     time_t tiempoDellegadaAReady;
     // registros de uso gral de cpu (??? )
     // tabla de segmentos
-    double estimacionProximaRafaga;
+
+
+        // realAnterior = TE n --->  double tiempoDeEjecucionDeRafagaActual;
+// estimacionAnterior = EST n --- >  double tiempoEstimadoParaLaRafagaActual; 
+//estimacionActual  =  estimacionProximaRafaga;
+    double estimacionProximaRafaga; ///EST n+1
+    double tiempoDeEjecucionDeRafagaActual; // TE n real anterior
+    double ejecutadosHastaAhora; 
+ 
     uint8_t estado;
     uint32_t tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
@@ -17,7 +25,7 @@ struct t_pcb {
 
 };
 
-t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio) {
+t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRRN) {
     t_pcb* self = malloc(sizeof(*self));
     self->pid = pid;
     self->tamanio = tamanio;
@@ -25,7 +33,9 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio) {
     self->estado = NEW;
     self->socketConsola = NULL;
     self->instrucciones = NULL;
-    self->estimacionProximaRafaga = 0.0;
+    self->estimacionProximaRafaga = estimacionInicialParaHRRN;
+    self->tiempoDeEjecucionDeRafagaActual = 0.0;
+    self->ejecutadosHastaAhora = 0.0;
     self->tiempoDeBloqueo = 0;
     self->mutex = malloc(sizeof(*(self->mutex)));
     pthread_mutex_init(self->mutex, NULL);
@@ -83,7 +93,7 @@ time_t pcb_obtener_tiempoDellegadaAReady(t_pcb* self){
 double pcb_obtener_estimacion_prox_rafaga(t_pcb* self) {
     return self->estimacionProximaRafaga;
 }
-void pcb_setear_estimado_prox_rafaga(t_pcb* self, double estimacionActual) {
+void pcb_setear_estimacion_prox_rafaga(t_pcb* self, double estimacionActual) {
     self->estimacionProximaRafaga = estimacionActual;
 }
 uint8_t pcb_obtener_estimado_prox_rafaga(t_pcb* self) {
@@ -94,4 +104,16 @@ uint8_t pcb_obtener_estado(t_pcb* self) {
 }
 void pcb_setear_estado(t_pcb* self, uint8_t estadoNuevo) {
     self->estado = estadoNuevo;
+}
+double pcb_obtener_tiempoDeEjecucionDeRafagaActual(t_pcb* self){
+    return self->tiempoDeEjecucionDeRafagaActual;
+}
+void pcb_setear_tiempoDeEjecucionDeRafagaActual(t_pcb* self, double nuevo){
+   self->tiempoDeEjecucionDeRafagaActual = nuevo;
+}
+double pcb_obtener_ejecutadosHastaAhora(t_pcb* self){
+    return self->ejecutadosHastaAhora;
+}
+void pcb_setear_ejecutadosHastaAhora(t_pcb* self, double nuevo){
+    self->ejecutadosHastaAhora = nuevo;
 }

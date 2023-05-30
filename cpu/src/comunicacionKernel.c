@@ -44,7 +44,8 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
 }
 
 void ejecutar_SET(t_contexto* pcb, char* reg, char* param) {
-
+    
+    log_info(cpuLogger, "PID: %d - Ejecutando: SET ", contexto_obtener_pid(pcb));
     uint32_t retardo = (cpu_config_obtener_retardo_instruccion(cpuConfig))/1000;
     sleep(retardo);
 

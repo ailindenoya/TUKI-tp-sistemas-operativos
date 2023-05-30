@@ -55,10 +55,34 @@ t_pcb* iniciar_fifo(t_estado* estado){
 }
 /*                            HRRN                                          */
 
-/*
+
+
+double promedio_ponderado(double realAnterior, double estimacionAnterior) {
+    double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
+    return alfa * realAnterior + (1 - alfa) * estimacionAnterior;
+}
+
+double siguiente_estimacion(t_pcb* pcb) {
+    return promedio_ponderado(pcb_obtener_tiempoDeEjecucionDeRafagaActual(pcb),pcb_obtener_estimacion_prox_rafaga(pcb));
+}
+
+void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado, double alfa ){
+    pcb_setear_tiempoDeEjecucionDeRafagaActual(pcb, pcb_obtener_ejecutadosHastaAhora(pcb) + ejecutado);
+    pcb_setear_ejecutadosHastaAhora(pcb,0);
+    double siguienteEstimacion = siguiente_estimacion(pcb);
+    pcb_setear_estimacion_prox_rafaga(pcb, siguienteEstimacion);
+}
+
+
+double response_ratio(double estimacionDeProxRafaga, double tiempoEsperandoEnReady){
+    return (tiempoEsperandoEnReady + estimacionDeProxRafaga)/estimacionDeProxRafaga;
+}
+
+
+
 t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
-    double responseRatioDeUno = response_ratio(pcb_obtener_rafaga(unPcb) );
-    double responseRatioDeOtro = response_ratio(pcb_obtener_rafaga(otroPcb));
+    double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), pcb_obtener_tiempoDellegadaAReady(unPcb) );
+    double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), pcb_obtener_tiempoDellegadaAReady(otroPcb));
 
     if(responseRatioDeUno > responseRatioDeOtro){
         return unPcb;
@@ -67,9 +91,7 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
         return otroPcb;
     }
 }
-*/
 
-/*
 t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     t_pcb* pcbElegido = NULL;
     pthread_mutex_lock(estado_obtener_mutex(estado));
@@ -83,7 +105,7 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     pthread_mutex_unlock(estado_obtener_mutex(estado));
     return pcbElegido;
 }
-*/
+
 
 /*                          FINALIZADOR DE PCBs                        */
 
@@ -106,7 +128,7 @@ void iniciar_io(void) {
         sem_wait(estado_obtener_sem(pcbsEsperandoParaIO));
         t_pcb* pcbAEjecutarRafagasIO = estado_desencolar_primer_pcb_con_semaforo(pcbsEsperandoParaIO);
         log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %d milisegundos", pcb_obtener_pid(pcbAEjecutarRafagasIO), pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
-      //  pcb_test_and_set_tiempo_final_bloqueado(pcbAEjecutarRafagasIO); supuestamente para SUSPENDED BLOCKED
+      
 
         intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
         pthread_mutex_lock(pcb_obtener_mutex(pcbAEjecutarRafagasIO));
@@ -120,7 +142,7 @@ void iniciar_io(void) {
             loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbAEjecutarRafagasIO));
             sem_post(estado_obtener_sem(estadoReady));
         } 
-       // pcb_marcar_tiempo_final_como_no_establecido(pcbAEjecutarRafagasIO); supuestamente para SUSPENDED BLOCKED
+      
         pthread_mutex_unlock(pcb_obtener_mutex(pcbAEjecutarRafagasIO));
     }
 }
@@ -156,9 +178,6 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
 
 
 
-void actualizar_pcb_por_bloqueo_HRRN(){
-    //TODO implementar
-}
 
 void atender_bloqueo(t_pcb* pcb) {
   //  pcb_marcar_tiempo_inicial_bloqueado(pcb); PREGUNTA
@@ -220,7 +239,7 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
                 if(algoritmoConfigurado == ALGORITMO_HRRN ){
-             //  actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_get_alfa(kernelConfig)) 
+                    actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_obtener_hrrn_alfa(kernelConfig));
                 }else{ 
                     //EN FIFO NO SE HACE NADA
                 }
@@ -258,7 +277,8 @@ void atender_pcb() {
 
         }else{
 
-            // HRRN
+        pcbToDispatch = iniciar_HRRN(estadoReady, kernel_config_obtener_hrrn_alfa(kernelConfig));
+
         }
 
         estado_encolar_pcb_con_semaforo(estadoExec, pcbToDispatch);
@@ -267,48 +287,6 @@ void atender_pcb() {
 }
 
 
-
-
-
-void iniciar_planificadores(void){
-    
-    estadoNew = estado_crear(NEW);
-    estadoReady = estado_crear(READY);
-    estadoExec = estado_crear(EXEC);
-    estadoExit = estado_crear(EXIT);
-    estadoBlocked = estado_crear(BLOCKED);
-    pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
-
-    pthread_t largoPlazoHilo;
-    pthread_t cortoPlazoHilo;
-    pthread_t dispositivoIOHilo;
-
-    //pthread_mutex_init(&mutexSocketMemoria, NULL);
-    
-    siguientePID = 1;
-
-    sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
-
-    if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
-        //evaluar_desalojo = evaluar_desalojo_segun_hrrn;
-        //actualizar_pcb_por_bloqueo = actualizar_pcb_por_bloqueo_segun_hrrn;
-        algoritmoConfigurado = ALGORITMO_HRRN;
-        log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
-    } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
-        algoritmoConfigurado = ALGORITMO_FIFO;
-        log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
-    } else {
-        log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
-        exit(-1);
-    }
-
-    pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
-    pthread_detach(largoPlazoHilo);
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); //No debería pasarse el algoritmo como 4to parametro???
-    pthread_detach(cortoPlazoHilo);
-    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-    pthread_detach(dispositivoIOHilo);
-}
 
 void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
     int* socketProceso = (int*)socket;
@@ -334,7 +312,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         t_buffer* bufferDeInstruccionesCopia = buffer_crear_copia(bufferDeInstrucciones);
 
         uint32_t nuevoPID = obtener_siguiente_pid();
-        t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio);
+        t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
 
@@ -353,4 +331,44 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         log_error(kernelLogger, "Error al intentar establecer conexión con proceso mediante <socket %d>", *socketProceso);
     }
     return NULL;
+}
+
+
+
+void iniciar_planificadores(void){
+    
+    estadoNew = estado_crear(NEW);
+    estadoReady = estado_crear(READY);
+    estadoExec = estado_crear(EXEC);
+    estadoExit = estado_crear(EXIT);
+    estadoBlocked = estado_crear(BLOCKED);
+    pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
+
+    pthread_t largoPlazoHilo;
+    pthread_t cortoPlazoHilo;
+    pthread_t dispositivoIOHilo;
+
+    //pthread_mutex_init(&mutexSocketMemoria, NULL);
+    
+    siguientePID = 1;
+
+    sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
+
+    if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
+        algoritmoConfigurado = ALGORITMO_HRRN;
+        log_info(kernelLogger, "Se crean los hilos planificadores con HRRN");
+    } else if (kernel_config_es_algoritmo_fifo(kernelConfig)) {
+        algoritmoConfigurado = ALGORITMO_FIFO;
+        log_info(kernelLogger, "Se crean los hilos planificadores con FIFO");
+    } else {
+        log_error(kernelLogger, "error al iniciar planificador. algoritmo no valido");
+        exit(-1);
+    }
+
+    pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
+    pthread_detach(largoPlazoHilo);
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); //No debería pasarse el algoritmo como 4to parametro???
+    pthread_detach(cortoPlazoHilo);
+    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
+    pthread_detach(dispositivoIOHilo);
 }
