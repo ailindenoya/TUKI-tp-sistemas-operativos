@@ -7,7 +7,10 @@ typedef enum {
     HEADER_pcb_a_ejecutar,
     HEADER_proceso_bloqueado,
     HEADER_proceso_terminado,
-    HEADER_proceso_yield
+    HEADER_proceso_yield,
+    HEADER_proceso_wait,
+    HEADER_proceso_parametros,
+    HEADER_proceso_signal
 } t_header;
 
 typedef enum {

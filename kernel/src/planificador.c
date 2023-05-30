@@ -197,6 +197,62 @@ static void __set_timespec(struct timespec* timespec) {
     }
 }
 
+
+
+
+
+
+int dimensionDeArrayDeRecursos(char** instancias){
+    int contador = 0;
+    char* instancia = *instancias; 
+    while(instancia!=NULL){
+        contador++;
+    }
+    return contador;
+}
+
+int* convertirInstanciasDeRecursoEnEnteros(char** instancias, int dimension){
+
+    int vectorAux[dimension];
+    for(int i=0; i<dimension; i++){
+        vectorAux[i] = atoi(instancias[i]);
+    }
+    return vectorAux;
+}
+
+
+void atender_wait(char* recurso, t_pcb* pcb){
+
+    char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
+    int posicion = 0;
+    while(*pteroARecursos!=NULL){
+        if(strcmp(*pteroARecursos, recurso) == 0){
+            arrayDeRecursos[posicion]--;
+            if(arrayDeRecursos[posicion] < 0){
+                // TODO En caso de que el número sea estrictamente menor a 0, el proceso que realizó
+//WAIT se bloqueará en la cola de bloqueados correspondiente al recurso.
+            }
+
+        }
+        else{
+            // si no esta el recurso, se le pone estado EXIT: 
+            pcb_setear_estado(pcb, EXIT);
+            estado_encolar_pcb_con_semaforo(estadoExit, pcb);
+            loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
+            stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
+            sem_post(estado_obtener_sem(estadoExit));
+            
+        }
+        pteroARecursos++;
+        posicion++;
+    }
+
+
+}
+
+
+
+
 void atender_pcb() {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
@@ -242,10 +298,22 @@ void atender_pcb() {
                 if(algoritmoConfigurado == ALGORITMO_HRRN ){
                     actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_obtener_hrrn_alfa(kernelConfig));
                 }else{ 
-                    //EN FIFO NO SE HACE NADA
+                    //EN FIFO NO SE HACE NADA   
                 }
                 atender_bloqueo(pcb);   // en ambos se atiende el bloqueo
                 break;        // VER COMO ATENDER POR I/O (SIN COLAS) Y POR RECURSOS (UNA COLA POR RECURSO)
+            case HEADER_proceso_wait: 
+                t_buffer* bufferWAIT = buffer_crear();
+                uint8_t headerWAIT = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferWAIT);
+                char* recursoDesempaquetado;
+                buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetado);
+                // atender wait
+
+                
+            case HEADER_proceso_signal:
+
+
             case HEADER_proceso_yield:
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
@@ -335,6 +403,15 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 }
 
 
+struct Recurso{
+    t_list procesosBloqueadosEsperandoEsteRecurso;
+    int instanciasDisponibles;
+};
+
+
+char** arrayDeRecursos;
+int* vectorDeInstancias;
+
 
 void iniciar_planificadores(void){
     
@@ -344,6 +421,13 @@ void iniciar_planificadores(void){
     estadoExit = estado_crear(EXIT);
     estadoBlocked = estado_crear(BLOCKED);
     pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
+
+
+
+    arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
+    int dimensionDeArrayDeRecursos = dimensionDeArrayDeRecursos(arrayDeRecursos);
+    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
+
 
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;

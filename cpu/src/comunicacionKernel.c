@@ -108,11 +108,34 @@ void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado)
 void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
-void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado){
+void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado, char* recurso){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PID: %d - Ejecutando: WAIT", contexto_obtener_pid(pcb));
+    t_buffer *bufferWAIT = buffer_crear();
+    buffer_empaquetar(bufferWAIT, &pid, sizeof(pid));
+    buffer_empaquetar(bufferWAIT, &programCounterActualizado, sizeof(programCounterActualizado));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_wait, bufferWAIT);
+    buffer_destruir(bufferWAIT);
 
+    t_buffer *bufferParametros = buffer_crear();
+    buffer_empaquetar_string(bufferParametros, recurso);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    buffer_destruir(bufferParametros);
 }
-void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado){
 
+void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado, char* recurso){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PID: %d - Ejecutando: SIGNAL", contexto_obtener_pid(pcb));
+    t_buffer *buffer = buffer_crear();
+    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_signal, buffer);
+    buffer_destruir(buffer);
+
+    t_buffer *bufferParametros = buffer_crear();
+    buffer_empaquetar_string(bufferParametros, recurso);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    buffer_destruir(bufferParametros);
 }
 
 void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueo){

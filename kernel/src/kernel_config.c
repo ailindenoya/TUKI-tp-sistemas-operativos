@@ -19,7 +19,7 @@ struct t_kernel_config {
     int SOCKET_CPU;
     int SOCKET_MEMORIA;
     int SOCKET_FILESYSTEM;
-    char** RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema
+    char** RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema 
     char** INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
 };
@@ -119,6 +119,9 @@ char** kernel_config_obtener_recursos(t_kernel_config* self){
 }
 char** kernel_config_obtener_instancias_recursos(t_kernel_config* self){
     return self->INSTANCIAS_RECURSOS;
+}
+void kernel_config_setear_instancias_recursos(t_kernel_config* self, int nuevo){
+    self->INSTANCIAS_RECURSOS;
 }
 void kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
      self->SOCKET_CPU = socket;
