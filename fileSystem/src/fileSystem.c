@@ -2,10 +2,11 @@
 
 #define LOGS_FILESYSTEM "bin/fileSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
-#define NUMERO_DE_ARGUMENTOS_NECESARIOS 2
+#define NUMERO_DE_ARGUMENTOS_NECESARIOS 3
 
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
+extern t_superbloque_config* superbloqueConfig;
 
 void fileSystem_destruir(t_fileSystem_config* fileSystemConfig, t_log* fileSystemLogger) {
     fileSystem_config_destruir(fileSystemConfig);
@@ -37,13 +38,13 @@ int main(int argc, char* argv[]){
     fileSystemLogger = log_create(LOGS_FILESYSTEM, MODULO_FILESYSTEM, true, LOG_LEVEL_DEBUG);
 
     fileSystemConfig = fileSystem_config_crear(argv[1], fileSystemLogger);
+    superbloqueConfig = superbloque_config_crear(argv[2], fileSystemLogger);
 
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
         log_error(fileSystemLogger, "Cantidad de argumentos inválida.\nArgumentos: <tamañoProceso> <pathInstrucciones>");
         fileSystem_destruir(fileSystemConfig,fileSystemLogger );
         return -1;
-    }
-    
+    }    
     // conexion con MEMORIA
 
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));

@@ -14,6 +14,8 @@
 #include <commons/collections/list.h>
 
 typedef struct t_fileSystem_config t_fileSystem_config;
+typedef struct t_superbloque_config t_superbloque_config;
+
 
 t_fileSystem_config* fileSystem_config_crear(char*,t_log*);
 void fileSystem_destruir(t_fileSystem_config*, t_log*);
@@ -30,3 +32,9 @@ char* fileSystem_config_obtener_path_fcb(t_fileSystem_config*);
 int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config*);
 int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) ;
 void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket);
+
+t_superbloque_config* superbloque_config_crear(char* superbloqueConfigPath, t_log* fileSystemLogger);
+void superbloque_config_iniciar(void* moduleConfig, t_config* tempCfg);
+
+int superbloque_config_obtener_block_size(t_superbloque_config* self);
+int superbloque_config_obtener_block_count(t_superbloque_config* self);
