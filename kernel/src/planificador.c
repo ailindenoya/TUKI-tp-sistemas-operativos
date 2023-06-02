@@ -13,6 +13,8 @@ sem_t gradoDeMultiprogramacion;
 sem_t hayPcbsParaAgregarAlSistema;
 sem_t dispatchPermitido;
 
+struct tm* tiempo1970;
+time_t tiempoLocalActual;
 
 
 pthread_mutex_t siguientePIDmutex;
@@ -57,19 +59,14 @@ t_pcb* iniciar_fifo(t_estado* estado){
 
 
 
-double promedio_ponderado(double realAnterior, double estimacionAnterior) {
+double siguiente_estimacion(double realAnterior, double estimacionAnterior) {
     double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
     return alfa * realAnterior + (1 - alfa) * estimacionAnterior;
 }
 
-double siguiente_estimacion(t_pcb* pcb) {
-    return promedio_ponderado(pcb_obtener_tiempoDeEjecucionDeRafagaActual(pcb),pcb_obtener_estimacion_prox_rafaga(pcb));
-}
 
-void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado, double alfa ){
-    pcb_setear_tiempoDeEjecucionDeRafagaActual(pcb, pcb_obtener_ejecutadosHastaAhora(pcb) + ejecutado);
-    pcb_setear_ejecutadosHastaAhora(pcb,0);
-    double siguienteEstimacion = siguiente_estimacion(pcb);
+void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado){
+    double siguienteEstimacion = siguiente_estimacion(ejecutado,pcb_obtener_estimacion_prox_rafaga(pcb));
     pcb_setear_estimacion_prox_rafaga(pcb, siguienteEstimacion);
 }
 
@@ -81,8 +78,13 @@ double response_ratio(double estimacionDeProxRafaga, double tiempoEsperandoEnRea
 
 
 t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
-    double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), pcb_obtener_tiempoDellegadaAReady(unPcb) );
-    double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), pcb_obtener_tiempoDellegadaAReady(otroPcb));
+
+
+    double tiempoUnPcb = difftime(tiempoLocalActual,pcb_obtener_tiempoDellegadaAReady(unPcb));
+    double tiempoOtroPcb = difftime(tiempoLocalActual,pcb_obtener_tiempoDellegadaAReady(otroPcb));
+
+    double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), tiempoUnPcb);
+    double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), tiempoOtroPcb);
 
     if(responseRatioDeUno > responseRatioDeOtro){
         return unPcb;
@@ -92,13 +94,19 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
     }
 }
 
+
 t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
+    tiempoLocalActual = time(NULL);
+    tiempo1970 = localtime(&tiempoLocalActual);
+
     t_pcb* pcbElegido = NULL;
     pthread_mutex_lock(estado_obtener_mutex(estado));
     int cantidadPcbsEnLista = list_size(estado_obtener_lista(estado));
     if (cantidadPcbsEnLista == 1) {
         pcbElegido = estado_desencolar_primer_pcb(estado);
     } else if (cantidadPcbsEnLista > 1) {
+    
+
         pcbElegido = list_get_maximum(estado_obtener_lista(estado), (void*)mayor_response_ratio);
         estado_remover_pcb_de_cola(estado, pcbElegido);
     }
@@ -295,7 +303,7 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
                 if(algoritmoConfigurado == ALGORITMO_HRRN ){
-                    actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado, kernel_config_obtener_hrrn_alfa(kernelConfig));
+                    actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado);
                 }else{ 
                     //EN FIFO NO SE HACE NADA   
                 }
@@ -337,14 +345,18 @@ void atender_pcb() {
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoReady));
+
         log_info(kernelLogger, "Se toma una instancia de READY");
         t_pcb* pcbToDispatch;
+        sem_wait(&dispatchPermitido);
+        log_info(kernelLogger, "Se permite dispatch");
+
         if(algoritmoConfigurado == ALGORITMO_FIFO){
        
         pcbToDispatch = iniciar_fifo(estadoReady);
 
         }else{
-
+        
         pcbToDispatch = iniciar_HRRN(estadoReady, kernel_config_obtener_hrrn_alfa(kernelConfig));
 
         }
@@ -451,7 +463,7 @@ void iniciar_planificadores(void){
 
     pthread_create(&largoPlazoHilo, NULL, (void*)planificador_largo_plazo, NULL);
     pthread_detach(largoPlazoHilo);
-    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); //No debería pasarse el algoritmo como 4to parametro???
+    pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); 
     pthread_detach(cortoPlazoHilo);
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
     pthread_detach(dispositivoIOHilo);

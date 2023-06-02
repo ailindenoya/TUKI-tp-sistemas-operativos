@@ -6,6 +6,7 @@
 #include "estado.h"
 #include <pthread.h>
 #include "comunicacionCPU.h"
+#include <time.h>
 
 void loggear_cambio_estado(const char *prev, const char *post, int pid);
 uint32_t obtener_siguiente_pid(void);
@@ -14,11 +15,10 @@ void iniciar_planificadores(void);
 
 t_pcb* iniciar_fifo(t_estado* estado);
 
-double promedio_ponderado(double realAnterior, double estimacionAnterior) ;
+double siguiente_estimacion(double realAnterior, double estimacionAnterior) ;
 
-void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado, double alfa );
+void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado);
 
-double siguiente_estimacion(t_pcb* pcb) ;
 double response_ratio(double estimacionDeProxRafaga, double tiempoEsperandoEnReady);
 
 t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb);
