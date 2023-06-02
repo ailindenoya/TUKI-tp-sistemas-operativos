@@ -67,6 +67,9 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
+    // Cargar BitMap
+    // t_bitarray* bitmap = cargarBitMap();
+
     // acepta conexion con KERNEL
 
     int socketESCUCHA = iniciar_servidor(NULL, fileSystem_config_obtener_puerto_escucha(fileSystemConfig));
