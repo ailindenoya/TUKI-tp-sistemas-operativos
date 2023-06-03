@@ -38,8 +38,8 @@ void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_MOV_OUT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado);
-void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado);
-void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado);
+void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado, char* recurso);
+void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado, char* recurso);
 void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueo);
 
 t_instruccion* cpu_fetch_instruccion(t_contexto* pcb);

@@ -13,6 +13,7 @@
 #include "../../utils/include/config_inicializacion.h"
 
 
+
 typedef struct t_cpu_config t_cpu_config;
 
 void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg);

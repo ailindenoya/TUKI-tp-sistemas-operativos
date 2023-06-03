@@ -1,5 +1,5 @@
 #include "../include/cpu_config.h"
-
+#include "../include/comunicacionKernel.h"
 
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"

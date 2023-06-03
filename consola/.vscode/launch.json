@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/consola.out",
-            "args": ["cfg/consola_config.cfg", "include/instrucciones/instrucciones_checkpoint1"],
+            "args": ["cfg/consola_config.cfg", "include/instrucciones/BASE_2"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

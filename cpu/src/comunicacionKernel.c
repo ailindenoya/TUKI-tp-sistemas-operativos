@@ -212,7 +212,7 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
         return pararDeEjecutar;
         break;
     case INSTRUCCION_io:
-        ejecutar_IO(parametro1, pcb, programCounterActualizado); // parametro1 es tiempoDeBloqueo
+        ejecutar_IO(pcb,programCounterActualizado,parametro1); // parametro1 es tiempoDeBloqueo
         pararDeEjecutar = true;
         return pararDeEjecutar;
         break;

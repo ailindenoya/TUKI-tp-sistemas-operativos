@@ -87,6 +87,8 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
 
     double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), tiempoUnPcb);
     double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), tiempoOtroPcb);
+    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(unPcb), responseRatioDeUno);
+    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(otroPcb), responseRatioDeOtro);
 
     if(responseRatioDeUno > responseRatioDeOtro){
         return unPcb;
@@ -110,6 +112,7 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     
 
         pcbElegido = list_get_maximum(estado_obtener_lista(estado), (void*)mayor_response_ratio);
+        
         estado_remover_pcb_de_cola(estado, pcbElegido);
     }
     pthread_mutex_unlock(estado_obtener_mutex(estado));
@@ -368,11 +371,13 @@ void atender_pcb() {
                 atender_signal(recursoDesempaquetadoSIGNAL,pcb); 
                 break;
             case HEADER_proceso_yield:
+                actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado);
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                 loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
                 pcb_setear_tiempoDellegadaAReady(pcb);
                 sem_post(estado_obtener_sem(estadoReady));
+                // verificar que se este tomando en cuenta las rafagas en yield
                 break;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
@@ -491,7 +496,8 @@ void iniciar_planificadores(void){
     //pthread_mutex_init(&mutexSocketMemoria, NULL);
     
     siguientePID = 1;
-
+    sem_init(&dispatchPermitido,0,1);
+    sem_init(&hayPcbsParaAgregarAlSistema,0,0);
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
 
     if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
