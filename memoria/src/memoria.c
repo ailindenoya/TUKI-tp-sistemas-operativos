@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
 
     // inicializa servidor de escucha 
     
-    int socketESCUCHA = iniciar_servidor(NULL, memoria_config_obtener_puerto_escucha(memoriaConfig));
+    int socketESCUCHA = iniciar_servidor("0.0.0.0", memoria_config_obtener_puerto_escucha(memoriaConfig));
     
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
