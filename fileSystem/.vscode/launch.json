@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/fileSystem.out",
-            "args": ["cfg/fileSystem_config_base.cfg", "superbloque.dat"],
+            "args": ["cfg/FileSystem_Errores.cfg", "superbloque.dat"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
