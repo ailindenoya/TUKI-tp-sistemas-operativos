@@ -93,8 +93,8 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
 
     double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), tiempoUnPcb);
     double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), tiempoOtroPcb);
-    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(unPcb), responseRatioDeUno);
-    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(otroPcb), responseRatioDeOtro);
+    //log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(unPcb), responseRatioDeUno);
+    //log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(otroPcb), responseRatioDeOtro);
 
     if(responseRatioDeUno > responseRatioDeOtro){
         return unPcb;
