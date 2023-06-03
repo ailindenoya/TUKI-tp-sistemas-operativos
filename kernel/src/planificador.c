@@ -20,6 +20,8 @@ time_t tiempoLocalActual;
 pthread_mutex_t siguientePIDmutex;
 
 
+
+
 typedef enum {
     ALGORITMO_FIFO,
     ALGORITMO_HRRN
@@ -206,55 +208,92 @@ static void __set_timespec(struct timespec* timespec) {
 }
 
 
-
-
-
-
-int dimensionDeArrayDeRecursos(char** instancias){
+int obtenerDimensionDeArrayDeRecursos(char** instancias){
     int contador = 0;
-    char* instancia = *instancias; 
-    while(instancia!=NULL){
+    char** pteroAinstancia = instancias; 
+    while(*pteroAinstancia!=NULL){
         contador++;
+        pteroAinstancia++;
     }
     return contador;
 }
 
 int* convertirInstanciasDeRecursoEnEnteros(char** instancias, int dimension){
 
-    int vectorAux[dimension];
+    int* vectorAux = malloc(sizeof(int)* dimension);
     for(int i=0; i<dimension; i++){
         vectorAux[i] = atoi(instancias[i]);
     }
     return vectorAux;
 }
 
+char** arrayDeRecursos;
+int* vectorDeInstancias;
+int dimensionDeArrayDeRecursos;
+
+t_list** pteroAVectorDeListaDeRecursos;
+
 
 void atender_wait(char* recurso, t_pcb* pcb){
-
+    
     char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
-    int posicion = 0;
-    while(*pteroARecursos!=NULL){
-        if(strcmp(*pteroARecursos, recurso) == 0){
-            arrayDeRecursos[posicion]--;
-            if(arrayDeRecursos[posicion] < 0){
-                // TODO En caso de que el número sea estrictamente menor a 0, el proceso que realizó
-//WAIT se bloqueará en la cola de bloqueados correspondiente al recurso.
-            }
+    int i;
+    for(i=0; i<dimensionDeArrayDeRecursos;i++){
 
+        if(strcmp(*pteroARecursos, recurso) == 0){
+            vectorDeInstancias[i]--;
+            if(vectorDeInstancias[i] < 0){
+                list_add(pteroAVectorDeListaDeRecursos[i],pcb);
+                pcb_setear_estado(pcb, BLOCKED);
+                loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+            }
+            break; 
         }
-        else{
+
+        pteroARecursos++;
+    
+    }
+
+    if(i == dimensionDeArrayDeRecursos){
             // si no esta el recurso, se le pone estado EXIT: 
             pcb_setear_estado(pcb, EXIT);
             estado_encolar_pcb_con_semaforo(estadoExit, pcb);
             loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
             stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
             sem_post(estado_obtener_sem(estadoExit));
-            
-        }
-        pteroARecursos++;
-        posicion++;
+
     }
 
+}
+
+
+void atender_signal(char* recurso, t_pcb* pcb){
+    
+    char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
+    int i;
+    for(i=0; i<dimensionDeArrayDeRecursos;i++){
+
+        if(strcmp(*pteroARecursos, recurso) == 0){
+            vectorDeInstancias[i]++;
+            if(vectorDeInstancias[i] < 0){
+                list_remove(pteroAVectorDeListaDeRecursos[i],0);
+                pcb_setear_estado(pcb, EXEC);
+                loggear_cambio_estado("BLOCKED", "EXEC", pcb_obtener_pid(pcb));
+            }
+            break; 
+        }
+        pteroARecursos++;
+    }
+
+    if(i == dimensionDeArrayDeRecursos){
+            // si no esta el recurso, se le pone estado EXIT: 
+            pcb_setear_estado(pcb, EXIT);
+            estado_encolar_pcb_con_semaforo(estadoExit, pcb);
+            loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
+            stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
+            sem_post(estado_obtener_sem(estadoExit));
+
+    }
 
 }
 
@@ -315,6 +354,7 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferWAIT);
                 char* recursoDesempaquetado;
                 buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetado);
+                
                 // atender wait
 
                 
@@ -414,15 +454,6 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 }
 
 
-struct Recurso{
-    t_list procesosBloqueadosEsperandoEsteRecurso;
-    int instanciasDisponibles;
-};
-
-
-char** arrayDeRecursos;
-int* vectorDeInstancias;
-
 
 void iniciar_planificadores(void){
     
@@ -436,8 +467,17 @@ void iniciar_planificadores(void){
 
 
     arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
-    int dimensionDeArrayDeRecursos = dimensionDeArrayDeRecursos(arrayDeRecursos);
+    dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
     vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
+
+
+    pteroAVectorDeListaDeRecursos = malloc(sizeof(*pteroAVectorDeListaDeRecursos)*dimensionDeArrayDeRecursos);
+    
+    for(int i=0; i<dimensionDeArrayDeRecursos; i++){
+        pteroAVectorDeListaDeRecursos[i] = list_create();
+    }
+
+
 
 
     pthread_t largoPlazoHilo;
@@ -467,4 +507,7 @@ void iniciar_planificadores(void){
     pthread_detach(cortoPlazoHilo);
     pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
     pthread_detach(dispositivoIOHilo);
+
+
+
 }
