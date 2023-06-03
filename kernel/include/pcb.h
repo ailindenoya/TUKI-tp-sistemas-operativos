@@ -26,6 +26,7 @@ void pcb_setear_buffer_de_instrucciones(t_pcb* self, t_buffer* instructionsBuffe
 uint32_t pcb_obtener_program_counter(t_pcb* self);
 void pcb_setear_program_counter(t_pcb* self, uint32_t programCounter);
 time_t pcb_obtener_tiempoDellegadaAReady(t_pcb* self);
+void pcb_setear_tiempoDellegadaAReady(t_pcb* self);
 double pcb_obtener_estimacion_prox_rafaga(t_pcb* self);
 void pcb_setear_estimacion_prox_rafaga(t_pcb* self, double estimacionActual);
 void pcb_setear_estado(t_pcb* self, uint8_t estadoNuevo);
@@ -33,4 +34,5 @@ void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo);
 uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self);
 double pcb_obtener_realAnterior(t_pcb* self);
 void pcb_setear_realAnterior(t_pcb* self, double nuevo);
+
 #endif

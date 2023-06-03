@@ -173,6 +173,7 @@ void  planificador_largo_plazo(void) {
         // controlar con memoria el espacio (ver tp)
             estado_encolar_pcb_con_semaforo(estadoReady, pcbQuePasaAReady);
             loggear_cambio_estado("NEW", "READY", pcb_obtener_pid(pcbQuePasaAReady));
+            pcb_setear_tiempoDellegadaAReady(pcbQuePasaAReady);
             sem_post(estado_obtener_sem(estadoReady));
 
         pcbQuePasaAReady = NULL;
@@ -275,10 +276,13 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
-            if(vectorDeInstancias[i] < 0){
+            if(vectorDeInstancias[i] >= 0){
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
-                pcb_setear_estado(pcb, EXEC);
-                loggear_cambio_estado("BLOCKED", "EXEC", pcb_obtener_pid(pcb));
+                pcb_setear_estado(pcb, READY);
+                estado_encolar_pcb_con_semaforo(estadoReady, pcb);
+                loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
+                pcb_setear_tiempoDellegadaAReady(pcb);
+                sem_post(estado_obtener_sem(estadoReady));
             }
             break; 
         }
@@ -296,7 +300,6 @@ void atender_signal(char* recurso, t_pcb* pcb){
     }
 
 }
-
 
 
 
@@ -340,31 +343,35 @@ void atender_pcb() {
                 loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
                 sem_post(estado_obtener_sem(estadoExit));
                 break;
-            case HEADER_proceso_bloqueado:      //TODO ver caso de utilizacion de recursos
+            case HEADER_proceso_bloqueado:     
                 if(algoritmoConfigurado == ALGORITMO_HRRN ){
                     actualizar_pcb_por_bloqueo_HRRN(pcb, realEjecutado);
                 }else{ 
                     //EN FIFO NO SE HACE NADA   
                 }
                 atender_bloqueo(pcb);   // en ambos se atiende el bloqueo
-                break;        // VER COMO ATENDER POR I/O (SIN COLAS) Y POR RECURSOS (UNA COLA POR RECURSO)
+                break;        
             case HEADER_proceso_wait: 
                 t_buffer* bufferWAIT = buffer_crear();
-                uint8_t headerWAIT = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferWAIT);
-                char* recursoDesempaquetado;
-                buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetado);
-                
-                // atender wait
-
-                
+                char* recursoDesempaquetadoWAIT;
+                buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetadoWAIT);
+                atender_wait(recursoDesempaquetadoWAIT,pcb);
+                break;
             case HEADER_proceso_signal:
-
-
+                t_buffer* bufferSIGNAL = buffer_crear();
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferSIGNAL);
+                char* recursoDesempaquetadoSIGNAL;
+                buffer_desempaquetar_string(bufferSIGNAL, &recursoDesempaquetadoSIGNAL);   
+                atender_signal(recursoDesempaquetadoSIGNAL,pcb); 
+                break;
             case HEADER_proceso_yield:
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                 loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
+                pcb_setear_tiempoDellegadaAReady(pcb);
                 sem_post(estado_obtener_sem(estadoReady));
                 break;
             default:
@@ -465,7 +472,6 @@ void iniciar_planificadores(void){
     pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
 
 
-
     arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
     vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
@@ -476,8 +482,6 @@ void iniciar_planificadores(void){
     for(int i=0; i<dimensionDeArrayDeRecursos; i++){
         pteroAVectorDeListaDeRecursos[i] = list_create();
     }
-
-
 
 
     pthread_t largoPlazoHilo;

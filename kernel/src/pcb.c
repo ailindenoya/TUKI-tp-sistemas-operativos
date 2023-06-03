@@ -84,6 +84,9 @@ void pcb_setear_program_counter(t_pcb* self, uint32_t programCounter) {
 time_t pcb_obtener_tiempoDellegadaAReady(t_pcb* self){
     return self->tiempoDellegadaAReady;
 }
+void pcb_setear_tiempoDellegadaAReady(t_pcb* self) {
+    time(&self->tiempoDellegadaAReady);
+}
 double pcb_obtener_estimacion_prox_rafaga(t_pcb* self) {
     return self->estimacionProximaRafaga;
 }

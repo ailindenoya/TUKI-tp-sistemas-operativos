@@ -13,24 +13,6 @@
 extern t_log* memoriaLogger;
 extern t_memoria_config* memoriaConfig;
 
-/*     Hacer algo parecido o decidir que usar (hilos/select())
-static void kernel_acepta_conexion(int socketEscucha) {
-    struct sockaddr cliente = {0};
-    socklen_t len = sizeof(cliente);
-    log_info(kernelLogger, "listo para escuchar nuevas conexiones %d", socketEscucha);
-    for (;;) {
-        int clienteAceptado = accept(socketEscucha, &cliente, &len);
-        if (clienteAceptado > -1) {
-            int* socketCliente = malloc(sizeof(*socketCliente));
-            *socketCliente = clienteAceptado;
-//        crear hilo por cada conexion entrante???
-        } else {
-            log_error(kernelLogger, "error al aceptar conexión: %s", strerror(errno));
-        }
-    }
-}
-*/
-
 void handshake_filesystem(int socketFilesystem){
     uint8_t respuestaFILESYSTEM = stream_recibir_header(socketFilesystem);
     stream_recibir_buffer_vacio(socketFilesystem);

@@ -120,9 +120,6 @@ char** kernel_config_obtener_recursos(t_kernel_config* self){
 char** kernel_config_obtener_instancias_recursos(t_kernel_config* self){
     return self->INSTANCIAS_RECURSOS;
 }
-void kernel_config_setear_instancias_recursos(t_kernel_config* self, int nuevo){
-    self->INSTANCIAS_RECURSOS;
-}
 void kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
      self->SOCKET_CPU = socket;
 }

@@ -3,7 +3,7 @@
 
 #define LOGS_CPU "bin/cpu.log"
 #define MODULO_CPU "CPU"
-#define CONFIG_CPU "cfg/cpu_config.cfg"
+
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 2
 
 
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
         log_destroy(cpuLogger);
         return -1;
     }    
-    cpuConfig = cpu_config_crear(CONFIG_CPU, cpuLogger);
+    cpuConfig = cpu_config_crear(argv[1], cpuLogger);
 
     // conexion con MEMORIA
 
