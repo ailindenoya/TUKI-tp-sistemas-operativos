@@ -13,7 +13,7 @@ struct t_pcb {
     double realAnterior; // TE n real anterior
 
     uint8_t estado;
-    uint32_t tiempoDeBloqueo;
+    double tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
     int* socketConsola; // para saber a que consola pertenece
     pthread_mutex_t* mutex;
@@ -30,7 +30,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->instrucciones = NULL;
     self->estimacionProximaRafaga = estimacionInicialParaHRRN;
     self->realAnterior = 0.0;
-    self->tiempoDeBloqueo = 0;
+    self->tiempoDeBloqueo = 0.0;
     self->mutex = malloc(sizeof(*(self->mutex)));
     pthread_mutex_init(self->mutex, NULL);
     return self;
