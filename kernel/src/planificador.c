@@ -19,7 +19,13 @@ time_t tiempoLocalActual;
 
 pthread_mutex_t siguientePIDmutex;
 
+char** arrayDeRecursos;
+int* vectorDeInstancias;
+int dimensionDeArrayDeRecursos;
+bool hayQueReplanificar = true;
+t_pcb* ultimoPcbEjecutado;
 
+t_list** pteroAVectorDeListaDeRecursos;
 
 
 typedef enum {
@@ -87,8 +93,8 @@ t_pcb* mayor_response_ratio(t_pcb* unPcb, t_pcb* otroPcb){
 
     double responseRatioDeUno = response_ratio(pcb_obtener_estimacion_prox_rafaga(unPcb), tiempoUnPcb);
     double responseRatioDeOtro = response_ratio(pcb_obtener_estimacion_prox_rafaga(otroPcb), tiempoOtroPcb);
-    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(unPcb), responseRatioDeUno);
-    log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(otroPcb), responseRatioDeOtro);
+    //log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(unPcb), responseRatioDeUno);
+    //log_info(kernelLogger,"PCB <ID %d> de RESPONSE RATIO: %f", pcb_obtener_pid(otroPcb), responseRatioDeOtro);
 
     if(responseRatioDeUno > responseRatioDeOtro){
         return unPcb;
@@ -231,11 +237,7 @@ int* convertirInstanciasDeRecursoEnEnteros(char** instancias, int dimension){
     return vectorAux;
 }
 
-char** arrayDeRecursos;
-int* vectorDeInstancias;
-int dimensionDeArrayDeRecursos;
 
-t_list** pteroAVectorDeListaDeRecursos;
 
 
 void atender_wait(char* recurso, t_pcb* pcb){
@@ -250,6 +252,9 @@ void atender_wait(char* recurso, t_pcb* pcb){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+            }
+            else{
+                hayQueReplanificar = false;
             }
             break; 
         }
@@ -280,12 +285,14 @@ void atender_signal(char* recurso, t_pcb* pcb){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
             if(vectorDeInstancias[i] >= 0){
+                t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
-                pcb_setear_estado(pcb, READY);
-                estado_encolar_pcb_con_semaforo(estadoReady, pcb);
-                loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
-                pcb_setear_tiempoDellegadaAReady(pcb);
+                pcb_setear_estado(pcbADesbloquear, READY);
+                estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
+                loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbADesbloquear));
+                pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
                 sem_post(estado_obtener_sem(estadoReady));
+
             }
             break; 
         }
@@ -302,6 +309,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
     }
 
+    hayQueReplanificar = false;
 }
 
 
@@ -329,7 +337,9 @@ void atender_pcb() {
 
         pthread_mutex_lock(estado_obtener_mutex(estadoExec));
         pcb = kernel_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
-        
+
+        ultimoPcbEjecutado = pcb;
+
         list_remove(estado_obtener_lista(estadoExec), 0); // saca de ejec el proceso
 
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
@@ -396,21 +406,31 @@ void atender_pcb() {
     pthread_detach(atenderPCBHilo);
 
     for (;;) {
-        sem_wait(estado_obtener_sem(estadoReady));
-
-        log_info(kernelLogger, "Se toma una instancia de READY");
         t_pcb* pcbToDispatch;
-        sem_wait(&dispatchPermitido);
-        log_info(kernelLogger, "Se permite dispatch");
 
-        if(algoritmoConfigurado == ALGORITMO_FIFO){
-       
-        pcbToDispatch = iniciar_fifo(estadoReady);
+        if(hayQueReplanificar){
+            sem_wait(estado_obtener_sem(estadoReady));
 
-        }else{
+            log_info(kernelLogger, "Se toma una instancia de READY");
+            
+            sem_wait(&dispatchPermitido);
+            log_info(kernelLogger, "Se permite dispatch");
+
+            if(algoritmoConfigurado == ALGORITMO_FIFO){
         
-        pcbToDispatch = iniciar_HRRN(estadoReady, kernel_config_obtener_hrrn_alfa(kernelConfig));
+                pcbToDispatch = iniciar_fifo(estadoReady);
 
+            }else{
+            
+                pcbToDispatch = iniciar_HRRN(estadoReady, kernel_config_obtener_hrrn_alfa(kernelConfig));
+
+            }
+
+            
+        }
+        else{
+            log_info(kernelLogger, "Se vuelve a ejecutar el ultimo proceso");
+            pcbToDispatch = ultimoPcbEjecutado;
         }
 
         estado_encolar_pcb_con_semaforo(estadoExec, pcbToDispatch);

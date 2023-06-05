@@ -138,9 +138,10 @@ void ejecutar_SIGNAL(t_contexto* pcb,uint32_t programCounterActualizado, char* r
     buffer_destruir(bufferParametros);
 }
 
-void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueo){
+void ejecutar_IO(t_contexto* pcb, uint32_t programCounterActualizado, char* tiempoDeBloqueoComoString){
     uint32_t pid = contexto_obtener_pid(pcb);
-    log_info(cpuLogger, "PID: %d - Ejecutando: I/O - de %s milisegundos", pid, tiempoDeBloqueo);
+    uint32_t tiempoDeBloqueo = atoi(tiempoDeBloqueoComoString);
+    log_info(cpuLogger, "PID: %d - Ejecutando: I/O - de %d milisegundos", pid, tiempoDeBloqueo);
     t_buffer *bufferIO = buffer_crear();
     buffer_empaquetar(bufferIO, &pid, sizeof(pid));
     buffer_empaquetar(bufferIO, &programCounterActualizado, sizeof(programCounterActualizado));
