@@ -17,7 +17,7 @@ t_pcb* iniciar_fifo(t_estado* estado);
 
 double siguiente_estimacion(double realAnterior, double estimacionAnterior) ;
 
-void actualizar_pcb_por_bloqueo_HRRN(t_pcb* pcb, uint32_t ejecutado);
+void actualizar_pcb_por_fin_de_rafaga(t_pcb* pcb, uint32_t ejecutado);
 
 double response_ratio(double estimacionDeProxRafaga, double tiempoEsperandoEnReady);
 
