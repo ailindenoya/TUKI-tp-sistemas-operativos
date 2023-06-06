@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cd memoria
+./bin/memoria.out cfg/Memoria.cfg
+cd..
+cd cpu
+./bin/cpu.out cfg/cpu_config.cfg
+cd ..
+cd fileSystem
+./bin/fyleSistem.out cfg/fileSystem_config_base.cfg superbloque.dat
+cd ..
+cd kernel
+./bin/kernel.out cfg/Kernel.cfg
+cd ..
+cd consola
+./bin/consola.out cfg/consola_config_cfg
+cd ..
