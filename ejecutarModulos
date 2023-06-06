@@ -13,5 +13,5 @@ cd kernel
 ./bin/kernel.out cfg/Kernel.cfg
 cd ..
 cd consola
-./bin/consola.out cfg/consola_config_cfg
+./bin/consola.out cfg/consola_config.cfg
 cd ..
