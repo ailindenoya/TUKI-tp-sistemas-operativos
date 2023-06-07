@@ -130,7 +130,7 @@ int main(int argc, char* argv[]){
     log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
 
     // inicializa servidor de instancias CONSOLA /// ARREGLAR 
-    int socketESCUCHA = iniciar_servidor(kernel_config_obtener_ip_escucha(kernelConfig), kernel_config_obtener_puerto_escucha(kernelConfig));
+    int socketESCUCHA = iniciar_servidor("0.0.0.0", kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
 
 
