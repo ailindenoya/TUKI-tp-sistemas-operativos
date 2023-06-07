@@ -1,5 +1,6 @@
 #!/bin/bash
 #el script se ejecuta por terminal poniendo: bash nombreScript
+cd ..
 cd memoria
 make
 cd ..

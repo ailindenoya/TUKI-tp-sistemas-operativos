@@ -140,9 +140,9 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
 
 /*                          INICIO DISPOSITIVO I/O                       */
 
-void iniciar_io(void, t_pcb* pcb) {
+void iniciar_io(t_pcb* pcb) {
    
-    log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %d milisegundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
+    log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %u milisegundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
       
     intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcb));
 
@@ -183,8 +183,6 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
     const uint32_t NANOSECS_TO_MILISECS = 1000000;
     return (end.tv_sec - start.tv_sec) * SECS_TO_MILISECS + (end.tv_nsec - start.tv_nsec) / NANOSECS_TO_MILISECS;
 } 
-
-
 
 
 void atender_bloqueo(t_pcb* pcb) {
@@ -256,13 +254,13 @@ void atender_wait(char* recurso, t_pcb* pcb){
     }
 
     if(i == dimensionDeArrayDeRecursos){
-            // si no esta el recurso, se le pone estado EXIT: 
+            log_error(kernelLogger, "PID: %d - error WAIT de recurso no existente", pcb_obtener_pid(pcb));
             pcb_setear_estado(pcb, EXIT);
             estado_encolar_pcb_con_semaforo(estadoExit, pcb);
             loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
             stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
             sem_post(estado_obtener_sem(estadoExit));
-
+            hayQueReplanificar = true; 
     }
 
 }
@@ -292,13 +290,18 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
     }
 
+
     if(i == dimensionDeArrayDeRecursos){
+            log_error(kernelLogger, "PID: %d - error SIGNAL de recurso no existente", pcb_obtener_pid(pcb));
             pcb_setear_estado(pcb, EXIT);
             estado_encolar_pcb_con_semaforo(estadoExit, pcb);
             loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
             stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
             sem_post(estado_obtener_sem(estadoExit));
+            hayQueReplanificar = true;
 
+    }else{
+        hayQueReplanificar = false;
     }
 
 }
@@ -373,7 +376,6 @@ void atender_pcb() {
                 char* recursoDesempaquetadoSIGNAL;
                 buffer_desempaquetar_string(bufferSIGNAL, &recursoDesempaquetadoSIGNAL);   
                 atender_signal(recursoDesempaquetadoSIGNAL,pcb); 
-                hayQueReplanificar = false;
                 break;
             case HEADER_proceso_yield:
                 if(algoritmoConfigurado == ALGORITMO_HRRN){
@@ -409,7 +411,7 @@ void planificador_corto_plazo() {
 
         if(hayQueReplanificar){
             sem_wait(estado_obtener_sem(estadoReady));
-            
+
             log_info(kernelLogger, "Se toma una instancia de READY");
 
             if(algoritmoConfigurado == ALGORITMO_FIFO){
@@ -505,9 +507,6 @@ void iniciar_planificadores(void){
 
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;
-    pthread_t dispositivoIOHilo;
-
-    //pthread_mutex_init(&mutexSocketMemoria, NULL);
     
     siguientePID = 1;
     sem_init(&dispatchPermitido,0,1);
@@ -529,8 +528,6 @@ void iniciar_planificadores(void){
     pthread_detach(largoPlazoHilo);
     pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); 
     pthread_detach(cortoPlazoHilo);
-    pthread_create(&dispositivoIOHilo, NULL, (void*)iniciar_io, NULL);
-    pthread_detach(dispositivoIOHilo);
 
 
 

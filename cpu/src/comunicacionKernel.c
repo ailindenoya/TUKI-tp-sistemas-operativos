@@ -204,8 +204,14 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     case INSTRUCCION_delete_segment:
         break;
     case INSTRUCCION_wait:
+        ejecutar_WAIT(pcb,programCounterActualizado, parametro1);
+        pararDeEjecutar = true;
+        return pararDeEjecutar;
         break;
     case INSTRUCCION_signal:
+        ejecutar_SIGNAL(pcb, programCounterActualizado, parametro1);
+        pararDeEjecutar = true;
+        return pararDeEjecutar;
         break;
     case INSTRUCCION_yield:
         ejecutar_YIELD(pcb, programCounterActualizado);

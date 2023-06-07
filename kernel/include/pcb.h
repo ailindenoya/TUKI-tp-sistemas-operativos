@@ -14,7 +14,6 @@
 typedef struct t_pcb t_pcb;
 
 uint8_t pcb_obtener_estado(t_pcb* self) ;
-pthread_mutex_t* pcb_obtener_mutex(t_pcb* self) ;
 t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRRN);
 void pcb_destruir(t_pcb* self);
 int pcb_obtener_socket_consola(t_pcb* self);

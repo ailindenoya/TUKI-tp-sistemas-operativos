@@ -15,7 +15,7 @@ struct t_pcb {
     uint32_t tiempoEjecutado;
 
     uint8_t estado;
-    double tiempoDeBloqueo;
+    uint32_t tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
     int* socketConsola; // para saber a que consola pertenece
 
@@ -31,7 +31,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->instrucciones = NULL;
     self->estimacionProximaRafaga = estimacionInicialParaHRRN;
     self->realAnterior = 0.0;
-    self->tiempoDeBloqueo = 0.0;
+    self->tiempoDeBloqueo = 0;
     self->tiempoEjecutado = 0.0;
     return self;
 }
@@ -44,12 +44,7 @@ void pcb_destruir(t_pcb* self) {
         close(*self->socketConsola);
         free(self->socketConsola);
     }
-    pthread_mutex_destroy(self->mutex);
-    free(self->mutex);
     free(self);
-}
-pthread_mutex_t* pcb_obtener_mutex(t_pcb* self) {
-    return self->mutex;
 }
 uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self){
     return self->tiempoDeBloqueo;
