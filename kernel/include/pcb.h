@@ -34,5 +34,8 @@ void pcb_setear_tiempo_bloqueo(t_pcb* self, uint32_t tiempoDeBloqueo);
 uint32_t pcb_obtener_tiempo_bloqueo(t_pcb* self);
 double pcb_obtener_realAnterior(t_pcb* self);
 void pcb_setear_realAnterior(t_pcb* self, double nuevo);
+void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo);
+uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self);
+
 
 #endif

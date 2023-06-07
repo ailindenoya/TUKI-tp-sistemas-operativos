@@ -66,6 +66,10 @@ t_pcb* iniciar_fifo(t_estado* estado){
 /*                            HRRN                                          */
 
 
+void actualizar_tiempo_ejecutado(t_pcb* pcb, uint32_t tiempo){
+    uint32_t tiempoActualizado = pcb_obtener_tiempoEjecutado(pcb) + tiempo;
+    pcb_setear_tiempoEjecutado(pcb, tiempoActualizado);
+}
 
 double siguiente_estimacion(double realAnterior, double estimacionAnterior) {
     double alfa = kernel_config_obtener_hrrn_alfa(kernelConfig);
@@ -73,8 +77,9 @@ double siguiente_estimacion(double realAnterior, double estimacionAnterior) {
 }
 
 
-void actualizar_pcb_por_fin_de_rafaga(t_pcb* pcb, uint32_t ejecutado){
-    double siguienteEstimacion = siguiente_estimacion(ejecutado,pcb_obtener_estimacion_prox_rafaga(pcb));
+void actualizar_pcb_por_fin_de_rafaga(t_pcb* pcb){
+    double siguienteEstimacion = siguiente_estimacion(pcb_obtener_tiempoEjecutado(pcb),pcb_obtener_estimacion_prox_rafaga(pcb));
+    pcb_setear_tiempoEjecutado(pcb,0);
     pcb_setear_estimacion_prox_rafaga(pcb, siguienteEstimacion);
 }
 
@@ -111,10 +116,7 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
     if (cantidadPcbsEnLista == 1) {
         pcbElegido = estado_desencolar_primer_pcb(estado);
     } else if (cantidadPcbsEnLista > 1) {
-    
-
         pcbElegido = list_get_maximum(estado_obtener_lista(estado), (void*)mayor_response_ratio);
-        
         estado_remover_pcb_de_cola(estado, pcbElegido);
     }
     pthread_mutex_unlock(estado_obtener_mutex(estado));
@@ -138,23 +140,18 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
 
 /*                          INICIO DISPOSITIVO I/O                       */
 
-void iniciar_io(void) {
-    for (;;) {
-        sem_wait(estado_obtener_sem(pcbsEsperandoParaIO));
-        t_pcb* pcbAEjecutarRafagasIO = estado_desencolar_primer_pcb_con_semaforo(pcbsEsperandoParaIO);
-        log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %d milisegundos", pcb_obtener_pid(pcbAEjecutarRafagasIO), pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
+void iniciar_io(void, t_pcb* pcb) {
+   
+    log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %d milisegundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
       
-        intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcbAEjecutarRafagasIO));
+    intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcb));
 
-        estado_remover_pcb_de_cola_con_semaforo(estadoBlocked, pcbAEjecutarRafagasIO);
-        pcb_setear_estado(pcbAEjecutarRafagasIO, READY);
-
-        estado_encolar_pcb_con_semaforo(estadoReady, pcbAEjecutarRafagasIO);
-
-        pcb_setear_tiempo_bloqueo(pcbAEjecutarRafagasIO, 0); 
-        loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbAEjecutarRafagasIO));
-        sem_post(estado_obtener_sem(estadoReady));
-    }
+    pcb_setear_estado(pcb, READY);
+    estado_encolar_pcb_con_semaforo(estadoReady, pcb);
+    pcb_setear_tiempo_bloqueo(pcb, 0);
+    
+    loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
+    sem_post(estado_obtener_sem(estadoReady));
 }
 /*                  PLANIFICADOR A LARGO PLAZO                              */
 
@@ -192,12 +189,11 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
 
 void atender_bloqueo(t_pcb* pcb) {
   //  pcb_marcar_tiempo_inicial_bloqueado(pcb); PREGUNTA
-    estado_encolar_pcb_con_semaforo(pcbsEsperandoParaIO, pcb);
     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-    log_info(kernelLogger, "PCB <ID %d> ingresa a la cola de espera de I/O", pcb_obtener_pid(pcb));
-    sem_post(estado_obtener_sem(pcbsEsperandoParaIO));
     pcb_setear_estado(pcb, BLOCKED);
-    estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
+    pthread_t operacionIO;
+    pthread_create(&operacionIO, NULL, (void*) iniciar_io , pcb);
+    pthread_detach(operacionIO);
 }
 
 static void __set_timespec(struct timespec* timespec) {
@@ -239,10 +235,15 @@ void atender_wait(char* recurso, t_pcb* pcb){
 
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]--;
+
             if(vectorDeInstancias[i] < 0){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                if(algoritmoConfigurado == ALGORITMO_HRRN){
+                    actualizar_pcb_por_fin_de_rafaga(pcb);
+                }
+                hayQueReplanificar = true;
             }
             else{
                 hayQueReplanificar = false;
@@ -288,10 +289,10 @@ void atender_signal(char* recurso, t_pcb* pcb){
             break; 
         }
         pteroARecursos++;
+
     }
 
     if(i == dimensionDeArrayDeRecursos){
-            // si no esta el recurso, se le pone estado EXIT: 
             pcb_setear_estado(pcb, EXIT);
             estado_encolar_pcb_con_semaforo(estadoExit, pcb);
             loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
@@ -300,7 +301,6 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
     }
 
-    hayQueReplanificar = false;
 }
 
 
@@ -329,16 +329,18 @@ void atender_pcb() {
         pthread_mutex_lock(estado_obtener_mutex(estadoExec));
         pcb = kernel_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
 
-        ultimoPcbEjecutado = pcb;
+        ultimoPcbEjecutado = pcb; // que pcb sigue ejecutando
 
         list_remove(estado_obtener_lista(estadoExec), 0); // saca de ejec el proceso
 
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
 
         uint32_t realEjecutado = 0;
-        realEjecutado = obtener_tiempo_en_milisegundos(end, start); // obtener_es
+        realEjecutado = obtener_tiempo_en_milisegundos(end, start); 
 
         log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d milisegundos", pcb_obtener_pid(pcb), realEjecutado);       
+        
+        actualizar_tiempo_ejecutado(pcb, realEjecutado);    
 
         switch (cpuRespuesta) {
             case HEADER_proceso_terminado:
@@ -350,10 +352,9 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_bloqueado:     
                 if(algoritmoConfigurado == ALGORITMO_HRRN ){
-                    actualizar_pcb_por_fin_de_rafaga(pcb, realEjecutado);
-                }else{ 
-                    //EN FIFO NO SE HACE NADA   
+                    actualizar_pcb_por_fin_de_rafaga(pcb);
                 }
+                    //EN FIFO NO SE HACE NADA   
                 atender_bloqueo(pcb);   // en ambos se atiende el bloqueo
                 hayQueReplanificar = true; 
                 break;        
@@ -372,9 +373,12 @@ void atender_pcb() {
                 char* recursoDesempaquetadoSIGNAL;
                 buffer_desempaquetar_string(bufferSIGNAL, &recursoDesempaquetadoSIGNAL);   
                 atender_signal(recursoDesempaquetadoSIGNAL,pcb); 
+                hayQueReplanificar = false;
                 break;
             case HEADER_proceso_yield:
-                actualizar_pcb_por_fin_de_rafaga(pcb, realEjecutado);
+                if(algoritmoConfigurado == ALGORITMO_HRRN){
+                    actualizar_pcb_por_fin_de_rafaga(pcb);
+                }
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                 loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
@@ -386,13 +390,12 @@ void atender_pcb() {
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
                 break;
         }
-
         sem_post(&dispatchPermitido);
     }
 }
 
 
- void planificador_corto_plazo() {
+void planificador_corto_plazo() {
     pthread_t atenderPCBHilo;
 
     pthread_create(&atenderPCBHilo, NULL, (void*)atender_pcb, NULL);
@@ -406,7 +409,7 @@ void atender_pcb() {
 
         if(hayQueReplanificar){
             sem_wait(estado_obtener_sem(estadoReady));
-
+            
             log_info(kernelLogger, "Se toma una instancia de READY");
 
             if(algoritmoConfigurado == ALGORITMO_FIFO){

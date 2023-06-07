@@ -12,6 +12,8 @@ struct t_pcb {
     double estimacionProximaRafaga; ///EST n+1
     double realAnterior; // TE n real anterior
 
+    uint32_t tiempoEjecutado;
+
     uint8_t estado;
     double tiempoDeBloqueo;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
@@ -30,6 +32,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->estimacionProximaRafaga = estimacionInicialParaHRRN;
     self->realAnterior = 0.0;
     self->tiempoDeBloqueo = 0.0;
+    self->tiempoEjecutado = 0.0;
     return self;
 }
 
@@ -104,4 +107,10 @@ double pcb_obtener_realAnterior(t_pcb* self){
 }
 void pcb_setear_realAnterior(t_pcb* self, double nuevo){
    self->realAnterior = nuevo;
+}
+void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo){
+   self->tiempoEjecutado = nuevo;
+}
+uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self){
+   return self->tiempoEjecutado;
 }
