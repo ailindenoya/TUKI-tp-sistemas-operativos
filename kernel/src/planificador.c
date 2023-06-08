@@ -19,7 +19,6 @@ time_t tiempoLocalActual;
 
 pthread_mutex_t siguientePIDmutex;
 
-char** arrayDeRecursos;
 int* vectorDeInstancias;
 int dimensionDeArrayDeRecursos;
 bool hayQueReplanificar = true;
@@ -493,9 +492,9 @@ void iniciar_planificadores(void){
     pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
 
 
-    arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
+    char** arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
-    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
+    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(kernel_config_obtener_instancias_recursos(kernelConfig), dimensionDeArrayDeRecursos);
 
 
     pteroAVectorDeListaDeRecursos = malloc(sizeof(*pteroAVectorDeListaDeRecursos)*dimensionDeArrayDeRecursos);
