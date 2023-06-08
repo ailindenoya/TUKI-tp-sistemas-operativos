@@ -273,7 +273,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
-            if(vectorDeInstancias[i] >= 0){
+            if(vectorDeInstancias[i] <= 0){
                 t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
                 pcb_setear_estado(pcbADesbloquear, READY);
