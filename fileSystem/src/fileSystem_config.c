@@ -31,13 +31,13 @@ struct t_superbloque_config{
 void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
 
     t_fileSystem_config* fileSystemConfig = (t_fileSystem_config*) moduleConfig;
-    fileSystemConfig->IP_MEMORIA = (config_get_string_value(tempCfg, "IP_MEMORIA"));
-    fileSystemConfig->PUERTO_MEMORIA = (config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
-    fileSystemConfig->PUERTO_ESCUCHA = (config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
-    fileSystemConfig->PATH_SUPERBLOQUE = (config_get_string_value(tempCfg, "PATH_SUPERBLOQUE"));
-    fileSystemConfig->PATH_BITMAP = (config_get_string_value(tempCfg, "PATH_BITMAP"));
-    fileSystemConfig->PATH_BLOQUES = (config_get_string_value(tempCfg, "PATH_BLOQUES"));
-    fileSystemConfig->PATH_FCB = (config_get_string_value(tempCfg, "PATH_FCB"));
+    fileSystemConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
+    fileSystemConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
+    fileSystemConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
+    fileSystemConfig->PATH_SUPERBLOQUE = strdup(config_get_string_value(tempCfg, "PATH_SUPERBLOQUE"));
+    fileSystemConfig->PATH_BITMAP = strdup(config_get_string_value(tempCfg, "PATH_BITMAP"));
+    fileSystemConfig->PATH_BLOQUES = strdup(config_get_string_value(tempCfg, "PATH_BLOQUES"));
+    fileSystemConfig->PATH_FCB = strdup(config_get_string_value(tempCfg, "PATH_FCB"));
     fileSystemConfig->RETARDO_ACCESO_BLOQUE = config_get_int_value(tempCfg, "RETARDO_ACCESO_BLOQUE");
     fileSystemConfig->SOCKET_MEMORIA = -1;
 }

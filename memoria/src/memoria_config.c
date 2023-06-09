@@ -23,12 +23,12 @@ struct t_memoria_config {
 
 static void memoria_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_memoria_config* memoriaConfig = (t_memoria_config*)moduleConfig;
-    memoriaConfig->PUERTO_ESCUCHA = config_get_string_value(tempCfg, "PUERTO_ESCUCHA");
+    memoriaConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
     memoriaConfig->TAM_MEMORIA = config_get_int_value(tempCfg, "TAM_MEMORIA");
     memoriaConfig->TAM_SEGMENTO = config_get_int_value(tempCfg, "TAM_SEGMENTO_0");
     memoriaConfig->CANT_SEGMENTOS = config_get_int_value(tempCfg, "CANT_SEGMENTOS");
     memoriaConfig->RETARDO_MEMORIA = config_get_int_value(tempCfg, "RETARDO_MEMORIA");
-    memoriaConfig->ALGORITMO_ASIGNACION= config_get_string_value(tempCfg, "ALGORITMO_ASIGNACION");
+    memoriaConfig->ALGORITMO_ASIGNACION = strdup(config_get_string_value(tempCfg, "ALGORITMO_ASIGNACION"));
     memoriaConfig->RETARDO_COMPACTACION = config_get_int_value(tempCfg, "RETARDO_COMPACTACION");
 }
 

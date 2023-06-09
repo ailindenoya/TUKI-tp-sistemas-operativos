@@ -8,7 +8,6 @@ t_cpu_config* cpuConfig;
 t_log* cpuLogger;
 
 struct t_cpu_config {
-    char* IP;
     uint32_t RETARDO_INSTRUCCION;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
@@ -19,16 +18,13 @@ struct t_cpu_config {
     int SOCKET_KERNEL;
 };
 
-t_cpu_config* cpuConfig;
-
 void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     t_cpu_config* cpuConfig = (t_cpu_config*)moduleConfig;
-    cpuConfig->IP = config_get_string_value(tempCfg, "IP");
     cpuConfig->RETARDO_INSTRUCCION = config_get_int_value(tempCfg, "RETARDO_INSTRUCCION");
-    cpuConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
-    cpuConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
-    cpuConfig->PUERTO_ESCUCHA = config_get_string_value(tempCfg, "PUERTO_ESCUCHA");
-    cpuConfig->TAM_MAX_SEGMENTO = config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO");
+    cpuConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
+    cpuConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
+    cpuConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
+    cpuConfig->TAM_MAX_SEGMENTO = strdup(config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO"));
     cpuConfig->SOCKET_MEMORIA = -1;
     cpuConfig->SOCKET_KERNEL = -1;
 }
@@ -40,10 +36,6 @@ t_cpu_config* cpu_config_crear(char* cpuConfigPath, t_log* cpuLogger) {
     return self;
 }
 
-
-char* cpu_config_obtener_ip_cpu(t_cpu_config* self) {
-    return self->IP;
-}
 char* cpu_config_obtener_ip_memoria(t_cpu_config* self) {
     return self->IP_MEMORIA;
 }

@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
     // aceptar conexion con KERNEL
 
-    int socketKERNELESCUCHA= iniciar_servidor(cpu_config_obtener_ip_cpu(cpuConfig), cpu_config_obtener_puerto_escucha(cpuConfig));
+    int socketKERNELESCUCHA= iniciar_servidor("0.0.0.0", cpu_config_obtener_puerto_escucha(cpuConfig));
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
 

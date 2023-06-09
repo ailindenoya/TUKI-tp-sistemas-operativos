@@ -8,5 +8,6 @@
 #include <commons/log.h>
 
 int config_iniciar(void* config, char* pathAlConfig, t_log* logger,void (*config_initializer)(void* moduleConfig, t_config* configTemp));
+char** copiar_array(char** arrayDeConfig);
 
 #endif

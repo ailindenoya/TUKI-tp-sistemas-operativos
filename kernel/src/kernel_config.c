@@ -4,7 +4,6 @@ t_log* kernelLogger;
 t_kernel_config* kernelConfig;
 
 struct t_kernel_config {
-    char* IP_ESCUCHA;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* IP_FILESYSTEM;
@@ -26,23 +25,22 @@ struct t_kernel_config {
 
 void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     t_kernel_config* kernelConfig = (t_kernel_config*)moduleConfig;
-    kernelConfig->IP_ESCUCHA = config_get_string_value(tempCfg, "IP_ESCUCHA");
-    kernelConfig->IP_MEMORIA = config_get_string_value(tempCfg, "IP_MEMORIA");
-    kernelConfig->PUERTO_MEMORIA = config_get_string_value(tempCfg, "PUERTO_MEMORIA");
-    kernelConfig->IP_FILESYSTEM = config_get_string_value(tempCfg, "IP_FILESYSTEM");
-    kernelConfig->PUERTO_FILESYSTEM = config_get_string_value(tempCfg, "PUERTO_FILESYSTEM");
-    kernelConfig->IP_CPU = config_get_string_value(tempCfg, "IP_CPU");
-    kernelConfig->PUERTO_CPU = config_get_string_value(tempCfg, "PUERTO_CPU");
-    kernelConfig->PUERTO_ESCUCHA = config_get_string_value(tempCfg, "PUERTO_ESCUCHA");
-    kernelConfig->ALGORITMO_PLANIFICACION = config_get_string_value(tempCfg, "ALGORITMO_PLANIFICACION");
+    kernelConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
+    kernelConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
+    kernelConfig->IP_FILESYSTEM = strdup(config_get_string_value(tempCfg, "IP_FILESYSTEM"));
+    kernelConfig->PUERTO_FILESYSTEM = strdup(config_get_string_value(tempCfg, "PUERTO_FILESYSTEM"));
+    kernelConfig->IP_CPU = strdup(config_get_string_value(tempCfg, "IP_CPU"));
+    kernelConfig->PUERTO_CPU = strdup(config_get_string_value(tempCfg, "PUERTO_CPU"));
+    kernelConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
+    kernelConfig->ALGORITMO_PLANIFICACION = strdup(config_get_string_value(tempCfg, "ALGORITMO_PLANIFICACION"));
     kernelConfig->ESTIMACION_INICIAL = config_get_double_value(tempCfg, "ESTIMACION_INICIAL");
     kernelConfig->HRRN_ALFA = config_get_double_value(tempCfg, "HRRN_ALFA");
     kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MAX_MULTIPROGRAMACION");
     kernelConfig->SOCKET_CPU = -1;
     kernelConfig->SOCKET_MEMORIA = -1;
     kernelConfig->SOCKET_FILESYSTEM = -1;
-    kernelConfig->RECURSOS = config_get_array_value(tempCfg,"RECURSOS");
-    kernelConfig->INSTANCIAS_RECURSOS = config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS");
+    kernelConfig->RECURSOS = copiar_array(config_get_array_value(tempCfg,"RECURSOS"));
+    kernelConfig->INSTANCIAS_RECURSOS = copiar_array(config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS"));
 }
 
 
@@ -66,9 +64,6 @@ void kernel_config_destruir(t_kernel_config* self) {
     free(self);
 }
 
-char* kernel_config_obtener_ip_escucha(t_kernel_config* self) {
-    return self->IP_ESCUCHA;
-}
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) {
     return self->IP_MEMORIA;
 }
