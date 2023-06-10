@@ -245,6 +245,7 @@ void atender_wait(char* recurso, t_pcb* pcb){
             else{
                 hayQueReplanificar = false;
             }
+            log_info(kernelLogger, "PID: %d - Wait: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             break; 
         }
 
@@ -283,6 +284,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
                 sem_post(estado_obtener_sem(estadoReady));
 
             }
+            log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             break; 
         }
         pteroARecursos++;
