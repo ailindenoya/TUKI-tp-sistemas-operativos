@@ -15,6 +15,8 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 
+#include "../include/fcb.h"
+
 typedef struct t_fileSystem_config t_fileSystem_config;
 typedef struct t_superbloque_config t_superbloque_config;
 

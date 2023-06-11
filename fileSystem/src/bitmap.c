@@ -6,7 +6,7 @@ extern t_superbloque_config* superbloqueConfig;
 
 t_bitarray* cargarBitMap(){
     t_bitarray* bitArray;
-    int bytes = superbloque_config_obtener_block_count(superbloqueConfig) / 8;
+    int bytes = superbloque_config_obtener_block_count(superbloqueConfig) / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
     
     int fd = open("../bitmap.dat", O_RDONLY, S_IRUSR);
     struct stat sb;
