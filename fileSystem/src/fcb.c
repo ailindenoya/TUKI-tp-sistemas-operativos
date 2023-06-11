@@ -14,8 +14,8 @@ t_fcb* fcb_crear(char* Nombre){
 
     self->NOMBRE_ARCHIVO = Nombre;
     self->TAMANIO_ARCHIVO = 0;
-    self->PUNTERO_DIRECTO = NULL;
-    self->PUNTERO_INDIRECTO == NULL;
+    self->PUNTERO_DIRECTO = 0;
+    self->PUNTERO_INDIRECTO = 0;
 
     return self;
 }

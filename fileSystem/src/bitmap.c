@@ -3,29 +3,18 @@
 extern t_log* fileSystemLogger;
 extern t_superbloque_config* superbloqueConfig;
 
-
 t_bitarray* cargarBitMap(){
-    t_bitarray* bitArray;
     int bytes = superbloque_config_obtener_block_count(superbloqueConfig) / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
-    
-    int fd = open("../bitmap.dat", O_RDONLY, S_IRUSR);
+    t_bitarray* bitArray;
+
+    int fd = open("../bitmap.dat", O_RDWR, S_IRUSR | S_IWUSR);
     struct stat sb;
     if (fstat(fd, &sb) == -1){
         log_info(fileSystemLogger, "No se pudo obtener los datos del archivo bitmap");
     }
 
-    char* bits = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-
-    if (!existenDatos()){
-        bitArray = bitarray_create(malloc(bytes), bytes);
-        return bitArray;
-    }
-
-    bitArray = bitarray_create(bits, bytes);
+    void* bitmap = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    bitArray = bitarray_create(bitmap, bytes);
+    
     return bitArray;
-}
-
-bool existenDatos(){
-    // verificar si el archivo bitmap.dat tiene datos o no, si está vacío o no
-    return true;
 }
