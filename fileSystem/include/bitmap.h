@@ -8,4 +8,4 @@
 #include <fcntl.h>
 
 t_bitarray* cargarBitMap();
-bool existenDatos();
+
