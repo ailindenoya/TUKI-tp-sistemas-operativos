@@ -8,4 +8,4 @@
 #include <fcntl.h>
 
 t_bitarray* cargarBitMap();
-
+void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso);
