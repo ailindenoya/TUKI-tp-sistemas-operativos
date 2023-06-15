@@ -38,8 +38,6 @@ t_bitarray* cargarBitMap(){
     }
 
     bitArray = bitarray_create_with_mode((char*) bitmap, bytes , LSB_FIRST);
-    msync(bitArray->bitarray, bytes, MS_ASYNC);
-    msync(bitmap, bytes, MS_ASYNC);
     
     //marco libres todos las posiciones del array
     limpiarPosiciones(bitArray, 0, bytes);  // ESTO HABRIA QUE HACERLO SOLO CUANDO LO INICIAMOS POR PRIMERA VEZ
@@ -48,16 +46,11 @@ t_bitarray* cargarBitMap(){
         printf("%d", bitarray_test_bit(bitArray, x));
     }
     
-    //printf ("%p", &bitmap);
-    //printf ("%d\n", bitarray_test_bit(bitArray, 1));
-    //memset(bitArray->bitarray, 0, 1);
-    //bitarray_set_bit(bitArray, 0);
-    
-    // int sincronizacion = msync(bitmap, sb.st_size, MS_SYNC);
-    // if (sincronizacion == -1){
-    //     log_info(fileSystemLogger, "Error al sincronizar el mmap de bitmap con disco");
-    //     perror("msync");
-    // }
+    int sincronizacion = msync(bitmap, bytes, MS_SYNC);
+    if (sincronizacion == -1){
+        log_info(fileSystemLogger, "Error al sincronizar el mmap de bitmap con disco");
+        perror("msync");
+    }
 
     int finMmap = munmap(bitmap, bytes);
     if (finMmap == -1){
@@ -66,6 +59,8 @@ t_bitarray* cargarBitMap(){
     }
     
     close(fd);
-    printf("\nSE CERRO\n");
+
+    printf("\nSE CERRO\n"); // esto lo hice para ver si llegaba a cerrar el archivo y hacer el munmap
+
     return bitArray;
 }
