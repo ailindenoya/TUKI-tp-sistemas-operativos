@@ -56,6 +56,17 @@ void avisar_si_hay_error(int socket, char* tipo){
     }
 }
 
+void enviar_cant_segmentos_seg_a_kernel(int socketKERNEL){
+    t_buffer *buffer = buffer_crear();
+    int cantidadDeSegmentos = memoria_config_obtener_cantidad_de_segmentos(memoriaConfig);
+    buffer_empaquetar(buffer,&cantidadDeSegmentos , sizeof(cantidadDeSegmentos));
+    stream_enviar_buffer(socketKERNEL, HEADER_cantidad_seg_enviada, buffer);
+    buffer_destruir(buffer);
+    log_info(memoriaLogger, "Se envio la cantidad de segmentos a Kernel");
+}
+
+
+
 int main(int argc, char* argv[]){
 
     memoriaLogger = log_create(LOGS_MEMORIA, MODULO_MEMORIA, true, LOG_LEVEL_INFO);
@@ -94,6 +105,8 @@ int main(int argc, char* argv[]){
     int socketKernel = accept(socketESCUCHA, &cliente, &len);
 
     handshake_kernel(socketKernel);
-    // ver como recibir varias conexiones (hilos o select()/poll())
+
+    enviar_cant_segmentos_seg_a_kernel(socketKernel);
+    
 }
 

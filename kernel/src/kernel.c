@@ -9,6 +9,8 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
+int cantidadDeSegmentos;
+
  void kernel_acepta_conexion(int socketEscucha) {
     struct sockaddr cliente = {0};
     socklen_t len = sizeof(cliente);
@@ -53,10 +55,29 @@ void intentar_establecer_conexion(int socket, char* tipo){
     log_info(kernelLogger, "se establecio conexion con %s", tipo);
 }
 
+int recibir_cant_segmentos_de_memoria(int socketMemoria){
+
+    uint8_t MEMORIARespuesta = stream_recibir_header(socketMemoria);
+    t_buffer* buffer = buffer_crear();
+    stream_recibir_buffer(socketMemoria,buffer);
+    if (MEMORIARespuesta != HEADER_cantidad_seg_enviada) {
+        log_error(kernelLogger, "error al recibir cantidad de segmentos de memoria");
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    log_info(kernelLogger, "se recibio la cantidad de segmentos de memoria");
+    int cantidadDeSegmentos;
+    buffer_desempaquetar(buffer,&cantidadDeSegmentos,sizeof(cantidadDeSegmentos));
+    buffer_destruir(buffer);
+    return cantidadDeSegmentos;
+}
+
+
 int main(int argc, char* argv[]){
     kernelLogger = log_create(LOGS_KERNEL, MODULO_KERNEL, true, LOG_LEVEL_DEBUG);
 
     kernelConfig = kernel_config_crear(argv[1], kernelLogger);
+    
 
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
         log_error(kernelLogger, "Cantidad de argumentos inválida.\nArgumentos: <tamañoProceso> <pathInstrucciones>");
@@ -106,6 +127,9 @@ int main(int argc, char* argv[]){
         exit(-1);
     }
     log_info(kernelLogger, "se establecio conexion con MEMORIA");
+
+    cantidadDeSegmentos = recibir_cant_segmentos_de_memoria(socketMEMORIA);
+
 
 
     // conexion con FILESYSTEM

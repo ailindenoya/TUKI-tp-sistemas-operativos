@@ -6,6 +6,7 @@ extern t_kernel_config* kernelConfig;
 
 static int algoritmoConfigurado;
 
+
 uint32_t siguientePID;
 
 //faltan semaforos
@@ -19,6 +20,7 @@ time_t tiempoLocalActual;
 
 pthread_mutex_t siguientePIDmutex;
 
+char** arrayDeRecursos;
 int* vectorDeInstancias;
 int dimensionDeArrayDeRecursos;
 bool hayQueReplanificar = true;
@@ -245,7 +247,6 @@ void atender_wait(char* recurso, t_pcb* pcb){
             else{
                 hayQueReplanificar = false;
             }
-            log_info(kernelLogger, "PID: %d - Wait: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             break; 
         }
 
@@ -274,7 +275,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
-            if(vectorDeInstancias[i] <= 0){
+            if(vectorDeInstancias[i] >= 0){
                 t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
                 pcb_setear_estado(pcbADesbloquear, READY);
@@ -284,7 +285,6 @@ void atender_signal(char* recurso, t_pcb* pcb){
                 sem_post(estado_obtener_sem(estadoReady));
 
             }
-            log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             break; 
         }
         pteroARecursos++;
@@ -494,9 +494,9 @@ void iniciar_planificadores(void){
     pcbsEsperandoParaIO = estado_crear(PCBS_ESPERANDO_PARA_IO);
 
 
-    char** arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
+    arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
-    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(kernel_config_obtener_instancias_recursos(kernelConfig), dimensionDeArrayDeRecursos);
+    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
 
 
     pteroAVectorDeListaDeRecursos = malloc(sizeof(*pteroAVectorDeListaDeRecursos)*dimensionDeArrayDeRecursos);

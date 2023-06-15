@@ -10,7 +10,8 @@ typedef enum {
     HEADER_proceso_yield,
     HEADER_proceso_wait,
     HEADER_proceso_parametros,
-    HEADER_proceso_signal
+    HEADER_proceso_signal,
+    HEADER_cantidad_seg_enviada
 } t_header;
 
 typedef enum {
