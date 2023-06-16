@@ -34,7 +34,7 @@ t_bitarray* cargarBitMap(){
         existeBitmap = false;
     }
 
-    ftruncate(fd, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\n'
+    ftruncate(fd, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\0'
 
 
     void* bitmap = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
