@@ -9,7 +9,7 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
-const int socketMEMORIA;
+int socketMEMORIA;
 
 int cantidadDeSegmentos;
 

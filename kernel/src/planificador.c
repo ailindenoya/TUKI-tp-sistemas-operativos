@@ -6,7 +6,7 @@ extern t_kernel_config* kernelConfig;
 
 static int algoritmoConfigurado;
 
-extern const int socketMEMORIA;
+extern int socketMEMORIA;
 
 uint32_t siguientePID;
 

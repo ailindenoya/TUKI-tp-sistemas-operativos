@@ -154,7 +154,7 @@ void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado,
     buffer_empaquetar(buffer, &pid, sizeof(pid));
     buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
     buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_proceso_delete_segment, buffer);
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_delete_segment, buffer);
     buffer_destruir(buffer);
 }
 
