@@ -11,8 +11,13 @@ typedef enum {
     HEADER_proceso_wait,
     HEADER_proceso_parametros,
     HEADER_proceso_signal,
+
     HEADER_cantidad_seg_enviada,
-    HEADER_proceso_agregado_a_memoria
+    HEADER_proceso_agregado_a_memoria,
+    HEADER_create_segment,
+    HEADER_delete_segment,
+    HEADER_mov_in,
+    HEADER_mov_out
 } t_header;
 
 typedef enum {

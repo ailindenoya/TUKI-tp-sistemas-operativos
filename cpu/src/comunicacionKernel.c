@@ -96,18 +96,68 @@ void ejecutar_F_SEEK(t_contexto* pcb,uint32_t programCounterActualizado){
 void ejecutar_F_TRUNCATE(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
-void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado){
-
+void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado, char* reg, char* dirLogica){
+    log_info(cpuLogger, "PID: %d - Ejecutando: MOV_IN ", contexto_obtener_pid(pcb));
+    // se sobreescribe lo que ocurre en set???? o hay que crear nuevos?
+    if(strcmp(reg,"AX") == 0){
+        copiarStringAVector(dirLogica, AX, 4);
+    }else if (strcmp(reg,"BX") == 0){
+        copiarStringAVector(dirLogica, BX, 4);
+    }else if (strcmp(reg,"CX") == 0){
+        copiarStringAVector(dirLogica, CX, 4);
+    }else if (strcmp(reg,"DX") == 0){
+        copiarStringAVector(dirLogica, DX, 4);
+    }else if (strcmp(reg,"EAX") == 0){
+        copiarStringAVector(dirLogica, EAX, 8);
+    }else if (strcmp(reg,"EBX") == 0){
+        copiarStringAVector(dirLogica, EBX, 8);
+    }else if (strcmp(reg,"ECX") == 0){
+        copiarStringAVector(dirLogica, ECX, 8);
+    }else if (strcmp(reg,"EDX") == 0){
+        copiarStringAVector(dirLogica, EDX, 8);
+    }else if (strcmp(reg,"RAX") == 0){
+        copiarStringAVector(dirLogica, RAX, 16);
+    }else if (strcmp(reg,"RBX") == 0){
+        copiarStringAVector(dirLogica, RBX, 16);
+    }else if (strcmp(reg,"RCX") == 0){
+        copiarStringAVector(dirLogica, RCX, 16);
+    }else if (strcmp(reg,"RDX") == 0){
+        copiarStringAVector(dirLogica, RDX, 16);
+    }else {
+        log_info(cpuLogger, "error al ejecutar MOV_IN");
+    }
 }
-void ejecutar_MOV_OUT(t_contexto* pcb,uint32_t programCounterActualizado){
 
+void ejecutar_MOV_OUT(t_contexto* pcb,uint32_t programCounterActualizado, char* dirLogica, char* regALeer){
+    
 }
-void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado){
 
-}
-void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado){
+void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado, char* IdsegmentoComoString, char* tamanioComoString){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    uint32_t id_segmento= atoi(IdsegmentoComoString);
+    uint32_t tamanio_segmento = atoi(tamanioComoString);
+    log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT", contexto_obtener_pid(pcb));
+    t_buffer *buffer = buffer_crear();
+    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
+    buffer_empaquetar(buffer ,&tamanio_segmento , sizeof(tamanio_segmento));
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_create_segment, buffer);
+    buffer_destruir(buffer);
+}  
 
+void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado, char* IdsegmentoComoString){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    uint32_t id_segmento = atoi(IdsegmentoComoString);
+    log_info(cpuLogger, "PID: %d - Ejecutando: DELETE_SEGMENT", contexto_obtener_pid(pcb));
+    t_buffer *buffer = buffer_crear();
+    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_proceso_delete_segment, buffer);
+    buffer_destruir(buffer);
 }
+
 void ejecutar_WAIT(t_contexto* pcb,uint32_t programCounterActualizado, char* recurso){
     uint32_t pid = contexto_obtener_pid(pcb);
     log_info(cpuLogger, "PID: %d - Ejecutando: WAIT", contexto_obtener_pid(pcb));
@@ -196,12 +246,16 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     case INSTRUCCION_f_truncate:
         break;
     case INSTRUCCION_mov_in:
+        ejecutar_MOV_IN(pcb,programCounterActualizado,parametro1, parametro2);
         break;
     case INSTRUCCION_mov_out:
+        ejecutar_MOV_OUT(pcb,programCounterActualizado,parametro1, parametro2);
         break;
     case INSTRUCCION_create_segment:
+        ejecutar_CREATE_SEGMENT(pcb,programCounterActualizado,parametro1, parametro2);
         break;
     case INSTRUCCION_delete_segment:
+        ejecutar_DELETE_SEGMENT(pcb, programCounterActualizado, parametro1);
         break;
     case INSTRUCCION_wait:
         ejecutar_WAIT(pcb,programCounterActualizado, parametro1);
@@ -257,32 +311,6 @@ bool cpu_ejecutar_ciclos_de_instruccion(t_contexto* pcb) {
 }
 
 
-/*/
-NO tenemos kernel interrupt. por lo tanto, hay que atender interrupciones? 
-static bool cpu_atender_interrupcion(t_contexto* pcb) {
-    pthread_mutex_lock(&mutexInterrupcion);
-    bool pararDeEjecutar = false;
-    if (hayInterrupcion) {
-        uint32_t pid = contexto_obtener_pid(pcb);
-        uint32_t programCounterActualizado = contexto_obtener_program_counter(pcb);
-        //segmentacion - ver como actualizar tema memoria
-        t_buffer* bufferInt = buffer_crear();
-        buffer_empaquetar(bufferInt, &pid, sizeof(pid));
-        buffer_empaquetar(bufferInt, &programCounterActualizado, sizeof(programCounterActualizado));
-        //empaquetado memoria
-
-     //  desalojo?
-     //stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_desalojado, bufferInt);
-        buffer_destruir(bufferInt);
-        hayInterrupcion = false;
-        pararDeEjecutar = true;
-        log_info(cpuLogger, "INT: Se envía a Kernel <PID %d> con <PC %d>", pid, programCounterActualizado);
-    }
-    pthread_mutex_unlock(&mutexInterrupcion);
-    return pararDeEjecutar;
-}
-
-*/
 
 void dispatch_peticiones_de_kernel(void) {
     uint32_t pidRecibido = 0;

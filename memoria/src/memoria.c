@@ -72,13 +72,22 @@ void avisar_si_hay_error(int socket, char* tipo){
     }
 }
 
-void enviar_cant_segmentos_seg_a_kernel(){
+void enviar_cant_segmentos_a_kernel(){
     t_buffer *buffer = buffer_crear();
     int cantidadDeSegmentos = memoria_config_obtener_cantidad_de_segmentos(memoriaConfig);
     buffer_empaquetar(buffer,&cantidadDeSegmentos , sizeof(cantidadDeSegmentos));
     stream_enviar_buffer(socketKERNEL, HEADER_cantidad_seg_enviada, buffer);
     buffer_destruir(buffer);
     log_info(memoriaLogger, "Se envio la cantidad de segmentos a Kernel");
+}
+
+void crear_segmento(int pid, int idSegmento, int tamanioSegmento){
+
+
+}
+
+void eliminar_segmento(int pid, int idSegmento ){
+
 }
 
 void recibir_de_kernel(){
@@ -90,10 +99,21 @@ void recibir_de_kernel(){
     stream_recibir_buffer(socketKERNEL,buffer);
         switch (headerRecibido)
         {
-        case: 
+        case HEADER_create_segment:
+            int pid, idSegmento, tamanio;
+            buffer_desempaquetar(buffer, &pid, sizeof(pid));
+            buffer_desempaquetar(buffer, &idSegmento, sizeof(idSegmento));  
+            buffer_desempaquetar(buffer, &tamanio,sizeof(tamanio));
+            crear_segmento(pid,idSegmento, tamanio);
             break;
-        
+        case HEADER_delete_segment:
+            int pid, idSegmento; 
+            buffer_desempaquetar(buffer, &pid, sizeof(pid));
+            buffer_desempaquetar(buffer,idSegmento,sizeof(idSegmento));
+            eliminar_segmento(pid, idSegmento); 
+            break;
         default:
+            log_error(memoriaLogger, "Error al recibir mensaje de KERNEL");
             break;
         }
 
@@ -144,7 +164,7 @@ int main(int argc, char* argv[]){
 
     handshake_kernel();
 
-    enviar_cant_segmentos_seg_a_kernel();
+    enviar_cant_segmentos_a_kernel();
     
     void* bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
 

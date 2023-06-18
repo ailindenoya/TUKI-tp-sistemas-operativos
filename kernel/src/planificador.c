@@ -309,7 +309,6 @@ void atender_signal(char* recurso, t_pcb* pcb){
 }
 
 
-
 void atender_pcb() {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
@@ -397,6 +396,7 @@ void atender_pcb() {
         sem_post(&dispatchPermitido);
     }
 }
+                // habria que destruir los buffers en cada CASE???
 
 
 void planificador_corto_plazo() {

@@ -57,11 +57,11 @@ void intentar_establecer_conexion(int socket, char* tipo){
     log_info(kernelLogger, "se establecio conexion con %s", tipo);
 }
 
-int recibir_cant_segmentos_de_memoria(int socketMemoria){
+int recibir_cant_segmentos_de_memoria(){
 
-    uint8_t MEMORIARespuesta = stream_recibir_header(socketMemoria);
+    uint8_t MEMORIARespuesta = stream_recibir_header(socketMEMORIA);
     t_buffer* buffer = buffer_crear();
-    stream_recibir_buffer(socketMemoria,buffer);
+    stream_recibir_buffer(socketMEMORIA,buffer);
     if (MEMORIARespuesta != HEADER_cantidad_seg_enviada) {
         log_error(kernelLogger, "error al recibir cantidad de segmentos de memoria");
         kernel_destruir(kernelConfig, kernelLogger);
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]){
     }
     log_info(kernelLogger, "se establecio conexion con MEMORIA");
 
-    cantidadDeSegmentos = recibir_cant_segmentos_de_memoria(socketMEMORIA);
+    cantidadDeSegmentos = recibir_cant_segmentos_de_memoria();
 
 
 
