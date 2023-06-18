@@ -13,6 +13,22 @@
 extern t_log* memoriaLogger;
 extern t_memoria_config* memoriaConfig;
 
+int socketKERNEL;
+
+struct proceso{
+    int pid; 
+    int * tablaDeSegmentos;
+};
+
+typedef proceso proceso; 
+struct hueco_libre{
+    int direccion;     
+    int tamanio; 
+};
+
+typedef hueco_libre hueco_libre;
+
+
 void handshake_filesystem(int socketFilesystem){
     uint8_t respuestaFILESYSTEM = stream_recibir_header(socketFilesystem);
     stream_recibir_buffer_vacio(socketFilesystem);
@@ -37,7 +53,7 @@ void handshake_cpu(int socketCPU){
     log_info(memoriaLogger, "conexion con CPU establecida");
 }
 
-void handshake_kernel(int socketKERNEL){
+void handshake_kernel(){
     uint8_t respuestaKERNEL = stream_recibir_header(socketKERNEL);
     stream_recibir_buffer_vacio(socketKERNEL);
     if (respuestaKERNEL != HANDSHAKE_kernel) {
@@ -56,7 +72,7 @@ void avisar_si_hay_error(int socket, char* tipo){
     }
 }
 
-void enviar_cant_segmentos_seg_a_kernel(int socketKERNEL){
+void enviar_cant_segmentos_seg_a_kernel(){
     t_buffer *buffer = buffer_crear();
     int cantidadDeSegmentos = memoria_config_obtener_cantidad_de_segmentos(memoriaConfig);
     buffer_empaquetar(buffer,&cantidadDeSegmentos , sizeof(cantidadDeSegmentos));
@@ -65,9 +81,30 @@ void enviar_cant_segmentos_seg_a_kernel(int socketKERNEL){
     log_info(memoriaLogger, "Se envio la cantidad de segmentos a Kernel");
 }
 
+void recibir_de_kernel(){
+
+    t_buffer * buffer = buffer_crear();
+    
+    for(; ;){
+    uint8_t headerRecibido = stream_recibir_header(socketKERNEL);
+    stream_recibir_buffer(socketKERNEL,buffer);
+        switch (headerRecibido)
+        {
+        case: 
+            break;
+        
+        default:
+            break;
+        }
+
+    }
+    
+}
+
 
 
 int main(int argc, char* argv[]){
+
 
     memoriaLogger = log_create(LOGS_MEMORIA, MODULO_MEMORIA, true, LOG_LEVEL_INFO);
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
@@ -76,6 +113,7 @@ int main(int argc, char* argv[]){
         return -1;
     }
     memoriaConfig = memoria_config_crear(argv[1], memoriaLogger);
+
 
     // inicializa servidor de escucha 
     
@@ -102,11 +140,20 @@ int main(int argc, char* argv[]){
 
     // acepta conexion con KERNEL
 
-    int socketKernel = accept(socketESCUCHA, &cliente, &len);
+    socketKERNEL= accept(socketESCUCHA, &cliente, &len);
 
-    handshake_kernel(socketKernel);
+    handshake_kernel();
 
-    enviar_cant_segmentos_seg_a_kernel(socketKernel);
+    enviar_cant_segmentos_seg_a_kernel();
     
+    void* bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
+
+    t_list* listaDeHuecosLibres = list_create();
+
+    t_list* listaDeProcesos = list_create(); // al crear pcb
+    pthread_t hiloDeProcesos;
+    pthread_create(&hiloDeProcesos, NULL, (void*)recibir_de_kernel_proceso_agregado, NULL);
+
+
 }
 

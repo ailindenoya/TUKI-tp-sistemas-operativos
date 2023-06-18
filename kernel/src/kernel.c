@@ -9,6 +9,8 @@
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
 
+const int socketMEMORIA;
+
 int cantidadDeSegmentos;
 
  void kernel_acepta_conexion(int socketEscucha) {
@@ -109,7 +111,7 @@ int main(int argc, char* argv[]){
 
 
     // conexion con MEMORIA
-    const int socketMEMORIA = conectar_a_servidor(kernel_config_obtener_ip_memoria(kernelConfig), kernel_config_obtener_puerto_memoria(kernelConfig));
+    socketMEMORIA = conectar_a_servidor(kernel_config_obtener_ip_memoria(kernelConfig), kernel_config_obtener_puerto_memoria(kernelConfig));
     if (socketMEMORIA == -1) {
         log_error(kernelLogger, "Error al intentar conectar con MEMORIA");
         kernel_destruir(kernelConfig, kernelLogger);

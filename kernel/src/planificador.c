@@ -6,6 +6,7 @@ extern t_kernel_config* kernelConfig;
 
 static int algoritmoConfigurado;
 
+extern const int socketMEMORIA;
 
 uint32_t siguientePID;
 
@@ -435,6 +436,14 @@ void planificador_corto_plazo() {
     }
 }
 
+void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb){
+
+    t_buffer* buffer = buffer_crear();
+    int pid = pcb_obtener_pid(pcb);
+    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    stream_enviar_buffer(socketMEMORIA,HEADER_proceso_agregado_a_memoria,buffer);
+    buffer_destruir(buffer);
+}
 
 
 void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
@@ -462,8 +471,11 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
+        avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
+        
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
+
 
         log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(nuevoPCB), tamanio, *socketProceso);
 
