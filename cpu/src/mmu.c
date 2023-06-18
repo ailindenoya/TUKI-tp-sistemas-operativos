@@ -21,10 +21,10 @@ int convertir_dir_fisica_a_logica(int dirLogica){
 }
 
 int obtener_numero_de_segmento(int dirLogica){
-    return floor(dirLogica / atoi(cpu_config_obtener_tam_max_segmento(cpuConfig)))// convertir a char;
+    return floor(dirLogica / atoi(cpu_config_obtener_tam_max_segmento(cpuConfig)));
 }
 
 int obtener_offset_de_segmento(int dirLogica){
-    return dirLogica % atoi(cpu_config_obtener_tam_max_segmento(cpuConfig)) // convertir a char;
+    return dirLogica % atoi(cpu_config_obtener_tam_max_segmento(cpuConfig)); // convertir a char;
 }
 
