@@ -18,6 +18,4 @@ void F_OPEN(char* NombreArchivo){
     buffer_empaquetar_string(mensajeOK, "OK");
     stream_enviar_buffer(socketKERNEL, HEADER_existe_archivo, mensajeOK);
     buffer_destruir(mensajeOK);
-
-    ;
 }

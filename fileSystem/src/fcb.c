@@ -1,5 +1,5 @@
 #include "../include/fcb.h"
-#define PATH_FCB "../fcb/"
+#define PATH_FCB "fcb/"
 
 
 extern t_log* fileSystemLogger;
@@ -33,7 +33,7 @@ char* concat(const char* s1, const char* s2){
 void crearArchivoFCB(char* NombreArchivo){
 
     char* ruta = concat(PATH_FCB, NombreArchivo);    
-    int fd = open(NombreArchivo, O_CREAT | O_RDWR, S_IRWXU);   
+    int fd = open(ruta, O_CREAT | O_RDWR, S_IRWXU);   
 
     char* Nom = concat("NOMBRE_ARCHIVO=", NombreArchivo);
     char* Tam = "\nTAMANIO_ARCHIVO=0";
