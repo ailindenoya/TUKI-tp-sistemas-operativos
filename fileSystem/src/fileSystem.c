@@ -1,5 +1,7 @@
 #include "../include/fileSystem_config.h"
 #include "../include/bitmap.h"
+#include "../include/comunicacionKernelYMemoria.h"
+
 
 #define LOGS_FILESYSTEM "bin/fileSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
@@ -8,6 +10,7 @@
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 extern t_superbloque_config* superbloqueConfig;
+int socketKERNEL;
 
 void fileSystem_destruir(t_fileSystem_config* fileSystemConfig, t_log* fileSystemLogger) {
     fileSystem_config_destruir(fileSystemConfig);
@@ -46,9 +49,7 @@ int main(int argc, char* argv[]){
         fileSystem_destruir(fileSystemConfig,fileSystemLogger );
         return -1;
     }    
-
-        // Cargar BitMap
-    t_bitarray* bitmap = cargarBitMap();
+    crearArchivoFCB("hola");
     // conexion con MEMORIA
 
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
@@ -71,7 +72,8 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
-
+    // Cargar BitMap
+    t_bitarray* bitmap = cargarBitMap();
 
     // acepta conexion con KERNEL
 
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]){
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA PARA KERNEL");
 
     log_info(fileSystemLogger, "ESPERANDO CLIENTES");
-    int socketKERNEL = accept(socketESCUCHA, &cliente, &len);
+    socketKERNEL = accept(socketESCUCHA, &cliente, &len);
     handshake_kernel(socketKERNEL);
     
 
