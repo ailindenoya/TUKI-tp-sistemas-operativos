@@ -369,6 +369,7 @@ void atender_pcb() {
                 char* recursoDesempaquetadoWAIT;
                 buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetadoWAIT);
                 atender_wait(recursoDesempaquetadoWAIT,pcb);
+                buffer_destruir(bufferWAIT);
                 break;
             case HEADER_proceso_signal:
                 t_buffer* bufferSIGNAL = buffer_crear();
@@ -376,7 +377,8 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferSIGNAL);
                 char* recursoDesempaquetadoSIGNAL;
                 buffer_desempaquetar_string(bufferSIGNAL, &recursoDesempaquetadoSIGNAL);   
-                atender_signal(recursoDesempaquetadoSIGNAL,pcb); 
+                atender_signal(recursoDesempaquetadoSIGNAL,pcb);
+                buffer_destruir(bufferSIGNAL);
                 break;
             case HEADER_proceso_yield:
                 if(algoritmoConfigurado == ALGORITMO_HRRN){
@@ -389,6 +391,18 @@ void atender_pcb() {
                 sem_post(estado_obtener_sem(estadoReady));
                 hayQueReplanificar = true; 
                 break;
+            case HEADER_create_segment:
+                t_buffer* bufferCreateSegment = buffer_crear();
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
+                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
+                buffer_destruir(bufferCreateSegment);
+            case HEADER_delete_segment:
+                t_buffer *bufferDeleteSegment = buffer_crear();
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferDeleteSegment);
+                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_delete_segment, bufferDeleteSegment);
+                buffer_destruir(bufferDeleteSegment);
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
                 break;
@@ -471,7 +485,14 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
+        
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
+        ////
+        t_buffer* bufferDeAvisoDeFaltaDeMemoria = buffer_crear();
+        int pidProcesoATerminar;  // seria necesario? habria que controlar pid == pcb_obtener_pid(nuevoPcb)?? 
+        buffer_desempaquetar(bufferDeAvisoDeFaltaDeMemoria,&pidProcesoATerminar,sizeof(pidProcesoATerminar));
+        // mandar a exit? 
+        ///
         
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
