@@ -12,7 +12,7 @@ struct t_cpu_config {
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA;
-    char* TAM_MAX_SEGMENTO;
+    int TAM_MAX_SEGMENTO;
 
     int SOCKET_MEMORIA;
     int SOCKET_KERNEL;

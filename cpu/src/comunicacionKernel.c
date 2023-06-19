@@ -98,34 +98,7 @@ void ejecutar_F_TRUNCATE(t_contexto* pcb,uint32_t programCounterActualizado){
 }
 void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado, char* reg, char* dirLogica){
     log_info(cpuLogger, "PID: %d - Ejecutando: MOV_IN ", contexto_obtener_pid(pcb));
-    // se sobreescribe lo que ocurre en set???? o hay que crear nuevos?
-    if(strcmp(reg,"AX") == 0){
-        copiarStringAVector(dirLogica, AX, 4);
-    }else if (strcmp(reg,"BX") == 0){
-        copiarStringAVector(dirLogica, BX, 4);
-    }else if (strcmp(reg,"CX") == 0){
-        copiarStringAVector(dirLogica, CX, 4);
-    }else if (strcmp(reg,"DX") == 0){
-        copiarStringAVector(dirLogica, DX, 4);
-    }else if (strcmp(reg,"EAX") == 0){
-        copiarStringAVector(dirLogica, EAX, 8);
-    }else if (strcmp(reg,"EBX") == 0){
-        copiarStringAVector(dirLogica, EBX, 8);
-    }else if (strcmp(reg,"ECX") == 0){
-        copiarStringAVector(dirLogica, ECX, 8);
-    }else if (strcmp(reg,"EDX") == 0){
-        copiarStringAVector(dirLogica, EDX, 8);
-    }else if (strcmp(reg,"RAX") == 0){
-        copiarStringAVector(dirLogica, RAX, 16);
-    }else if (strcmp(reg,"RBX") == 0){
-        copiarStringAVector(dirLogica, RBX, 16);
-    }else if (strcmp(reg,"RCX") == 0){
-        copiarStringAVector(dirLogica, RCX, 16);
-    }else if (strcmp(reg,"RDX") == 0){
-        copiarStringAVector(dirLogica, RDX, 16);
-    }else {
-        log_info(cpuLogger, "error al ejecutar MOV_IN");
-    }
+   /// llamar a SET
 }
 
 void ejecutar_MOV_OUT(t_contexto* pcb,uint32_t programCounterActualizado, char* dirLogica, char* regALeer){
@@ -139,10 +112,9 @@ void ejecutar_CREATE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado,
     log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT", contexto_obtener_pid(pcb));
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar(buffer, &pid, sizeof(pid));
-    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
     buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
     buffer_empaquetar(buffer ,&tamanio_segmento , sizeof(tamanio_segmento));
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_create_segment, buffer);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_create_segment, buffer);
     buffer_destruir(buffer);
 }  
 
@@ -152,9 +124,8 @@ void ejecutar_DELETE_SEGMENT(t_contexto* pcb,uint32_t programCounterActualizado,
     log_info(cpuLogger, "PID: %d - Ejecutando: DELETE_SEGMENT", contexto_obtener_pid(pcb));
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar(buffer, &pid, sizeof(pid));
-    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
     buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_delete_segment, buffer);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_delete_segment, buffer);
     buffer_destruir(buffer);
 }
 
