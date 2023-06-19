@@ -1,7 +1,6 @@
 extern int cantidadDeSegmentos;
 #include "../include/pcb.h"
-#define COLUMNAS_TABLA_DE_SEGMENTOS 3
-
+#include "../../utils/include/funcionesDeMemoria.h"
 
 struct t_pcb {
     uint32_t pid;
@@ -15,7 +14,7 @@ struct t_pcb {
     uint32_t tiempoDeBloqueo;
     uint32_t tiempoEjecutado;
 
-    int* tablaDeSegmentos;
+    segmento* tablaDeSegmentos;
 
     uint8_t estado;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
@@ -35,7 +34,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->realAnterior = 0.0;
     self->tiempoDeBloqueo = 0;
     self->tiempoEjecutado = 0.0;
-    self->tablaDeSegmentos = malloc(sizeof(*(self->tablaDeSegmentos))*cantidadDeSegmentos*COLUMNAS_TABLA_DE_SEGMENTOS);
+    self->tablaDeSegmentos = malloc(sizeof(*(self->tablaDeSegmentos))*cantidadDeSegmentos);
     return self;
 }
 

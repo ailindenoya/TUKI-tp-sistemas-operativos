@@ -18,7 +18,8 @@ typedef enum {
     HEADER_delete_segment,
     HEADER_mov_in,
     HEADER_mov_out,
-    HEADER_existe_archivo
+    HEADER_existe_archivo,
+    HEADER_proceso_terminado_out_of_memory
 } t_header;
 
 typedef enum {

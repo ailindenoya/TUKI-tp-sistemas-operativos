@@ -29,6 +29,13 @@ t_pcb* ultimoPcbEjecutado;
 
 t_list** pteroAVectorDeListaDeRecursos;
 
+typedef enum{
+    SUCCESS,
+    SEG_FAULT,
+    OUT_OF_MEMORY,
+    WAIT_DE_RECURSO_NO_EXISTENTE,
+    SIGNAL_DE_RECURSO_NO_EXISTENTE
+} t_motivos_de_finalizacion;
 
 typedef enum {
     ALGORITMO_FIFO,
@@ -126,14 +133,44 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
 }
 
 
+
+
+
 /*                          FINALIZADOR DE PCBs                        */
 
- void finalizar_pcbs_en_hilo_con_exit(void) {
+void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
+
+    pcb_setear_estado(pcb, EXIT);
+    estado_encolar_pcb_con_semaforo(estadoExit, pcb);
+    loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
+    sem_post(estado_obtener_sem(estadoExit));
+
+    switch (motivoDeFinalizacion)
+    {
+    case SUCCESS: // caso feliz
+        log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SUCCESS", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        break;
+    case SEG_FAULT: // caso seg fault
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SEG_FAULT", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        break;
+    case OUT_OF_MEMORY: 
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: OUT_OF_MEMORY", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        break;
+    case WAIT_DE_RECURSO_NO_EXISTENTE:
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        break;
+    case SIGNAL_DE_RECURSO_NO_EXISTENTE:
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        break;
+    }
+}
+
+void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
      // avisar a memoria que finalizo   mem_adapter_finalizar_proceso(pcbALiberar, kernelConfig, kernelLogger);
-        log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+    // ESTO YA ESTA EN FINALIZA    log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
         stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HEADER_proceso_terminado);
         pcb_destruir(pcbALiberar);
         sem_post(&gradoDeMultiprogramacion);
@@ -256,12 +293,7 @@ void atender_wait(char* recurso, t_pcb* pcb){
     }
 
     if(i == dimensionDeArrayDeRecursos){
-            log_error(kernelLogger, "PID: %d - error WAIT de recurso no existente", pcb_obtener_pid(pcb));
-            pcb_setear_estado(pcb, EXIT);
-            estado_encolar_pcb_con_semaforo(estadoExit, pcb);
-            loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
-            stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
-            sem_post(estado_obtener_sem(estadoExit));
+            finalizar_proceso(pcb,WAIT_DE_RECURSO_NO_EXISTENTE);
             hayQueReplanificar = true; 
     }
 
@@ -294,12 +326,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
 
 
     if(i == dimensionDeArrayDeRecursos){
-            log_error(kernelLogger, "PID: %d - error SIGNAL de recurso no existente", pcb_obtener_pid(pcb));
-            pcb_setear_estado(pcb, EXIT);
-            estado_encolar_pcb_con_semaforo(estadoExit, pcb);
-            loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
-            stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcb), HEADER_proceso_terminado);
-            sem_post(estado_obtener_sem(estadoExit));
+            finalizar_proceso(pcb,SIGNAL_DE_RECURSO_NO_EXISTENTE);
             hayQueReplanificar = true;
 
     }else{
@@ -348,10 +375,7 @@ void atender_pcb() {
 
         switch (cpuRespuesta) {
             case HEADER_proceso_terminado:
-                pcb_setear_estado(pcb, EXIT);
-                estado_encolar_pcb_con_semaforo(estadoExit, pcb);
-                loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
-                sem_post(estado_obtener_sem(estadoExit));
+                finalizar_proceso(pcb,SUCCESS);
                 hayQueReplanificar = true; 
                 break;
             case HEADER_proceso_bloqueado:     
@@ -397,6 +421,19 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
                 stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
                 buffer_destruir(bufferCreateSegment);
+                ////
+                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                switch (respuestaMemoria)
+                {
+                case HEADER_proceso_terminado_out_of_memory:
+                    finalizar_proceso(pcb,OUT_OF_MEMORY);
+                    break;
+    
+                default:
+                    break;
+                }
+                
             case HEADER_delete_segment:
                 t_buffer *bufferDeleteSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -487,12 +524,8 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
         
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
-        ////
-        t_buffer* bufferDeAvisoDeFaltaDeMemoria = buffer_crear();
-        int pidProcesoATerminar;  // seria necesario? habria que controlar pid == pcb_obtener_pid(nuevoPcb)?? 
-        buffer_desempaquetar(bufferDeAvisoDeFaltaDeMemoria,&pidProcesoATerminar,sizeof(pidProcesoATerminar));
-        // mandar a exit? 
-        ///
+        
+
         
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);

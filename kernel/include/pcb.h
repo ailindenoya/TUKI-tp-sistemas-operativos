@@ -11,6 +11,7 @@
 #include "nombre_estados.h"
 
 
+
 typedef struct t_pcb t_pcb;
 
 uint8_t pcb_obtener_estado(t_pcb* self) ;
