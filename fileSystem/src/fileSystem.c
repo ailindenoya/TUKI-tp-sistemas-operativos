@@ -88,6 +88,7 @@ int main(int argc, char* argv[]){
     socketKERNEL = accept(socketESCUCHA, &cliente, &len);
     handshake_kernel(socketKERNEL);
     
+    atenderPeticionesDeKernel();
 
 }
 

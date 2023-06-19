@@ -8,3 +8,4 @@
 
 
 void F_OPEN(char*);
+void atenderPeticionesDeKernel();
