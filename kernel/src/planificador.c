@@ -492,7 +492,7 @@ void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb){
     t_buffer* buffer = buffer_crear();
     int pid = pcb_obtener_pid(pcb);
     buffer_empaquetar(buffer, &pid, sizeof(pid));
-    stream_enviar_buffer(socketMEMORIA,HEADER_proceso_agregado_a_memoria,buffer);
+    stream_enviar_buffer(socketMEMORIA,HEADER_proceso_a_agregar_a_memoria,buffer);
     buffer_destruir(buffer);
 }
 

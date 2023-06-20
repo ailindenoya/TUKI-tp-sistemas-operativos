@@ -1,12 +1,7 @@
 #ifndef MEMORIA_H_INCLUDED
 #define MEMORIA_H_INCLUDED
 
-struct proceso{
-    int pid; 
-    segmento *tablaDeSegmentos;
-};
 
-typedef struct proceso proceso; 
 
 struct hueco_libre{
     int direccion;     
@@ -16,7 +11,7 @@ struct hueco_libre{
 typedef struct hueco_libre hueco_libre;
 
 void recibir_de_kernel(void);
-proceso* crear_proceso(int pid);
+proceso* crear_proceso(uint32_t pid);
 hueco_libre* crear_hueco_libre(int tamanio, int dir);
 void atender_delete_segment(int pid, int idSegmento );
 void atender_create_segment(int pid, int idSegmento);

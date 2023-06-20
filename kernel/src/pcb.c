@@ -14,7 +14,7 @@ struct t_pcb {
     uint32_t tiempoDeBloqueo;
     uint32_t tiempoEjecutado;
 
-    segmento* tablaDeSegmentos;
+    segmento** tablaDeSegmentos;
 
     uint8_t estado;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
