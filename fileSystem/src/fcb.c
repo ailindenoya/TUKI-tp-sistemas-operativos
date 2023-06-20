@@ -55,6 +55,8 @@ void crearArchivoFCB(char* NombreArchivo){
     munmap(mapArchivo, tamanioMap);
     close(fd);
     
+    log_info(fileSystemLogger, "Crear Archivo: %s", NombreArchivo);
+
 }
 
 char* fcb_obtener_nombre_archivo(t_fcb* self){

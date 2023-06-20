@@ -8,6 +8,8 @@
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
+extern const int socketFILESYSTEM;
+
 
 int socketMEMORIA;
 
@@ -136,7 +138,7 @@ int main(int argc, char* argv[]){
 
     // conexion con FILESYSTEM
 
-    const int socketFILESYSTEM = conectar_a_servidor(kernel_config_obtener_ip_filesystem(kernelConfig), kernel_config_obtener_puerto_filesystem(kernelConfig));
+    socketFILESYSTEM = conectar_a_servidor(kernel_config_obtener_ip_filesystem(kernelConfig), kernel_config_obtener_puerto_filesystem(kernelConfig));
     if (socketFILESYSTEM == -1) {
         log_error(kernelLogger, "Error al intentar conectar con FILESYSTEM");
         kernel_destruir(kernelConfig, kernelLogger);

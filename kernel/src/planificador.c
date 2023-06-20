@@ -3,6 +3,8 @@
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
+extern t_list* tablaArchivosAbiertos;
+
 
 static int algoritmoConfigurado;
 
@@ -415,6 +417,44 @@ void atender_pcb() {
                 sem_post(estado_obtener_sem(estadoReady));
                 hayQueReplanificar = true; 
                 break;
+
+            case HEADER_proceso_F_OPEN:
+
+                t_buffer* buffer_F_OPEN = buffer_crear();
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_OPEN);
+
+                char* nombreArchivo;
+                buffer_desempaquetar_string(buffer_F_OPEN, &nombreArchivo);
+
+                if(list_is_empty(tablaArchivosAbiertos)){
+                    buffer_empaquetar_string(buffer_F_OPEN, nombreArchivo);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+                    // Crear entrada en tabla
+
+                    break;
+                }
+                
+                t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo));
+
+                if(/*No lo encontro */){
+                    buffer_empaquetar_string(buffer_F_OPEN, nombreArchivo);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+
+                    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+
+                    if(respuestaFileSystem != HEADER_archivo_abierto){
+                        log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivo);
+                        exit(-1);
+                    }
+                }
+
+                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb_obtener_pid(pcb));
+
+                // Bloquear proceso
+
+                break;
             case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -563,6 +603,8 @@ void iniciar_planificadores(void){
     arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
     vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
+    tablaArchivosAbiertos = list_create();
+
 
 
     pteroAVectorDeListaDeRecursos = malloc(sizeof(*pteroAVectorDeListaDeRecursos)*dimensionDeArrayDeRecursos);

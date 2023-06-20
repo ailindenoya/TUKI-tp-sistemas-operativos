@@ -11,6 +11,8 @@ typedef enum {
     HEADER_proceso_wait,
     HEADER_proceso_parametros,
     HEADER_proceso_signal,
+    HEADER_proceso_F_OPEN,
+
 
     HEADER_cantidad_seg_enviada,
     HEADER_proceso_agregado_a_memoria,
@@ -21,7 +23,12 @@ typedef enum {
     HEADER_mov_in,
     HEADER_mov_out,
     HEADER_existe_archivo,
-    HEADER_proceso_terminado_out_of_memory
+    HEADER_proceso_terminado_out_of_memory,
+
+    HEADER_archivo_abierto,
+    HEADER_no_existe_archivo,
+    HEADER_crear_archivo,
+    HEADER_F_OPEN
 } t_header;
 
 typedef enum {
