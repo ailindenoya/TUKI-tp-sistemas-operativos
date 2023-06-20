@@ -5,16 +5,19 @@
 #include <stdlib.h>
 #include "buffer.h"
 
-typedef struct {
+struct segmento{
     uint32_t id;
     uint32_t base; 
     uint32_t tamanio; 
-} segmento;
+};
 
-typedef struct {
+typedef struct segmento segmento;
+struct proceso{
     uint32_t pid; 
     segmento **tablaDeSegmentos;
-}proceso;
+};
+
+typedef struct proceso proceso;
 
 segmento* crear_segmento(uint32_t id, uint32_t base, uint32_t tamanio);
 void buffer_empaquetar_tabla(t_buffer* self, proceso* proceso, int cantidadDeSegmentos);

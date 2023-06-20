@@ -1,3 +1,4 @@
+extern int cantidadDeSegmentos;
 #include "../include/planificador.h"
 
 
@@ -150,19 +151,19 @@ void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
     switch (motivoDeFinalizacion)
     {
     case SUCCESS: // caso feliz
-        log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SUCCESS", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SUCCESS", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     case SEG_FAULT: // caso seg fault
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SEG_FAULT", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SEG_FAULT", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     case OUT_OF_MEMORY: 
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: OUT_OF_MEMORY", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: OUT_OF_MEMORY", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     case WAIT_DE_RECURSO_NO_EXISTENTE:
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     case SIGNAL_DE_RECURSO_NO_EXISTENTE:
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     }
 }
@@ -435,7 +436,7 @@ void atender_pcb() {
                     break;
                 }
                 
-                t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo));
+                t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo)); 
 
                 if(/*No lo encontro */){
                     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivo);
@@ -563,13 +564,26 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
         
+        ////// PARTE DE MEMORIA 
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
         
+        /// esta bien esto aca o iria en create_segment en atender pcb?? /////
+        proceso* procesoConSegmentoCreado; 
+        t_buffer* bufferSegmentoCreado = buffer_crear();
+        uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+        if (respuestaDeMemoria != HEADER_proceso_agregado_a_memoria) {
+            log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(nuevoPCB));
+            return NULL;
+        }
+        buffer_desempaquetar_tabla(bufferSegmentoCreado,procesoConSegmentoCreado,cantidadDeSegmentos);
+        buffer_destruir(bufferSegmentoCreado);
+        pcb_setear_tabla_de_segmentos(nuevoPCB,procesoConSegmentoCreado->tablaDeSegmentos);
+      
+        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB));
+        ///////////
 
-        
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
-
 
         log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(nuevoPCB), tamanio, *socketProceso);
 

@@ -111,6 +111,10 @@ void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo){
 uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self){
    return self->tiempoEjecutado;
 }
-int* pcb_obtener_tabla_de_segmentos(t_pcb* self){
+segmento** pcb_obtener_tabla_de_segmentos(t_pcb* self){
     return self->tablaDeSegmentos;
 }
+
+void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs){
+    self->tablaDeSegmentos = tablaDeSegs;
+}// hacer free antes????

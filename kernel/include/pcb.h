@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "../../utils/include/buffer.h"
+#include "../../utils/include/funcionesDeMemoria.h"
 #include <pthread.h>
 #include "nombre_estados.h"
 
@@ -36,6 +37,7 @@ double pcb_obtener_realAnterior(t_pcb* self);
 void pcb_setear_realAnterior(t_pcb* self, double nuevo);
 void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo);
 uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self);
-int* pcb_obtener_tabla_de_segmentos(t_pcb* self);
+segmento** pcb_obtener_tabla_de_segmentos(t_pcb* self);
+void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs);
 
 #endif

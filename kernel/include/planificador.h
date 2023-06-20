@@ -8,6 +8,7 @@
 #include "comunicacionCPU.h"
 #include <time.h>
 #include "comunicacionFileSystem.h"
+#include "../../utils/include/funcionesDeMemoria.h"
 
 
 void loggear_cambio_estado(const char *prev, const char *post, int pid);

@@ -26,5 +26,5 @@ void t_archivo_tabla_setear_nombre_archivo(t_archivo_tabla* self, char* NombreNu
     self->nombreArchivo = NombreNuevo;
 }
 void t_archivo_tabla_actualizar_cola_procesos(t_archivo_tabla* self, uint32_t pidAgregar){
-    list_add(self->colaProcesos, pidAgregar);
+    list_add(self->colaProcesos, (void*) pidAgregar);
 }
