@@ -8,8 +8,8 @@
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
-extern const int socketFILESYSTEM;
 
+int socketFILESYSTEM;
 
 int socketMEMORIA;
 

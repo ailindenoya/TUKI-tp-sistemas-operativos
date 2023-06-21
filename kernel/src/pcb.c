@@ -14,7 +14,7 @@ struct t_pcb {
     uint32_t tiempoDeBloqueo;
     uint32_t tiempoEjecutado;
 
-    segmento** tablaDeSegmentos;
+    segmento* tablaDeSegmentos;
 
     uint8_t estado;
     // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
@@ -35,6 +35,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->tiempoDeBloqueo = 0;
     self->tiempoEjecutado = 0.0;
     self->tablaDeSegmentos = malloc(sizeof(*(self->tablaDeSegmentos))*cantidadDeSegmentos);
+    inicializar_tabla_de_segmentos(self->tablaDeSegmentos, cantidadDeSegmentos);
     return self;
 }
 
@@ -111,15 +112,13 @@ void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo){
 uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self){
    return self->tiempoEjecutado;
 }
-segmento** pcb_obtener_tabla_de_segmentos(t_pcb* self){
+segmento* pcb_obtener_tabla_de_segmentos(t_pcb* self){
     return self->tablaDeSegmentos;
 }
 
-void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs, int cantidadDeSegs){ 
+void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento* tablaDeSegs, int cantidadDeSegs){ 
     for(int i=0; i<cantidadDeSegs; i++){
-        self->tablaDeSegmentos[i]->id = tablaDeSegs[i]->id;
-        self->tablaDeSegmentos[i]->base = tablaDeSegs[i]->base;
-        self->tablaDeSegmentos[i]->tamanio = tablaDeSegs[i]->tamanio;
+        self->tablaDeSegmentos[i] = tablaDeSegs[i];
     }
 }
 

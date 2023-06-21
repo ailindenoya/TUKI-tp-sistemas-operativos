@@ -1,8 +1,7 @@
+extern int socketFILESYSTEM;
 #include "../include/comunicacionFileSystem.h"
-
 extern t_log* kernelLogger;
-extern const int socketFILESYSTEM;
-extern t_list* tablaArchivosAbiertos;
+//extern t_list* tablaArchivosAbiertos;
 
 struct t_archivo_tabla{
     __uint32_t pid;
@@ -26,5 +25,5 @@ void t_archivo_tabla_setear_nombre_archivo(t_archivo_tabla* self, char* NombreNu
     self->nombreArchivo = NombreNuevo;
 }
 void t_archivo_tabla_actualizar_cola_procesos(t_archivo_tabla* self, uint32_t pidAgregar){
-    list_add(self->colaProcesos, (void*) pidAgregar);
+    list_add(self->colaProcesos,pidAgregar);
 }

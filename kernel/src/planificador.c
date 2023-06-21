@@ -364,7 +364,7 @@ void atender_pcb() {
         pcb = kernel_recibir_pcb_actualizado_de_cpu(pcb, cpuRespuesta, kernelConfig, kernelLogger);
 
         ultimoPcbEjecutado = pcb; // que pcb sigue ejecutando
-
+        
         list_remove(estado_obtener_lista(estadoExec), 0); // saca de ejec el proceso
 
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
@@ -421,7 +421,7 @@ void atender_pcb() {
 
             case HEADER_proceso_F_OPEN:
 
-                t_buffer* buffer_F_OPEN = buffer_crear();
+            /*    t_buffer* buffer_F_OPEN = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_OPEN);
 
@@ -435,12 +435,9 @@ void atender_pcb() {
 
                     break;
                 }
-
-
-                
                 t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo)); 
-
-                if(/*No lo encontro */){
+                
+                if(//No lo encontro ){
                     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivo);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
 
@@ -453,10 +450,10 @@ void atender_pcb() {
                     }
                 }
 
-                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb_obtener_pid(pcb));
+                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb_obtener_pid(pcb)); 
 
                 // Bloquear proceso
-
+                */
                 break;
             case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
@@ -473,13 +470,13 @@ void atender_pcb() {
                     t_buffer* bufferSegCreado = buffer_crear();
                     stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                     stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig),bufferSegCreado);
-                    
+                    buffer_desempaquetar_tabla_de_segmentos(bufferSegCreado,pcb_obtener_tabla_de_segmentos(pcb),cantidadDeSegmentos);
+                    buffer_destruir(bufferSegCreado);
                     break;
                 case HEADER_proceso_terminado_out_of_memory:
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
                     break;
-    
                 default:
                     break;
                 }
@@ -626,7 +623,7 @@ void iniciar_planificadores(void){
     arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
     vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
-    tablaArchivosAbiertos = list_create();
+   // tablaArchivosAbiertos = list_create();
 
 
 
