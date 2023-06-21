@@ -115,6 +115,11 @@ segmento** pcb_obtener_tabla_de_segmentos(t_pcb* self){
     return self->tablaDeSegmentos;
 }
 
-void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs){
-    self->tablaDeSegmentos = tablaDeSegs;
-}// hacer free antes????
+void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs, int cantidadDeSegs){ 
+    for(int i=0; i<cantidadDeSegs; i++){
+        self->tablaDeSegmentos[i]->id = tablaDeSegs[i]->id;
+        self->tablaDeSegmentos[i]->base = tablaDeSegs[i]->base;
+        self->tablaDeSegmentos[i]->tamanio = tablaDeSegs[i]->tamanio;
+    }
+}
+

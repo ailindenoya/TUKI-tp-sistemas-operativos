@@ -18,10 +18,11 @@ struct proceso{
 };
 
 typedef struct proceso proceso;
-
-segmento* crear_segmento(uint32_t id, uint32_t base, uint32_t tamanio);
-void buffer_empaquetar_tabla(t_buffer* self, proceso* proceso, int cantidadDeSegmentos);
-void buffer_desempaquetar_tabla(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos);
-
+void buffer_empaquetar_tabla_de_segmentos(t_buffer* self, segmento** tablaDeSegs, int cantidadDeSegmentos);
+segmento* segmento_crear(uint32_t id, uint32_t base, uint32_t tamanio);
+void buffer_empaquetar_proceso_de_memoria(t_buffer* self, proceso* proceso, int cantidadDeSegmentos);
+void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos);
+proceso* proceso_crear(uint32_t pid, int cantidadDeSegs);
+void proceso_destruir(proceso* procesoADestruir);
 
 #endif

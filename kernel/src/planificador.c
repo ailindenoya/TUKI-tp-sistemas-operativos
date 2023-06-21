@@ -435,6 +435,8 @@ void atender_pcb() {
 
                     break;
                 }
+
+
                 
                 t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo)); 
 
@@ -464,11 +466,18 @@ void atender_pcb() {
                 buffer_destruir(bufferCreateSegment);
                 ////
                 uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
-                stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                
                 switch (respuestaMemoria)
                 {
+                case HEADER_segmento_creado:
+                    t_buffer* bufferSegCreado = buffer_crear();
+                    stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                    stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig),bufferSegCreado);
+                    
+                    break;
                 case HEADER_proceso_terminado_out_of_memory:
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
+                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
                     break;
     
                 default:
@@ -567,19 +576,19 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         ////// PARTE DE MEMORIA 
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
         
-        /// esta bien esto aca o iria en create_segment en atender pcb?? /////
-        proceso* procesoConSegmentoCreado; 
         t_buffer* bufferSegmentoCreado = buffer_crear();
         uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
         if (respuestaDeMemoria != HEADER_proceso_agregado_a_memoria) {
             log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(nuevoPCB));
             return NULL;
         }
-        buffer_desempaquetar_tabla(bufferSegmentoCreado,procesoConSegmentoCreado,cantidadDeSegmentos);
+        proceso* procesoConSegmentoCreado = proceso_crear(pcb_obtener_pid(nuevoPCB),cantidadDeSegmentos);
+        buffer_desempaquetar_proceso_de_memoria(bufferSegmentoCreado,procesoConSegmentoCreado,cantidadDeSegmentos);
         buffer_destruir(bufferSegmentoCreado);
-        pcb_setear_tabla_de_segmentos(nuevoPCB,procesoConSegmentoCreado->tablaDeSegmentos);
-      
-        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB));
+        pcb_setear_tabla_de_segmentos(nuevoPCB,procesoConSegmentoCreado->tablaDeSegmentos,cantidadDeSegmentos);
+        proceso_destruir(procesoConSegmentoCreado);
+        
+        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB), pcb_obtener_tabla_de_segmentos(nuevoPCB)[0]->tamanio);
         ///////////
 
         pcb_setear_socket(nuevoPCB, socketProceso);

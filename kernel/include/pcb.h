@@ -38,6 +38,6 @@ void pcb_setear_realAnterior(t_pcb* self, double nuevo);
 void pcb_setear_tiempoEjecutado(t_pcb* self, u_int32_t nuevo);
 uint32_t pcb_obtener_tiempoEjecutado(t_pcb* self);
 segmento** pcb_obtener_tabla_de_segmentos(t_pcb* self);
-void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs);
+void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento** tablaDeSegs, int cantidadDeSegs);
 
 #endif

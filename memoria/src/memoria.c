@@ -131,14 +131,32 @@ int obtener_tamanio_libre_total(void){
     return tamanioLibreTotal;
 }
 
-void atender_create_segment(int pid, int idSegmento){
 
+/*bool ver_si_tamanio_requerido_entra_en_hueco_libre(void* huecoAux){
+    hueco_libre* hueco = (hueco_libre*) huecoAux;
+    return hueco->tamanio >= tamanioRequeridoParaSegmentoACrear;
+}*/
+
+
+void atender_create_segment(int pid, int idSegmento){
+    
+/*
+    bool es_proceso(void* procesoAux){
+        proceso* procesoN = (proceso*) procesoAux;
+        return procesoN->pid == pid;
+    }
+*/
     if(list_any_satisfy(listaDeHuecosLibres, ver_si_tamanio_requerido_entra_en_hueco_libre)){
         hueco_libre* huecoDisponible = puntero_algoritmo_asignacion();
-
-        // actualizar lista de procesos
-        // actualizar lista de huecos libres
-        // devolver contexto a kernel
+        proceso* procesoEncontrado =  list_find(listaDeProcesos,es_proceso);
+        segmento* segmentoCreado = segmento_crear(idSegmento, huecoDisponible->direccion,tamanioRequeridoParaSegmentoACrear);
+        procesoEncontrado->tablaDeSegmentos[idSegmento] = segmentoCreado;
+        int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio; 
+        huecoDisponible->tamanio = tamanioNuevoDeHueco;
+        t_buffer* buffer = buffer_crear();
+        buffer_empaquetar_tabla_de_segmentos(buffer,procesoEncontrado->tablaDeSegmentos,memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
+        stream_enviar_buffer(socketKERNEL,HEADER_segmento_creado,buffer);
+        buffer_destruir(buffer);
 
     }else if(obtener_tamanio_libre_total() >= tamanioRequeridoParaSegmentoACrear){
         // aca compactacion
@@ -162,14 +180,6 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
     return huecoLibre;
 }
 
-proceso* crear_proceso(uint32_t pid){
-    proceso* procesoNuevo = malloc(sizeof(*procesoNuevo));
-    procesoNuevo->pid = pid; 
-    int cantidadDeSegs = memoria_config_obtener_cantidad_de_segmentos(memoriaConfig);
-    procesoNuevo->tablaDeSegmentos = malloc(sizeof(procesoNuevo->tablaDeSegmentos)*cantidadDeSegs);
-    return procesoNuevo;
-}
-
 
 void recibir_de_kernel(void){
 
@@ -184,12 +194,13 @@ void recibir_de_kernel(void){
         switch (headerRecibido)
         {
         case HEADER_proceso_a_agregar_a_memoria:
-            proceso* procesoNuevo = crear_proceso(pID);
+            proceso* procesoNuevo = proceso_crear(pID, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
             procesoNuevo->tablaDeSegmentos[0] = segmento0;
             list_add(listaDeProcesos,procesoNuevo);
             t_buffer* bufferProcesoNuevo = buffer_crear();
             int cantidadDeSegmentos = memoria_config_obtener_cantidad_de_segmentos(memoriaConfig);
-            buffer_empaquetar_tabla(bufferProcesoNuevo,procesoNuevo,cantidadDeSegmentos);
+            buffer_empaquetar_tabla_de_segmentos(bufferProcesoNuevo,procesoNuevo->tablaDeSegmentos,cantidadDeSegmentos);
+            buffer_empaquetar_proceso_de_memoria(bufferProcesoNuevo,procesoNuevo,cantidadDeSegmentos);
             stream_enviar_buffer(socketKERNEL,HEADER_proceso_agregado_a_memoria,bufferProcesoNuevo);
             buffer_destruir(bufferProcesoNuevo);
             break;
@@ -271,7 +282,7 @@ int main(int argc, char* argv[]){
 
     void* bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
     
-    segmento0 = crear_segmento(0,0,memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
+    segmento0 = segmento_crear(0,0,memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
     
     listaDeHuecosLibres = list_create();
     int tamanioDeMemoriaInicial = memoria_config_obtener_tamanio_memoria(memoriaConfig) - tamanioDeSegmento0;
