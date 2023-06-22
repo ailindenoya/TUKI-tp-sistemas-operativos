@@ -2,7 +2,6 @@
 #include "fileSystem_config.h"
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <string.h>
 
 
 typedef struct t_fcb t_fcb;

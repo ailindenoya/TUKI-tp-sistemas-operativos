@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "../include/fcb.h"
 #define PATH_FCB "fcb/"
 
