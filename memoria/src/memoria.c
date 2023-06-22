@@ -133,28 +133,14 @@ int obtener_tamanio_libre_total(void){
 
 
 
-void 
-
-
-
 void atender_create_segment(int pid, int idSegmento){
-    /*
-    bool es_proceso(void* procesoAux){
-        proceso* procesoN = (proceso*) procesoAux;
-        return procesoN->pid == pid;
-    }
-*/ //// pos 1 pos 2 pos 3 pos 4
-            // huec       //huec
-            // 1 //(2)     //2 (4)
-
-/// cada vez que encontramos un espacio ocupado, lo agregamos a una lista. 
 
     if(list_any_satisfy(listaDeHuecosLibres, ver_si_tamanio_requerido_entra_en_hueco_libre)){
         hueco_libre* huecoDisponible = puntero_algoritmo_asignacion();
-        proceso* procesoEncontrado =  list_find(listaDeProcesos,es_proceso);
+        proceso* procesoEncontrado =  encontrar_proceso(pid);
         segmento* segmentoCreado = segmento_crear(idSegmento, huecoDisponible->direccion,tamanioRequeridoParaSegmentoACrear);
         procesoEncontrado->tablaDeSegmentos[idSegmento] = segmentoCreado;
-        int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio; 
+        int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado.tamanio; 
         huecoDisponible->tamanio = tamanioNuevoDeHueco;
         t_buffer* buffer = buffer_crear();
         buffer_empaquetar_tabla_de_segmentos(buffer,procesoEncontrado->tablaDeSegmentos,memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
@@ -162,11 +148,12 @@ void atender_create_segment(int pid, int idSegmento){
         buffer_destruir(buffer);
 
     }else if(obtener_tamanio_libre_total() >= tamanioRequeridoParaSegmentoACrear){
-        hueco_libre* huecoNuevo;
-        huecoNuevo->tamanio = obtener_tamanio_libre_total();
+        t_list* listaDeSegmentosLibres = list_create();
+        // hay que iterar TODAS las tablas de segmentos de TODOS los procesos.
+        // COMPACTACION
         
-        // aca compactacion
-        
+
+
     }else{
         // aca no hay espacio
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_proceso_terminado_out_of_memory);
@@ -175,8 +162,40 @@ void atender_create_segment(int pid, int idSegmento){
 
 }
 
-void atender_delete_segment(int pid, int idSegmento ){
 
+
+void copiarTablaDeSegmentos(int pid, int IdSegmento){
+
+    proceso* procesoEncontrado = encontrar_proceso(pid); 
+
+}
+
+proceso* encontrar_proceso(int pid){
+     bool es_proceso(void* procesoAux){
+        proceso* procesoN = (proceso*) procesoAux;
+        return procesoN->pid == pid;
+    }
+    return list_find(listaDeProcesos,es_proceso); 
+}
+
+
+segmento encontrar_segmento(int pid, int idSegmento){
+    proceso* procesoEncontrado = encontrar_proceso(pid); 
+    for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
+        if (procesoEncontrado->tablaDeSegmentos[i].id == idSegmento){
+            return procesoEncontrado->tablaDeSegmentos[i];
+        }
+    }
+}
+
+void atender_delete_segment(int pid, int idSegmento ){
+  
+    segmento segmentoEncontrado = encontrar_segmento(pid,idSegmento);
+    hueco_libre* huecoLibre = crear_hueco_libre(segmentoEncontrado.tamanio, segmentoEncontrado.base);
+    list_add(listaDeHuecosLibres,huecoLibre);
+    segmentoEncontrado.base = -1;
+    segmentoEncontrado.id = -1;
+    segmentoEncontrado.tamanio = -1;
 }
 
 hueco_libre* crear_hueco_libre(int tamanio, int dir){
@@ -288,7 +307,7 @@ int main(int argc, char* argv[]){
     void* bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
     
     pteroASegmento0 = segmento_crear(0,0,memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
-    
+
     listaDeHuecosLibres = list_create();
     int tamanioDeMemoriaInicial = memoria_config_obtener_tamanio_memoria(memoriaConfig) - tamanioDeSegmento0;
     hueco_libre* huecoLibreInicial = crear_hueco_libre(tamanioDeMemoriaInicial,tamanioDeSegmento0); 

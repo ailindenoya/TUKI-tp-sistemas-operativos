@@ -26,5 +26,5 @@ hueco_libre* worst_fit(void);
 hueco_libre* first_fit(void);
 hueco_libre* obtener_hueco_mas_grande(hueco_libre* hueco1, hueco_libre* hueco2);
 hueco_libre* obtener_hueco_mas_chico(hueco_libre* hueco1, hueco_libre* hueco2);
-
+proceso* encontrar_proceso(int pid);
 #endif
