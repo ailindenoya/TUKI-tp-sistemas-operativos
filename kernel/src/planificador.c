@@ -420,8 +420,7 @@ void atender_pcb() {
                 break;
 
             case HEADER_proceso_F_OPEN:
-
-            /*    t_buffer* buffer_F_OPEN = buffer_crear();
+                t_buffer* buffer_F_OPEN = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_OPEN);
 
@@ -435,9 +434,11 @@ void atender_pcb() {
 
                     break;
                 }
-                t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo)); 
+            
+
+               // t_archivo_tabla tabla = list_find(tablaArchivosAbiertos, (*encontrarArchivoEnTabla)(nombreArchivo)); 
                 
-                if(//No lo encontro ){
+                //if(//No lo encontro ){
                     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivo);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
 
@@ -446,16 +447,16 @@ void atender_pcb() {
 
                     if(respuestaFileSystem != HEADER_archivo_abierto){
                         log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivo);
-                        exit(-1);
-                    }
-                }
+                        exit(-1);}
+                  //  }
+                // }
 
                 t_archivo_tabla_actualizar_cola_procesos(tabla, pcb_obtener_pid(pcb)); 
 
                 // Bloquear proceso
-                */
+                
                 break;
-            case HEADER_create_segment:
+                case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
@@ -585,7 +586,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         pcb_setear_tabla_de_segmentos(nuevoPCB,procesoConSegmentoCreado->tablaDeSegmentos,cantidadDeSegmentos);
         proceso_destruir(procesoConSegmentoCreado);
         
-        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB), pcb_obtener_tabla_de_segmentos(nuevoPCB)[0]->tamanio);
+        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB), pcb_obtener_tabla_de_segmentos(nuevoPCB)[0].tamanio);
         ///////////
 
         pcb_setear_socket(nuevoPCB, socketProceso);
