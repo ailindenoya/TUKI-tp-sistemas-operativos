@@ -345,24 +345,13 @@ t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
                     return tab->nombreArchivo == nombreArchivoNuevo;
                 }
     return list_find(tablaArchivosAbiertos, encontrarArch); 
-    
+
 }
 
 
 
 void atender_pcb() {
-    /*
-    
-    bool ver_si_tamanio_requerido_entra_en_hueco_libre(void* huecoAux){
-    hueco_libre* hueco = (hueco_libre*) huecoAux;
-    return hueco->tamanio >= tamanioRequeridoParaSegmentoACrear;
-}*/
-  /* char* nombreArchivoNuevo;
-    bool encontrarArch(void* Aux){
-        t_archivo_tabla* tab = (t_archivo_tabla*) Aux; 
-                    return tab->nombreArchivo == nombreArchivoNuevo;
-                }
-*/ 
+
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
         
@@ -455,13 +444,12 @@ void atender_pcb() {
                     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
                     // Crear entrada en tabla
-
                     break;
                 }
             
-                t_archivo_tabla* tabla =  encontrarArchivo(nombreArchivoNuevo);
-                
-                //if(//No lo encontro ){
+                t_archivo_tabla* tabla = encontrarArchivo(nombreArchivoNuevo);
+
+                //if(/*No lo encontro */){
                     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
 
@@ -470,13 +458,14 @@ void atender_pcb() {
 
                     if(respuestaFileSystem != HEADER_archivo_abierto){
                         log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
-                        exit(-1);}
-                  //  }
-                // }
+                        exit(-1);
+                    }
+                //}
 
-                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb_obtener_pid(pcb)); 
+                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb);
 
                 // Bloquear proceso
+
                 break;
                 case HEADER_proceso_F_CLOSE:
                 break;
@@ -488,15 +477,15 @@ void atender_pcb() {
                 break;
                 case HEADER_proceso_F_TRUNCATE:
                 break;
+
                 case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
                 stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
                 buffer_destruir(bufferCreateSegment);
-                ////
-                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                 
+                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                 switch (respuestaMemoria)
                 {
                 case HEADER_segmento_creado:
@@ -527,7 +516,7 @@ void atender_pcb() {
         sem_post(&dispatchPermitido);
     }
 }
-                // habria que destruir los buffers en cada CASE???
+            
 
 
 void planificador_corto_plazo() {
