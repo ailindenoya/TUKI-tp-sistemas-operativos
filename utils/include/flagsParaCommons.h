@@ -11,13 +11,18 @@ typedef enum {
     HEADER_proceso_wait,
     HEADER_proceso_parametros,
     HEADER_proceso_signal,
-    HEADER_proceso_F_OPEN,
 
+
+    HEADER_proceso_F_OPEN,
+    HEADER_proceso_F_CLOSE,
+    HEADER_proceso_F_READ,
+    HEADER_proceso_F_WRITE,
+    HEADER_proceso_F_SEEK,
+    HEADER_proceso_F_TRUNCATE,
 
     HEADER_cantidad_seg_enviada,
     HEADER_proceso_agregado_a_memoria,
     HEADER_proceso_a_agregar_a_memoria,
-
     HEADER_create_segment,
     HEADER_segmento_creado,
     

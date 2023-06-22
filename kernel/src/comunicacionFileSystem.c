@@ -1,15 +1,10 @@
 extern int socketFILESYSTEM;
 #include "../include/comunicacionFileSystem.h"
 extern t_log* kernelLogger;
-//extern t_list* tablaArchivosAbiertos;
+extern t_list* tablaArchivosAbiertos;
 
-struct t_archivo_tabla{
-    __uint32_t pid;
-    char* nombreArchivo;
-    t_list* colaProcesos;
-};
 
-__uint32_t t_archivo_tabla_obtener_pid(t_archivo_tabla* self){
+uint32_t t_archivo_tabla_obtener_pid(t_archivo_tabla* self){
     return self->pid;
 }
 char* t_archivo_tabla_obtener_nombre_archivo(t_archivo_tabla* self){
