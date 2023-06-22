@@ -17,7 +17,7 @@ struct t_pcb {
     segmento* tablaDeSegmentos;
 
     uint8_t estado;
-    // tabla de archivos abiertos con LA info de la POSICION del puntero en cada uno (struct con puntero indicando posicion)
+    t_list* tablaDeArchivosAbiertos;
     int* socketConsola; // para saber a que consola pertenece
 
 };
@@ -26,7 +26,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     t_pcb* self = malloc(sizeof(*self));
     self->pid = pid;
     self->tamanio = tamanio;
-    self->programCounter = 0;;
+    self->programCounter = 0;
     self->estado = NEW;
     self->socketConsola = NULL;
     self->instrucciones = NULL;
@@ -36,6 +36,7 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->tiempoEjecutado = 0.0;
     self->tablaDeSegmentos = malloc(sizeof(*(self->tablaDeSegmentos))*cantidadDeSegmentos);
     inicializar_tabla_de_segmentos(self->tablaDeSegmentos, cantidadDeSegmentos);
+    self->tablaDeArchivosAbiertos = list_create();
     return self;
 }
 
@@ -122,3 +123,10 @@ void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento* tablaDeSegs, int canti
     }
 }
 
+t_list* pcb_obtener_tabla_de_archivos_abiertos(t_pcb* self){
+    return self->tablaDeArchivosAbiertos;
+}
+
+void pcb_agregar_a_tabla_de_archivos_abiertos(t_pcb* self, t_archivo_tabla_proceso* tablaArchivoAbierto){
+    list_add(self->tablaDeArchivosAbiertos, (void*) tablaArchivoAbierto);
+}

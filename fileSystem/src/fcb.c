@@ -57,6 +57,8 @@ void crearArchivoFCB(char* NombreArchivo){
     
     log_info(fileSystemLogger, "Crear Archivo: %s", NombreArchivo);
 
+    free(ruta);
+    free(Nom);
 }
 
 char* fcb_obtener_nombre_archivo(t_fcb* self){

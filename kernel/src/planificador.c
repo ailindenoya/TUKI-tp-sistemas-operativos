@@ -348,7 +348,34 @@ t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
 
 }
 
+void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
+    t_buffer* buffer_F_OPEN = buffer_crear();
 
+    buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
+        stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+        
+        uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+        stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+
+        if (respuestaFileSystem == HEADER_no_existe_archivo){
+            stream_enviar_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_crear_archivo);
+            respuestaFileSystem =stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+            if(respuestaFileSystem == HEADER_archivo_abierto){
+                buffer_destruir(buffer_F_OPEN);
+                t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
+                list_add(tablaArchivosAbiertos, (void*) tabla);
+            }
+            else {
+                log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
+            }
+        }
+
+        else if (respuestaFileSystem == HEADER_archivo_abierto){
+            buffer_destruir(buffer_F_OPEN);
+            t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
+            list_add(tablaArchivosAbiertos, (void*) tabla);
+        }
+}
 
 void atender_pcb() {
 
@@ -440,32 +467,32 @@ void atender_pcb() {
                 char* nombreArchivoNuevo;
                 buffer_desempaquetar_string(buffer_F_OPEN, &nombreArchivoNuevo);
 
-                if(list_is_empty(tablaArchivosAbiertos)){
-                    buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
-                    // Crear entrada en tabla
-                    break;
+                if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
+                    enviar_F_OPEN_a_FS(nombreArchivoNuevo);
+                    t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
                 }
-            
-                t_archivo_tabla* tabla = encontrarArchivo(nombreArchivoNuevo);
+                
+                // Tabla no vacía, hay archivos abiertos
 
-                //if(/*No lo encontro */){
-                    buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+                t_archivo_tabla* tablaDeArchivoBuscado = encontrarArchivo(nombreArchivoNuevo);  //Buscas el archivo en la tabla
 
-                    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
-                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+                if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) != nombreArchivoNuevo){    // Si no está, lo abris
+                    enviar_F_OPEN_a_FS(nombreArchivoNuevo, pcb_obtener_pid(pcb));
+                    t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
+                }
+                
+                // El archivo está en la tabla, está abierto, se bloquea el proceso en la cola de bloqueados del archivo
 
-                    if(respuestaFileSystem != HEADER_archivo_abierto){
-                        log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
-                        exit(-1);
-                    }
-                //}
+                else if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) == nombreArchivoNuevo){
+                    t_archivo_tabla_actualizar_cola_procesos(tablaDeArchivoBuscado, pcb);
 
-                t_archivo_tabla_actualizar_cola_procesos(tabla, pcb);
-
-                // Bloquear proceso
-
+                    pcb_setear_estado(pcb, BLOCKED);
+                    estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
+                    loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                    sem_post(estado_obtener_sem(estadoReady));
+                }
                 break;
                 case HEADER_proceso_F_CLOSE:
                 break;

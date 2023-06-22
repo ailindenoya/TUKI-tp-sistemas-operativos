@@ -16,7 +16,7 @@ uint32_t obtener_siguiente_pid(void);
 void* encolar_en_new_nuevo_pcb_entrante(void*);
 void iniciar_planificadores(void);
 bool encontrarArchivoEnTabla(char*);
-
+void enviar_F_OPEN_a_FS(char*, uint32_t);
 
 t_pcb* iniciar_fifo(t_estado* estado);
 

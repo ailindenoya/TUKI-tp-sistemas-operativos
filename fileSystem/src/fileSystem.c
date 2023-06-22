@@ -49,7 +49,6 @@ int main(int argc, char* argv[]){
         fileSystem_destruir(fileSystemConfig,fileSystemLogger );
         return -1;
     }    
-    crearArchivoFCB("hola");
     // conexion con MEMORIA
 
     const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));

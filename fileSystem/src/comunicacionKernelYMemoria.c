@@ -34,4 +34,5 @@ void F_OPEN(char* NombreArchivo){
     buffer_empaquetar_string(mensajeOK, NombreArchivo);
     stream_enviar_buffer(socketKERNEL, HEADER_archivo_abierto, mensajeOK);
     buffer_destruir(mensajeOK);
+    free(ruta);
 }
