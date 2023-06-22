@@ -1,5 +1,6 @@
 #include "../include/config_inicializacion.h"
 #include <string.h>
+#include <stdlib.h>
 
 int config_iniciar(void* config, char* pathAlConfig, t_log* logger,void (*config_initializer)(void* moduleConfig, t_config* configTemp)) {
     t_config* configTemp = config_create(pathAlConfig);
