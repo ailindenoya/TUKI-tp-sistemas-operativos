@@ -1,6 +1,9 @@
 #include "../include/memoria_config.h"
 #include "../../utils/include/funcionesDeMemoria.h"
+#include "../../utils/src/list_find_element_and_index.c"
 #include "../include/memoria.h"
+
+
 
 #include <errno.h>
 #include <pthread.h>
@@ -27,7 +30,7 @@ int tamanioRequeridoParaSegmentoACrear;
 int tamanioLibreTotal;
 int tamanioDeSegmento0;
 segmento* pteroASegmento0;
-
+void* bloque_de_memoria;
 
 hueco_libre* (*puntero_algoritmo_asignacion) (void) = NULL;
 
@@ -133,6 +136,34 @@ int obtener_tamanio_libre_total(void){
 
 
 
+// hueco_libre* hueco = (hueco_libre*) huecoAux;
+void compactar(){
+
+    int cursor = memoria_config_obtener_tamanio_segmento_0(memoriaConfig);
+    void* bloque_espejo_para_compactar = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
+    memcpy(bloque_espejo_para_compactar, bloque_de_memoria, memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
+    void copiarProcesoAListaCompactada(void* Aux){
+        proceso* procesoACopiar = (proceso*) Aux;   
+
+        for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
+
+            if(procesoACopiar->tablaDeSegmentos[i].id != -1){
+                memcpy(bloque_espejo_para_compactar + cursor, bloque_de_memoria + procesoACopiar->tablaDeSegmentos[i].base, procesoACopiar->tablaDeSegmentos[i].tamanio);
+                procesoACopiar->tablaDeSegmentos[i].base = cursor; 
+                cursor += procesoACopiar->tablaDeSegmentos[i].tamanio; 
+            }
+        }
+    }
+    
+    list_iterate(listaDeProcesos, copiarProcesoAListaCompactada); 
+
+    free(bloque_de_memoria);
+    bloque_de_memoria = bloque_espejo_para_compactar;
+}
+
+
+
+
 void atender_create_segment(int pid, int idSegmento){
 
     if(list_any_satisfy(listaDeHuecosLibres, ver_si_tamanio_requerido_entra_en_hueco_libre)){
@@ -148,10 +179,11 @@ void atender_create_segment(int pid, int idSegmento){
         buffer_destruir(buffer);
 
     }else if(obtener_tamanio_libre_total() >= tamanioRequeridoParaSegmentoACrear){
-        t_list* listaDeSegmentosLibres = list_create();
-        // hay que iterar TODAS las tablas de segmentos de TODOS los procesos.
-        // COMPACTACION
 
+        // enviar msje a kernel de decirle que tiene que compactar
+        stream_enviar_buffer_vacio(socketKERNEL,HEADER_hay_que_compactar);
+        compactar();
+        // COMPACTACION
     }else{
         // aca no hay espacio
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_proceso_terminado_out_of_memory);
@@ -185,12 +217,40 @@ void atender_delete_segment(int pid, int idSegmento ){
   
     segmento segmentoEncontrado = encontrar_segmento(pid,idSegmento);
     hueco_libre* huecoLibre = crear_hueco_libre(segmentoEncontrado.tamanio, segmentoEncontrado.base);
-    list_add(listaDeHuecosLibres,huecoLibre);
     segmentoEncontrado.base = -1;
     segmentoEncontrado.id = -1;
     segmentoEncontrado.tamanio = -1;
+    /// si hay huecos libres aledaños, compactar.
+    
+    bool esAledanioDeArriba(void* huecoAuxArriba){
+        hueco_libre* huecoArriba = (hueco_libre*) huecoAuxArriba;
+        return huecoArriba->direccion + huecoArriba->tamanio == huecoLibre->direccion; 
+    }
 
-    /// si hay huecos libres aledaños, compactar. TODO 
+    bool esAledanioDeAbajo(void*huecoAuxAbajo){
+        hueco_libre* huecoAbajo = (hueco_libre*) huecoAuxAbajo;
+        return huecoLibre->direccion + huecoLibre->tamanio == huecoAbajo->direccion; 
+    }
+
+    int* indiceHuecoDeArriba = malloc(sizeof(*indiceHuecoDeArriba));
+    
+    hueco_libre* huecoAledanioDeArriba=  list_find_element_and_index(listaDeHuecosLibres, esAledanioDeArriba, indiceHuecoDeArriba);
+
+    if(huecoAledanioDeArriba!= NULL){
+        huecoLibre->direccion = huecoAledanioDeArriba->direccion; 
+        huecoLibre->tamanio += huecoAledanioDeArriba->tamanio;
+        list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeArriba, free);
+    }
+    free(indiceHuecoDeArriba);
+    
+    int* indiceHuecoDeAbajo =  malloc(sizeof(*indiceHuecoDeAbajo));
+    hueco_libre* huecoAledanioDeAbajo = list_find_element_and_index(listaDeHuecosLibres, esAledanioDeAbajo, indiceHuecoDeAbajo);
+    
+    if(huecoAledanioDeAbajo!=NULL){
+        huecoLibre->tamanio += huecoAledanioDeAbajo->tamanio;
+        list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeAbajo,free);
+    }
+    free(indiceHuecoDeAbajo);
 }
 
 hueco_libre* crear_hueco_libre(int tamanio, int dir){
@@ -300,7 +360,7 @@ int main(int argc, char* argv[]){
 
     tamanioDeSegmento0 = memoria_config_obtener_tamanio_segmento_0(memoriaConfig);
 
-    void* bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
+    bloque_de_memoria = malloc(memoria_config_obtener_tamanio_memoria(memoriaConfig));
     
     pteroASegmento0 = segmento_crear(0,0,memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
 

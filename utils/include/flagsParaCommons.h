@@ -31,6 +31,7 @@ typedef enum {
     HEADER_mov_out,
     HEADER_existe_archivo,
     HEADER_proceso_terminado_out_of_memory,
+    HEADER_hay_que_compactar,
 
     HEADER_archivo_abierto,
     HEADER_no_existe_archivo,

@@ -522,9 +522,13 @@ void atender_pcb() {
                     buffer_desempaquetar_tabla_de_segmentos(bufferSegCreado,pcb_obtener_tabla_de_segmentos(pcb),cantidadDeSegmentos);
                     buffer_destruir(bufferSegCreado);
                     break;
+                case HEADER_hay_que_compactar: 
+                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    break;
                 case HEADER_proceso_terminado_out_of_memory:
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+
                     break;
                 default:
                     break;

@@ -4,6 +4,7 @@
 #include <string.h>
 
 
+
 void inicializar_tabla_de_segmentos(segmento* tablaDeSegmentos, int cantidadDeSegmentos){
     for(int i=0; i<cantidadDeSegmentos; i++){
         tablaDeSegmentos[i].base = -1;
@@ -60,3 +61,4 @@ void proceso_destruir(proceso* procesoADestruir){
     free(procesoADestruir->tablaDeSegmentos);
     free(procesoADestruir);
 }
+
