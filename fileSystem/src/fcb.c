@@ -4,6 +4,7 @@
 
 
 extern t_log* fileSystemLogger;
+extern t_list* listaFCBsAbiertos;
 
 struct t_fcb {
     char* NOMBRE_ARCHIVO;
@@ -20,6 +21,43 @@ t_fcb* fcb_crear(char* Nombre){
     self->PUNTERO_DIRECTO = 0;
     self->PUNTERO_INDIRECTO = 0;
 
+    return self;
+}
+
+t_fcb* encontrarFCB(char* nombreArchivoNuevo){
+
+    bool encontrarArch(void* Aux){
+        t_fcb* tab = (t_fcb*) Aux; 
+                    return tab->NOMBRE_ARCHIVO == nombreArchivoNuevo;
+    }
+    return list_find(listaFCBsAbiertos, encontrarArch); 
+
+}
+
+int config_iniciar_fcb(void* config, char* pathAlConfig, t_log* logger,void (*config_initializer)(void* moduleConfig, t_config* configTemp)) {
+    t_config* configTemp = config_create(pathAlConfig);
+    if (NULL == configTemp) {
+        log_error(logger, "el path \"%s\" no se encontro", pathAlConfig);
+        return -1;
+    }
+    config_initializer(config, configTemp);
+    config_destroy(configTemp);
+    return 1;
+}
+
+void fcb_config_iniciar(void* moduleConfig, t_config* tempCfg){
+    t_fcb* fcbConfig = (t_fcb*) moduleConfig;
+
+    fcbConfig->NOMBRE_ARCHIVO = strdup(config_get_string_value(tempCfg, "NOMBRE_ARCHIVO"));
+    fcbConfig->TAMANIO_ARCHIVO = config_get_int_value(tempCfg, "TAMANIO_ARCHIVO");
+    fcbConfig->PUNTERO_DIRECTO = config_get_int_value(tempCfg, "PUNTERO_DIRECTO");
+    fcbConfig->PUNTERO_INDIRECTO = config_get_int_value(tempCfg, "PUNTERO_INDIRECTO");
+   
+}
+
+t_fcb* fcb_config_crear(char* path, t_log* fileSystemLogger){
+    t_fcb* self = malloc(sizeof(*self));
+    config_iniciar_fcb(self, path, fileSystemLogger, fcb_config_iniciar);
     return self;
 }
 
@@ -76,4 +114,16 @@ uint32_t fcb_obtener_puntero_directo(t_fcb* self){
 
 uint32_t fcb_obtener_puntero_indirecto(t_fcb* self){
     return self->PUNTERO_INDIRECTO;
+}
+
+void fcb_setear_tamanio_archivo(t_fcb* self, uint32_t tamanio){
+    self->TAMANIO_ARCHIVO = tamanio;
+}
+
+void fcb_setear_puntero_directo(t_fcb* self, uint32_t punteroDirecto){
+    self->PUNTERO_DIRECTO = punteroDirecto;
+}
+
+void fcb_setear_puntero_indirecto(t_fcb* self, uint32_t punteroIndirecto){
+    self->PUNTERO_INDIRECTO = punteroIndirecto;
 }

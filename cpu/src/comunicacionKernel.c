@@ -81,9 +81,6 @@ void ejecutar_SET(t_contexto* pcb, char* reg, char* param) {
 void ejecutar_F_CLOSE(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
-void ejecutar_F_OPEN(t_contexto* pcb,uint32_t programCounterActualizado){
-
-}
 void ejecutar_F_READ(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
@@ -91,9 +88,6 @@ void ejecutar_F_WRITE(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
 void ejecutar_F_SEEK(t_contexto* pcb,uint32_t programCounterActualizado){
-
-}
-void ejecutar_F_TRUNCATE(t_contexto* pcb,uint32_t programCounterActualizado){
 
 }
 void ejecutar_MOV_IN(t_contexto* pcb,uint32_t programCounterActualizado, char* reg, char* dirLogica){
@@ -192,7 +186,32 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     buffer_destruir(bufferSalida);
 }
 
+void ejecutar_F_OPEN(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_OPEN", pid);
 
+    t_buffer* bufferF_OPEN = buffer_crear();
+    buffer_empaquetar(bufferF_OPEN, &pid, sizeof(pid));
+    buffer_empaquetar(bufferF_OPEN, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar_string(bufferF_OPEN, NombreArchivo);
+
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_OPEN, bufferF_OPEN);
+    buffer_destruir(bufferF_OPEN);   
+}
+
+void ejecutar_F_TRUNCATE(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo, uint32_t tamanio){
+    uint32_t pid = contexto_obtener_pid(pcb);
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", pid);
+
+    t_buffer* bufferF_TRUNCATE = buffer_crear();
+    buffer_empaquetar(bufferF_TRUNCATE, &pid, sizeof(pid));
+    buffer_empaquetar(bufferF_TRUNCATE, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar_string(bufferF_TRUNCATE, NombreArchivo);
+    buffer_empaquetar(bufferF_TRUNCATE, &tamanio, sizeof(tamanio));
+
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_TRUNCATE, bufferF_TRUNCATE);
+    buffer_destruir(bufferF_TRUNCATE);   
+}
 
  bool cpu_ejecutar_instrucciones(t_contexto* pcb, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
     contexto_setear_program_counter(pcb, contexto_obtener_program_counter(pcb) + 1);
@@ -207,6 +226,7 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     case INSTRUCCION_f_close:
         break;
     case INSTRUCCION_f_open:
+        ejecutar_F_OPEN(pcb, programCounterActualizado, parametro1);
         break;
     case INSTRUCCION_f_write:
         break;
@@ -215,6 +235,7 @@ void ejecutar_YIELD(t_contexto* pcb, uint32_t programCounterActualizado){
     case INSTRUCCION_f_seek:
         break;
     case INSTRUCCION_f_truncate:
+        ejecutar_F_TRUNCATE(pcb, programCounterActualizado, parametro1, parametro2);
         break;
     case INSTRUCCION_mov_in:
         ejecutar_MOV_IN(pcb,programCounterActualizado,parametro1, parametro2);

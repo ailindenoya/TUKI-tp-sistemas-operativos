@@ -10,6 +10,7 @@
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 extern t_superbloque_config* superbloqueConfig;
+t_list* listaFCBsAbiertos;
 int socketKERNEL;
 
 void fileSystem_destruir(t_fileSystem_config* fileSystemConfig, t_log* fileSystemLogger) {
@@ -71,8 +72,8 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
-    // Cargar BitMap
     t_bitarray* bitmap = cargarBitMap();
+    listaFCBsAbiertos = list_create();
 
     // acepta conexion con KERNEL
 

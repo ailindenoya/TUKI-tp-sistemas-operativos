@@ -343,7 +343,7 @@ t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
     bool encontrarArch(void* Aux){
         t_archivo_tabla* tab = (t_archivo_tabla*) Aux; 
                     return tab->nombreArchivo == nombreArchivoNuevo;
-                }
+    }
     return list_find(tablaArchivosAbiertos, encontrarArch); 
 
 }
@@ -459,8 +459,6 @@ void atender_pcb() {
                 break;
 
             case HEADER_proceso_F_OPEN:
-
-
                 t_buffer* buffer_F_OPEN = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_OPEN);
@@ -503,6 +501,29 @@ void atender_pcb() {
                 case HEADER_proceso_F_SEEK:
                 break;
                 case HEADER_proceso_F_TRUNCATE:
+                    t_buffer* bufferF_TRUNCATE = buffer_crear();
+                    stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
+                    buffer_destruir(bufferF_TRUNCATE);
+                    
+                    pcb_setear_estado(pcb, BLOCKED);
+                    estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
+                    loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                    sem_post(estado_obtener_sem(estadoReady));
+
+                    /* Logica para desbloqueo del proceso por un F_TRUNCATE
+                    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+
+                    if(respuestaFileSystem == HEADER_ERROR_F_TRUNCATE){
+                        log_error(kernelLogger, "Error al ejecutar F_TRUNCATE");
+                    }
+                    else if(respuestaFileSystem == HEADER_F_TRUNCATE_REALIZADO){
+                        pcb_setear_estado(pcb, READY);
+                        estado_encolar_pcb_con_semaforo(estadoReady, pcb);
+                        loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
+                    }
+                    */
                 break;
 
                 case HEADER_create_segment:

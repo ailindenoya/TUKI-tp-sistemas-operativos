@@ -36,7 +36,10 @@ typedef enum {
     HEADER_archivo_abierto,
     HEADER_no_existe_archivo,
     HEADER_crear_archivo,
-    HEADER_F_OPEN
+    HEADER_F_OPEN,
+    HEADER_F_TRUNCATE,
+    HEADER_ERROR_F_TRUNCATE,
+    HEADER_F_TRUNCATE_REALIZADO
 } t_header;
 
 typedef enum {
