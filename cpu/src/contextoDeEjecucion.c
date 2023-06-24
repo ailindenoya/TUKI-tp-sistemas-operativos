@@ -3,18 +3,21 @@
 
 extern t_log* cpuLogger;
 
+extern int cantidadDeSegmentos;
 struct t_contexto {
     uint32_t pid;
     uint32_t programCounter;
     t_list* instrucciones;
+    segmento* tablaDeSegmentos;
 };
 
-t_contexto* crear_contexto(uint32_t pid, uint32_t programCounter){
-   t_contexto* contexto = malloc(sizeof(*contexto));
-   contexto->pid = pid; 
-   contexto->programCounter = programCounter; 
-   contexto->instrucciones = NULL;
-   return contexto;
+t_contexto *crear_contexto(uint32_t pid, uint32_t programCounter){
+    t_contexto *contexto = malloc(sizeof(*contexto));
+    contexto->pid = pid;
+    contexto->programCounter = programCounter;
+    contexto->instrucciones = NULL;
+    contexto->tablaDeSegmentos = malloc(sizeof(*(contexto->tablaDeSegmentos)) * cantidadDeSegmentos);
+    return contexto;
 }
 
 uint32_t contexto_obtener_pid(t_contexto* self) {

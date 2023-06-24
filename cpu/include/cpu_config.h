@@ -25,7 +25,7 @@ char* cpu_config_obtener_ip_memoria(t_cpu_config* self);
 uint32_t cpu_config_obtener_retardo_instruccion(t_cpu_config* self);
 char* cpu_config_obtener_puerto_memoria(t_cpu_config* self);
 char* cpu_config_obtener_puerto_escucha(t_cpu_config* self);
-char* cpu_config_obtener_tam_max_segmento(t_cpu_config* self) ;
+int cpu_config_obtener_tam_max_segmento(t_cpu_config* self) ;
 int cpu_config_obtener_socket_memoria(t_cpu_config* self);
 void cpu_config_setear_socket_kernel(t_cpu_config* self, int socket) ;
 int cpu_config_obtener_socket_kernel(t_cpu_config* self);

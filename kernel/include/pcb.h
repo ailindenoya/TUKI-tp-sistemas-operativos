@@ -8,13 +8,30 @@
 #include <stdint.h>
 #include "../../utils/include/buffer.h"
 #include "../../utils/include/funcionesDeMemoria.h"
-#include "../include/comunicacionFileSystem.h"
 #include <pthread.h>
 #include "nombre_estados.h"
+#include "tabla_de_archivos_abiertos.h"
 
 
+typedef struct t_pcb {
+    uint32_t pid;
+    uint32_t tamanio;
+    t_buffer* instrucciones;
+    uint32_t programCounter;
+    time_t tiempoDellegadaAReady;
+   
+    double estimacionProximaRafaga; ///EST n+1
+    double realAnterior; // TE n real anterior
+    uint32_t tiempoDeBloqueo;
+    uint32_t tiempoEjecutado;
 
-typedef struct t_pcb t_pcb;
+    segmento* tablaDeSegmentos;
+
+    uint8_t estado;
+    t_list* tablaDeArchivosAbiertos;
+    int* socketConsola; // para saber a que consola pertenece
+
+}t_pcb;
 
 uint8_t pcb_obtener_estado(t_pcb* self) ;
 t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRRN);

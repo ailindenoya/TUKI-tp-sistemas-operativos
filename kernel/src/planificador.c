@@ -1,6 +1,6 @@
 extern int cantidadDeSegmentos;
 #include "../include/planificador.h"
-
+#include "../include/comunicacionFileSystem.h"
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
@@ -359,7 +359,8 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
 
         if (respuestaFileSystem == HEADER_no_existe_archivo){
             stream_enviar_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_crear_archivo);
-            respuestaFileSystem =stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+            respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+            stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
             if(respuestaFileSystem == HEADER_archivo_abierto){
                 buffer_destruir(buffer_F_OPEN);
                 t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
@@ -466,7 +467,7 @@ void atender_pcb() {
                 buffer_desempaquetar_string(buffer_F_OPEN, &nombreArchivoNuevo);
 
                 if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
-                    enviar_F_OPEN_a_FS(nombreArchivoNuevo);
+                    enviar_F_OPEN_a_FS(nombreArchivoNuevo,pcb_obtener_pid(pcb));
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
                 }
@@ -512,7 +513,7 @@ void atender_pcb() {
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                     sem_post(estado_obtener_sem(estadoReady));
 
-                    /* Logica para desbloqueo del proceso por un F_TRUNCATE
+                    /* Logica para desbloqueo del proceso por un F_TRUNCATE*/
                     uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
 
                     if(respuestaFileSystem == HEADER_ERROR_F_TRUNCATE){
@@ -523,9 +524,7 @@ void atender_pcb() {
                         estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                         loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
                     }
-                    */
                 break;
-
                 case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -545,11 +544,11 @@ void atender_pcb() {
                     break;
                 case HEADER_hay_que_compactar: 
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
                     break;
                 case HEADER_proceso_terminado_out_of_memory:
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
-
                     break;
                 default:
                     break;
@@ -613,7 +612,8 @@ void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb){
     t_buffer* buffer = buffer_crear();
     int pid = pcb_obtener_pid(pcb);
     buffer_empaquetar(buffer, &pid, sizeof(pid));
-    stream_enviar_buffer(socketMEMORIA,HEADER_proceso_a_agregar_a_memoria,buffer);
+    stream_enviar_buffer(socketMEMORIA,HEADER_proceso_a_agregar_a_memoria,buffer); 
+    log_info(kernelLogger, "empaqueto!");
     buffer_destruir(buffer);
 }
 
@@ -653,12 +653,10 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
             log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(nuevoPCB));
             return NULL;
         }
-        proceso* procesoConSegmentoCreado = proceso_crear(pcb_obtener_pid(nuevoPCB),cantidadDeSegmentos);
-        buffer_desempaquetar_proceso_de_memoria(bufferSegmentoCreado,procesoConSegmentoCreado,cantidadDeSegmentos);
+        stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferSegmentoCreado);
+        buffer_desempaquetar_tabla_de_segmentos(bufferSegmentoCreado,pcb_obtener_tabla_de_segmentos(nuevoPCB),cantidadDeSegmentos);
         buffer_destruir(bufferSegmentoCreado);
-        pcb_setear_tabla_de_segmentos(nuevoPCB,procesoConSegmentoCreado->tablaDeSegmentos,cantidadDeSegmentos);
-        proceso_destruir(procesoConSegmentoCreado);
-        
+
         log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB), pcb_obtener_tabla_de_segmentos(nuevoPCB)[0].tamanio);
         ///////////
 

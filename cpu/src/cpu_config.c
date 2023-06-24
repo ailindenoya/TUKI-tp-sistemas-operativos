@@ -24,10 +24,12 @@ void cpu_iniciar_config(void* moduleConfig, t_config* tempCfg) {
     cpuConfig->IP_MEMORIA = strdup(config_get_string_value(tempCfg, "IP_MEMORIA"));
     cpuConfig->PUERTO_MEMORIA = strdup(config_get_string_value(tempCfg, "PUERTO_MEMORIA"));
     cpuConfig->PUERTO_ESCUCHA = strdup(config_get_string_value(tempCfg, "PUERTO_ESCUCHA"));
-    cpuConfig->TAM_MAX_SEGMENTO = strdup(config_get_string_value(tempCfg, "TAM_MAX_SEGMENTO"));
+    cpuConfig->TAM_MAX_SEGMENTO = config_get_int_value(tempCfg, "TAM_MAX_SEGMENTO");
     cpuConfig->SOCKET_MEMORIA = -1;
     cpuConfig->SOCKET_KERNEL = -1;
 }
+
+
 
 
 t_cpu_config* cpu_config_crear(char* cpuConfigPath, t_log* cpuLogger) {
@@ -48,7 +50,7 @@ char* cpu_config_obtener_puerto_memoria(t_cpu_config* self) {
 char* cpu_config_obtener_puerto_escucha(t_cpu_config* self) {
     return self->PUERTO_ESCUCHA;
 }
-char* cpu_config_obtener_tam_max_segmento(t_cpu_config* self) {
+int cpu_config_obtener_tam_max_segmento(t_cpu_config* self) {
     return self->TAM_MAX_SEGMENTO;
 }
 int cpu_config_obtener_socket_memoria(t_cpu_config* self) {

@@ -9,7 +9,23 @@
 
 extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
+int cantidadDeSegmentos; 
 
+int recibir_cant_segmentos_de_memoria(int socketMEMORIA){
+
+    uint8_t MEMORIARespuesta = stream_recibir_header(socketMEMORIA);
+    t_buffer* buffer = buffer_crear();
+    stream_recibir_buffer(socketMEMORIA,buffer);
+    if (MEMORIARespuesta != HEADER_cantidad_seg_enviada) {
+        log_error(cpuLogger, "error al recibir cantidad de segmentos de memoria");
+        exit(-1);
+    }
+    log_info(cpuLogger, "se recibio la cantidad de segmentos de memoria");
+    int cantidadDeSegmentos;
+    buffer_desempaquetar(buffer,&cantidadDeSegmentos,sizeof(cantidadDeSegmentos));
+    buffer_destruir(buffer);
+    return cantidadDeSegmentos;
+}
 
 int main(int argc, char* argv[]) {
    
@@ -44,6 +60,8 @@ int main(int argc, char* argv[]) {
     }else{
         log_info(cpuLogger, "se establecio conexion con MEMORIA");
     }
+
+    cantidadDeSegmentos = recibir_cant_segmentos_de_memoria(socketMEMORIA);
 
     // aceptar conexion con KERNEL
 

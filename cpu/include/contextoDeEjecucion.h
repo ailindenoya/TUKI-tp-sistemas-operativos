@@ -6,6 +6,7 @@
 #include "cpu_config.h"
 #include <commons/log.h>
 #include "../../utils/include/instrucciones.h"
+#include "../../utils/include/funcionesDeMemoria.h"
 
 typedef struct t_contexto t_contexto;
 

@@ -199,8 +199,9 @@ void ejecutar_F_OPEN(t_contexto* pcb, uint32_t programCounterActualizado, char* 
     buffer_destruir(bufferF_OPEN);   
 }
 
-void ejecutar_F_TRUNCATE(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo, uint32_t tamanio){
+void ejecutar_F_TRUNCATE(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanioEnString){
     uint32_t pid = contexto_obtener_pid(pcb);
+    uint32_t tamanio = atoi(tamanioEnString);
     log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", pid);
 
     t_buffer* bufferF_TRUNCATE = buffer_crear();

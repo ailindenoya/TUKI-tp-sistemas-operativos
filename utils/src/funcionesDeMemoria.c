@@ -38,14 +38,14 @@ void buffer_empaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, in
 void buffer_desempaquetar_tabla_de_segmentos(t_buffer* self, segmento* tablaDeSegs, int cantidadDeSegs){
     segmento* tablaDeSegmentosAux = tablaDeSegs;
     for(int i=0; i<cantidadDeSegs; i++){
-        buffer_desempaquetar(self, &tablaDeSegmentosAux[i].id, sizeof(tablaDeSegmentosAux[i].id));
-        buffer_desempaquetar(self, &tablaDeSegmentosAux[i].base, sizeof(tablaDeSegmentosAux[i].base));
-        buffer_desempaquetar(self, &tablaDeSegmentosAux[i].tamanio, sizeof(tablaDeSegmentosAux[i].tamanio));
+        buffer_desempaquetar(self, &(tablaDeSegmentosAux[i].id), sizeof(tablaDeSegmentosAux[i].id));
+        buffer_desempaquetar(self, &(tablaDeSegmentosAux[i].base), sizeof(tablaDeSegmentosAux[i].base));
+        buffer_desempaquetar(self, &(tablaDeSegmentosAux[i].tamanio), sizeof(tablaDeSegmentosAux[i].tamanio));
     }
 }
 
 void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos){
-    buffer_desempaquetar(self,&unProceso->pid, sizeof(unProceso->pid));
+    buffer_desempaquetar(self,&(unProceso->pid), sizeof(unProceso->pid));
     buffer_desempaquetar_tabla_de_segmentos(self,unProceso->tablaDeSegmentos, cantidadDeSegmentos);
 }
 

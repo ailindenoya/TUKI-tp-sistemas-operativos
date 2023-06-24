@@ -7,7 +7,6 @@
 #include <pthread.h>
 #include "comunicacionCPU.h"
 #include <time.h>
-#include "comunicacionFileSystem.h"
 #include "../../utils/include/funcionesDeMemoria.h"
 
 
