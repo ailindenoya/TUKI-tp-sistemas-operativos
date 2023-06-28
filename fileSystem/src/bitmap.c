@@ -25,17 +25,7 @@ t_bitarray* cargarBitMap(){
         log_info(fileSystemLogger, "No se pudo abrir el archivo Bitmap");
     }
 
-    struct stat sb;
-    if (fstat(fd, &sb) == -1){
-        log_info(fileSystemLogger, "No se pudo obtener los datos del archivo bitmap");
-    }
-
-    if (sb.st_size == 0){
-        existeBitmap = false;
-    }
-
     ftruncate(fd, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\0'
-
 
     void* bitmap = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
