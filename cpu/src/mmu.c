@@ -9,22 +9,11 @@
 extern t_cpu_config* cpuConfig;
 
 
-int concatenar(int x, int  y) {
-    int pow = 10;
-    while(y >= pow)
-        pow *= 10;
-    return x * pow + y;        
-}
-
-int convertir_dir_logica_a_fisica(int dirLogica){
-    return concatenar(obtener_numero_de_segmento(dirLogica), obtener_offset_de_segmento(dirLogica));
-}
-
-int obtener_numero_de_segmento(int dirLogica){
+uint32_t obtener_numero_de_segmento(int dirLogica){
     return floor(dirLogica / cpu_config_obtener_tam_max_segmento(cpuConfig));
 }
 
-int obtener_offset_de_segmento(int dirLogica){
+uint32_t obtener_offset_de_segmento(int dirLogica){
     return dirLogica % cpu_config_obtener_tam_max_segmento(cpuConfig); 
 }
 

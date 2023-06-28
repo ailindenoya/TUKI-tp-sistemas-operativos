@@ -18,4 +18,5 @@ void contexto_setear_program_counter(t_contexto* self, uint32_t programCounter);
 void contexto_destruir(t_contexto* self);
 t_list* contexto_obtener_instrucciones(t_contexto* self);
 void contexto_setear_instrucciones(t_contexto* self, t_list* instrucciones);
+segmento* contexto_obtener_tabla_de_segmentos(t_contexto* self);
 #endif

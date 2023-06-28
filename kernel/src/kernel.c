@@ -2,6 +2,7 @@
 #include "../include/kernel_config.h"
 #include "../include/planificador.h"
 
+
 #define LOGS_KERNEL "bin/kernel.log"
 #define MODULO_KERNEL "Kernel"
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 2 
@@ -70,10 +71,10 @@ int recibir_cant_segmentos_de_memoria(){
         exit(-1);
     }
     log_info(kernelLogger, "se recibio la cantidad de segmentos de memoria");
-    int cantidadDeSegmentos;
-    buffer_desempaquetar(buffer,&cantidadDeSegmentos,sizeof(cantidadDeSegmentos));
+    int segmentos;
+    buffer_desempaquetar(buffer,&segmentos,sizeof(segmentos));
     buffer_destruir(buffer);
-    return cantidadDeSegmentos;
+    return segmentos;
 }
 
 

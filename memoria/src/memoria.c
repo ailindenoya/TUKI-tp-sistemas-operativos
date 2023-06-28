@@ -25,7 +25,7 @@ t_list* listaDeProcesos;
 
 
 int socketKERNEL;
-
+int socketCPU;
 int tamanioRequeridoParaSegmentoACrear;
 int tamanioLibreTotal;
 int tamanioDeSegmento0;
@@ -263,6 +263,38 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
     return huecoLibre;
 }
 
+void recibir_de_cpu(){
+    t_buffer* buffer = buffer_crear();
+
+    for(;;){
+        uint8_t headerRecibido = stream_recibir_header(socketCPU);
+        stream_recibir_buffer(memoria_obtener,buffer);
+        uint32_t pID;
+        uint32_t nroSegmento;
+        uint32_t offset; 
+        buffer_desempaquetar(buffer,&pID,sizeof(pID));
+        buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
+        buffer_desempaquetar(buffer,&offset, sizeof(offset));
+        switch (headerRecibido)
+        {
+        case HEADER_valor_de_memoria:
+            proceso* proceso = encontrar_proceso(pID); 
+            int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
+
+
+            break;
+        case HEADER_valor_de_registro:
+            break;
+        default:
+            break;
+        }
+
+
+    }
+
+}
+
+
 
 void recibir_de_kernel(){
 
@@ -335,7 +367,7 @@ int main(int argc, char* argv[]){
 
     // acepta conexion con CPU
 
-   int socketCPU = accept(socketESCUCHA, &cliente, &len);
+   socketCPU = accept(socketESCUCHA, &cliente, &len);
 
     handshake_cpu(socketCPU);
 
@@ -376,7 +408,9 @@ int main(int argc, char* argv[]){
     list_add(listaDeHuecosLibres,huecoLibreInicial);
 
     listaDeProcesos = list_create(); // al crear pcb
-
+    pthread_t hiloParaEscuchaDeCPU;
+    pthread_create(&hiloParaEscuchaDeCPU, NULL, (void*)recibir_de_cpu, NULL);
+    pthread_detach(hiloParaEscuchaDeCPU);
     recibir_de_kernel();
 
 }

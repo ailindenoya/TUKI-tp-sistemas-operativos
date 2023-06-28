@@ -43,3 +43,7 @@ t_list* contexto_obtener_instrucciones(t_contexto* self){
 void contexto_setear_instrucciones(t_contexto* self, t_list* instrucciones) {
     self->instrucciones = instrucciones;
 }
+
+segmento* contexto_obtener_tabla_de_segmentos(t_contexto* self){
+    return self->tablaDeSegmentos;
+}

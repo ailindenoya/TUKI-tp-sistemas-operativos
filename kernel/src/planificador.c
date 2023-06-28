@@ -392,8 +392,8 @@ void atender_pcb() {
         // tiempo real ejecutado - rafaga
         struct timespec start;  
         __set_timespec(&start);
-    
-        kernel_enviar_pcb_a_cpu(pcb, kernelConfig, kernelLogger, HEADER_pcb_a_ejecutar);
+
+        kernel_enviar_pcb_a_cpu(pcb, kernelConfig, kernelLogger, HEADER_proceso_a_ejecutar);
         uint8_t cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
 
         struct timespec end;
@@ -417,6 +417,10 @@ void atender_pcb() {
         actualizar_tiempo_ejecutado(pcb, realEjecutado);    
 
         switch (cpuRespuesta) {
+            case HEADER_proceso_terminado_seg_fault:
+                finalizar_proceso(pcb,SEG_FAULT);
+                hayQueReplanificar = true; 
+                break;
             case HEADER_proceso_terminado:
                 finalizar_proceso(pcb,SUCCESS);
                 hayQueReplanificar = true; 
@@ -566,6 +570,7 @@ void atender_pcb() {
         }
         sem_post(&dispatchPermitido);
     }
+    // controlar que se actualice bien la rafaga con el hayQueReplanificar TODO
 }
             
 

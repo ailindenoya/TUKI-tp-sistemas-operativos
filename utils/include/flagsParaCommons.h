@@ -4,7 +4,7 @@
 typedef enum {
     HEADER_lista_de_instrucciones,
     HEADER_pid,
-    HEADER_pcb_a_ejecutar,
+    HEADER_proceso_a_ejecutar,
     HEADER_proceso_bloqueado,
     HEADER_proceso_terminado,
     HEADER_proceso_yield,
@@ -32,6 +32,9 @@ typedef enum {
     HEADER_existe_archivo,
     HEADER_proceso_terminado_out_of_memory,
     HEADER_hay_que_compactar,
+    HEADER_proceso_terminado_seg_fault,
+    HEADER_valor_de_memoria,
+    HEADER_valor_de_registro,
 
     HEADER_archivo_abierto,
     HEADER_no_existe_archivo,
