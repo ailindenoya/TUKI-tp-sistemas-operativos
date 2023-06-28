@@ -26,3 +26,4 @@ t_fcb* fcb_config_crear(char*, t_log*);
 int config_iniciar_fcb(void* config, char* pathAlConfig, t_log* logger,void (*config_initializer)(void* moduleConfig, t_config* configTemp));
 
 t_fcb* encontrarFCB(char*);
+void fcb_asignar_bloque(t_fcb*, uint32_t);

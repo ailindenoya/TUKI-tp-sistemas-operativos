@@ -7,6 +7,31 @@ extern t_superbloque_config* superbloqueConfig;
 
 t_bitarray* bitArray;
 
+void agregarBloques(int cantidadBloques, t_fcb* fcb){
+
+    int tamanioBitmap = (int) bitarray_get_max_bit(bitArray);
+
+    int aux = 0;
+
+        for(int i=0; i< tamanioBitmap; i++){
+
+            if (bitarray_test_bit(bitArray, i) == false){
+                bitarray_set_bit(bitArray, i);
+                fcb_asignar_bloque(fcb, i);
+                aux++;
+            }
+            if(aux == cantidadBloques){
+                break;
+            }
+        }
+}
+/*
+void quitarBloques(int cantidadBloques, t_fcb* fcb){
+    if(fcb_obtener_puntero_indirecto == 0){
+
+    }
+}
+*/
 void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso) {
 	int i = 0;
 	for (i = posicionInicial; i < posicionInicial + tamanioProceso; i++) {
@@ -62,4 +87,11 @@ t_bitarray* cargarBitMap(){
     printf("\nSE CERRO\n"); // esto lo hice para ver si llegaba a cerrar el archivo y hacer el munmap
 
     return bitArray;
+}
+
+void cargarArchivoDeBloques(){
+    int fd = open("bloques.dat", O_CREAT | O_RDWR, S_IRWXU);
+    uint32_t tamanioArchivoBloques = superbloque_config_obtener_block_count(superbloqueConfig) * superbloque_config_obtener_block_size(superbloqueConfig);
+
+    ftruncate(fd, tamanioArchivoBloques);
 }

@@ -3,13 +3,14 @@
 #include "../include/comunicacionKernelYMemoria.h"
 
 
-#define LOGS_FILESYSTEM "bin/fileSystem.log"
+#define LOGS_FILESYSTEM "bin/fi64eSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 3
 
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 extern t_superbloque_config* superbloqueConfig;
+extern t_bitarray* bitmap;
 t_list* listaFCBsAbiertos;
 int socketKERNEL;
 
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
-    t_bitarray* bitmap = cargarBitMap();
+    bitmap = cargarBitMap();
+    cargarArchivoDeBloques();
     listaFCBsAbiertos = list_create();
 
     // acepta conexion con KERNEL

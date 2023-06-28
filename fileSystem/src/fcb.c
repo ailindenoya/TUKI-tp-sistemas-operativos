@@ -5,6 +5,8 @@
 
 extern t_log* fileSystemLogger;
 extern t_list* listaFCBsAbiertos;
+extern t_superbloque_config* superbloqueConfig;
+
 
 struct t_fcb {
     char* NOMBRE_ARCHIVO;
@@ -22,6 +24,37 @@ t_fcb* fcb_crear(char* Nombre){
     self->PUNTERO_INDIRECTO = 0;
 
     return self;
+}
+
+void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
+    if (fcb_obtener_puntero_directo(fcb) == 0){
+        fcb_setear_puntero_directo(fcb, bloque);
+    }
+
+    uint32_t punteroIndirecto = fcb_obtener_puntero_indirecto(fcb);
+
+
+    if (punteroIndirecto == 0){
+        fcb_setear_puntero_indirecto(fcb, bloque);
+    }
+
+    int fd = open("bloques.dat", O_RDWR, S_IRWXU);
+
+
+    if (fd == -1){
+        log_info(fileSystemLogger, "No se pudo abrir el archivo de Bloques");
+    }
+
+    void* bloques = mmap(NULL, superbloque_config_obtener_block_size(superbloqueConfig), PROT_READ | PROT_WRITE, MAP_SHARED, fd, punteroIndirecto* superbloque_config_obtener_block_size(superbloqueConfig));
+/*
+    void* aux = malloc(superbloque_config_obtener_block_size(superbloqueConfig));
+    void* punteroAlFin = mempcpy(aux, bloques, sizeof(uint32_t));  // Copias el primer puntero dentro del bloque de punteros
+    while ((uint32_t*) aux != '/0'){
+        punteroAlFin = mempcpy(aux, bloques, sizeof(uint32_t))
+    }
+    memcpy(aux, bloque, sizeof(bloque));   
+    memcpy(bloques, aux, sizeof(aux));     
+    */
 }
 
 t_fcb* encontrarFCB(char* nombreArchivoNuevo){
