@@ -6,7 +6,7 @@ extern int socketKERNEL;
 extern t_list* listaFCBsAbiertos;
 
 void atenderPeticionesDeKernel(){
-    
+    // bucle for para atender peticiones, implementar algun switch como en CPU para instrucciones
 }
 
 void F_OPEN(char* NombreArchivo){
@@ -57,7 +57,9 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     }
     else if (tamanioNuevo < tamanioViejo){  // Reducir, quitar bloques
         // En bitmap poner cantBloques en 0 de ese archivo, duda: buscar los bloques en bloques.dat y borrarlos? actualizar puntero indirecto
+        if (tamanioNuevo == 0){
+            fcb_setear_puntero_directo(fcb, 0);
+            fcb_setear_puntero_indirecto(fcb, 0);
+        }     
     }
-
-    
 }
