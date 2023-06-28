@@ -415,7 +415,7 @@ void atender_pcb() {
         log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d milisegundos", pcb_obtener_pid(pcb), realEjecutado);       
         
         actualizar_tiempo_ejecutado(pcb, realEjecutado);    
-
+        
         switch (cpuRespuesta) {
             case HEADER_proceso_terminado_seg_fault:
                 finalizar_proceso(pcb,SEG_FAULT);
@@ -553,6 +553,7 @@ void atender_pcb() {
                 case HEADER_proceso_terminado_out_of_memory:
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    hayQueReplanificar = true; 
                     break;
                 default:
                     break;

@@ -35,6 +35,7 @@ typedef enum {
     HEADER_proceso_terminado_seg_fault,
     HEADER_valor_de_memoria,
     HEADER_valor_de_registro,
+    HEADER_OK_puede_continuar,
 
     HEADER_archivo_abierto,
     HEADER_no_existe_archivo,

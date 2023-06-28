@@ -1,22 +1,14 @@
-#include "../include/comunicacionKernel.h"
+#include "../include/ejecucionDeInstrucciones.h"
 #include "../include/mmu.h"
+#include "../../utils/include/funcionesDeRegistrosDeCpu.h"
 extern int cantidadDeSegmentos; 
 extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
 
 
-char AX[4];
-char BX[4];
-char CX[4];
-char DX[4];
-char EAX[8];
-char EBX[8];
-char ECX[8];
-char EDX[8];
-char RAX[16];
-char RBX[16];
-char RCX[16];
-char RDX[16];
+
+registros registrosDeCpu;
+
 
 t_instruccion* cpu_fetch_instruccion(t_contexto* contexto) {
     t_list* listaInstrucciones = contexto_obtener_instrucciones(contexto);
@@ -31,37 +23,6 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
         vector[i] = string[i];
 }
 
-bool copiarARegistros(char* reg, char* param){
-    bool fueBienCopiado = true; 
-    if(strcmp(reg,"AX") == 0){
-        copiarStringAVector(param, AX, 4);
-    }else if (strcmp(reg,"BX") == 0){
-        copiarStringAVector(param, BX, 4);
-    }else if (strcmp(reg,"CX") == 0){
-        copiarStringAVector(param, CX, 4);
-    }else if (strcmp(reg,"DX") == 0){
-        copiarStringAVector(param, DX, 4);
-    }else if (strcmp(reg,"EAX") == 0){
-        copiarStringAVector(param, EAX, 8);
-    }else if (strcmp(reg,"EBX") == 0){
-        copiarStringAVector(param, EBX, 8);
-    }else if (strcmp(reg,"ECX") == 0){
-        copiarStringAVector(param, ECX, 8);
-    }else if (strcmp(reg,"EDX") == 0){
-        copiarStringAVector(param, EDX, 8);
-    }else if (strcmp(reg,"RAX") == 0){
-        copiarStringAVector(param, RAX, 16);
-    }else if (strcmp(reg,"RBX") == 0){
-        copiarStringAVector(param, RBX, 16);
-    }else if (strcmp(reg,"RCX") == 0){
-        copiarStringAVector(param, RCX, 16);
-    }else if (strcmp(reg,"RDX") == 0){
-        copiarStringAVector(param, RDX, 16);
-    }else {
-        fueBienCopiado= false; 
-    }
-    return fueBienCopiado;
-}
 
 void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
     
@@ -69,8 +30,31 @@ void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
     uint32_t retardo = (cpu_config_obtener_retardo_instruccion(cpuConfig))/1000;
     sleep(retardo);
 
-    bool copia = copiarARegistros(reg, param);
-    if(copia == false){
+    if(strcmp(reg,"AX") == 0){
+        copiarStringAVector(param, registrosDeCpu.AX, 4);
+    }else if (strcmp(reg,"BX") == 0){
+        copiarStringAVector(param, registrosDeCpu.BX, 4);
+    }else if (strcmp(reg,"CX") == 0){
+        copiarStringAVector(param, registrosDeCpu.CX, 4);
+    }else if (strcmp(reg,"DX") == 0){
+        copiarStringAVector(param, registrosDeCpu.DX, 4);
+    }else if (strcmp(reg,"EAX") == 0){
+        copiarStringAVector(param, registrosDeCpu.EAX, 8);
+    }else if (strcmp(reg,"EBX") == 0){
+        copiarStringAVector(param, registrosDeCpu.EBX, 8);
+    }else if (strcmp(reg,"ECX") == 0){
+        copiarStringAVector(param, registrosDeCpu.ECX, 8);
+    }else if (strcmp(reg,"EDX") == 0){
+        copiarStringAVector(param, registrosDeCpu.EDX, 8);
+    }else if (strcmp(reg,"RAX") == 0){
+        copiarStringAVector(param, registrosDeCpu.RAX, 16);
+    }else if (strcmp(reg,"RBX") == 0){
+        copiarStringAVector(param, registrosDeCpu.RBX, 16);
+    }else if (strcmp(reg,"RCX") == 0){
+        copiarStringAVector(param, registrosDeCpu.RCX, 16);
+    }else if (strcmp(reg,"RDX") == 0){
+        copiarStringAVector(param, registrosDeCpu.RDX, 16);
+    }else{
         log_info(cpuLogger, "error al ejecutar SET");
     }
 
@@ -88,35 +72,143 @@ void ejecutar_F_WRITE(t_contexto* contexto,uint32_t programCounterActualizado){
 void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado){
 
 }
+
+void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria){
+    buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_mov_in, buffer);
+    int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig)); // recibimos HEADER_valor_de_memoria
+    if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
+        log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
+        exit(-1);
+    }
+    valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
+
+    t_buffer* recibidoDeMemoria = buffer_crear();
+    stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
+    buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes);
+    buffer_destruir(recibidoDeMemoria); 
+}
+
 void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica){
     uint32_t pid = contexto_obtener_pid(contexto);
     log_info(cpuLogger, "PID: %d - Ejecutando: MOV_IN ", pid);
     int direccionLogica = atoi(dirLogica);
     uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
     uint32_t offset = obtener_offset_de_segmento(direccionLogica);
-    t_buffer* buffer = crear_buffer(); 
+    t_buffer* buffer = buffer_crear(); 
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         buffer_empaquetar(buffer, &pid, sizeof(pid));
         buffer_empaquetar(buffer,&nroSegmento, sizeof(nroSegmento));
         buffer_empaquetar(buffer,&offset, sizeof(offset));
-        stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig),HEADER_mov_in);
-        int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig)); // recibimos HEADER_valor_de_memoria
-        if(headerDeValorDeMemoria != HEADER_valor_de_memoria){
-            log_error(cpuLogger, "error al recibir header de valor de memoria de MEMORIA");
+        char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
+        if (strcmp(reg, "AX") == 0){   
+            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.AX, 4);
+        }else if (strcmp(reg, "BX") == 0){   
+            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.BX, 4);
+        }else if (strcmp(reg, "CX") == 0){
+            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.CX, 4);
+        }else if (strcmp(reg, "DX") == 0){
+            pedirleAMemoria(buffer, 4, valorDeMemoria);    
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.DX, 4);
+        }else if (strcmp(reg, "EAX") == 0){
+            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.EAX, 8);
+        }else if (strcmp(reg, "EBX") == 0){
+            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.EBX, 8);
+        }else if (strcmp(reg, "ECX") == 0){
+            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.ECX, 8);
+        }else if (strcmp(reg, "EDX") == 0){
+            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.EDX, 8);
+        }else if (strcmp(reg, "RAX") == 0){
+            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.RAX, 16);
+        }else if (strcmp(reg, "RBX") == 0){
+            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.RBX, 16);
+        }else if (strcmp(reg, "RCX") == 0){
+            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.RCX, 16);
+        }else if (strcmp(reg, "RDX") == 0){
+            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            copiarStringAVector(valorDeMemoria, registrosDeCpu.RDX, 16);
+        } else {
+            log_error(cpuLogger, "no se reconocio el registro para ejecutar MOV_IN");
+            exit(-1);
         }
-        bool copia = copiarARegistros(reg, param);
-        if(copia == false){
-            log_info(cpuLogger, "error al copiar los registros con MOV_IN");
-        }
+        free(valorDeMemoria);
     }else{
         buffer_empaquetar(buffer,&pid, sizeof(pid));
         buffer_empaquetar(buffer,&programCounterActualizado, sizeof(programCounterActualizado));
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
+    }
+    buffer_destruir(buffer);
+}
+
+void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
+    buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
+    buffer_empaquetar(buffer, reg, cantidadDeBytes);
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_mov_out, buffer);
+    int headerPuedeContinuar = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
+    if(headerPuedeContinuar!= HEADER_OK_puede_continuar){
+        log_error(cpuLogger, "error al escribir en MEMORIA");
+        exit(-1);
     }
 }
 
-void ejecutar_MOV_OUT(t_contexto* contexto, char* dirLogica, char* regALeer){
 
+void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica){
+    uint32_t pid = contexto_obtener_pid(contexto);
+    log_info(cpuLogger, "PID: %d - Ejecutando: MOV_IN ", pid);
+    int direccionLogica = atoi(dirLogica);
+    uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
+    uint32_t offset = obtener_offset_de_segmento(direccionLogica);
+    t_buffer* buffer = buffer_crear(); 
+    if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        buffer_empaquetar(buffer,&pid, sizeof(pid));
+        buffer_empaquetar(buffer,&nroSegmento, sizeof(nroSegmento));
+        buffer_empaquetar(buffer,&offset, sizeof(offset));
+        char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
+        if (strcmp(reg, "AX") == 0){   
+            escribirEnMemoria(buffer, 4, registrosDeCpu.AX);
+        }else if (strcmp(reg, "BX") == 0){
+            escribirEnMemoria(buffer, 4, registrosDeCpu.BX);
+        }else if (strcmp(reg, "CX") == 0){
+            escribirEnMemoria(buffer, 4, registrosDeCpu.CX);
+        }else if (strcmp(reg, "DX") == 0){
+            escribirEnMemoria(buffer, 4, registrosDeCpu.DX);
+        }else if (strcmp(reg, "EAX") == 0){
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EAX);
+        }else if (strcmp(reg, "EBX") == 0){
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EBX);
+        }else if (strcmp(reg, "ECX") == 0){
+            escribirEnMemoria(buffer, 8, registrosDeCpu.ECX);
+        }else if (strcmp(reg, "EDX") == 0){
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EDX);
+        }else if (strcmp(reg, "RAX") == 0){
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RAX);
+        }else if (strcmp(reg, "RBX") == 0){
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RBX);
+        }else if (strcmp(reg, "RCX") == 0){
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RCX);
+        }else if (strcmp(reg, "RDX") == 0){
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RDX);
+        } else {
+            log_error(cpuLogger, "no se reconocio el registro para ejecutar MOV_OUT");
+            exit(-1);
+        }
+        free(valorDeMemoria);
+    }else{
+        buffer_empaquetar(buffer,&pid, sizeof(pid));
+        buffer_empaquetar(buffer,&programCounterActualizado, sizeof(programCounterActualizado));
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
+    }
+    buffer_destruir(buffer);
 }
 
 void ejecutar_CREATE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString, char* tamanioComoString){
@@ -259,10 +351,10 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
         ejecutar_F_TRUNCATE(contexto, programCounterActualizado, parametro1, parametro2);
         break;
     case INSTRUCCION_mov_in:
-        ejecutar_MOV_IN(contexto,parametro1, parametro2);
+        ejecutar_MOV_IN(contexto,programCounterActualizado, parametro1, parametro2);
         break;
     case INSTRUCCION_mov_out:
-        ejecutar_MOV_OUT(contexto,parametro1, parametro2);
+        ejecutar_MOV_OUT(contexto,programCounterActualizado,parametro2,parametro1);
         break;
     case INSTRUCCION_create_segment:
         ejecutar_CREATE_SEGMENT(contexto,parametro1, parametro2);

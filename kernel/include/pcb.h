@@ -11,21 +11,8 @@
 #include <pthread.h>
 #include "nombre_estados.h"
 #include "tabla_de_archivos_abiertos.h"
+#include "../../utils/include/funcionesDeRegistrosDeCpu.h"
 
-typedef struct registros {
-char AX[4];
-    char BX[4];
-    char CX[4];
-    char DX[4];
-    char EAX[8];
-    char EBX[8];
-    char ECX[8];
-    char EDX[8];
-    char RAX[16];
-    char RBX[16];
-    char RCX[16];
-    char RDX[16];
-}registros; 
 typedef struct t_pcb {
     uint32_t pid;
     uint32_t tamanio;

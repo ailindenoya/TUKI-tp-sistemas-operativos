@@ -268,22 +268,30 @@ void recibir_de_cpu(){
 
     for(;;){
         uint8_t headerRecibido = stream_recibir_header(socketCPU);
-        stream_recibir_buffer(memoria_obtener,buffer);
+        stream_recibir_buffer(socketCPU,buffer);
         uint32_t pID;
         uint32_t nroSegmento;
         uint32_t offset; 
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
         buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
         buffer_desempaquetar(buffer,&offset, sizeof(offset));
+        proceso* proceso = encontrar_proceso(pID); 
+        int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
+        uint32_t cantidadDeBytes;
+        buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
+        sleep(memoria_config_obtener_retardo_memoria(memoriaConfig));
+
         switch (headerRecibido)
         {
         case HEADER_valor_de_memoria:
-            proceso* proceso = encontrar_proceso(pID); 
-            int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
-
-
+            t_buffer* bufferParaCPU = buffer_crear();
+            buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
+            stream_enviar_buffer(socketCPU, HEADER_valor_de_memoria, bufferParaCPU);
+            buffer_destruir(bufferParaCPU);
             break;
         case HEADER_valor_de_registro:
+            buffer_desempaquetar(buffer,bloque_de_memoria+direccionFisica, cantidadDeBytes);
+            stream_enviar_buffer_vacio(socketCPU, HEADER_OK_puede_continuar);
             break;
         default:
             break;

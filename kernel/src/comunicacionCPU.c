@@ -11,7 +11,7 @@ void kernel_enviar_pcb_a_cpu(t_pcb* pcbAEnviar, t_kernel_config* kernelConfig, t
     t_buffer* bufferPcbAEjecutar = buffer_crear();
     buffer_empaquetar(bufferPcbAEjecutar, &pidAEnviar, sizeof(pidAEnviar));
     buffer_empaquetar(bufferPcbAEjecutar, &pcAEnviar, sizeof(pcAEnviar));
-    buffer_empaquetar_tabla_de_segmentos(bufferPcbAEjecutar, &pcb_obtener_tabla_de_segmentos(pcbAEnviar),cantidadDeSegmentos);
+    buffer_empaquetar_tabla_de_segmentos(bufferPcbAEjecutar, pcb_obtener_tabla_de_segmentos(pcbAEnviar),cantidadDeSegmentos);
     stream_enviar_buffer(kernel_config_obtener_socket_cpu(kernelConfig), header, bufferPcbAEjecutar);
     stream_enviar_buffer(kernel_config_obtener_socket_cpu(kernelConfig), HEADER_lista_de_instrucciones, pcb_obtener_buffer_de_instrucciones(pcbAEnviar));
 
@@ -28,7 +28,7 @@ t_pcb* kernel_recibir_pcb_actualizado_de_cpu(t_pcb* pcbAActualizar, uint8_t cpuR
     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferPcb);
     buffer_desempaquetar(bufferPcb, &pidRecibido, sizeof(pidRecibido));
     buffer_desempaquetar(bufferPcb, &programCounterActualizado, sizeof(programCounterActualizado));
-
+    
     if (pidRecibido == pcb_obtener_pid(pcbAActualizar)) { /// si es el mismo al que tenes en kernel
         if (cpuResponse == HEADER_proceso_bloqueado) {
             buffer_desempaquetar(bufferPcb, &tiempoDeBloqActualizado, sizeof(tiempoDeBloqActualizado)); // desempaqueta tiempo que se bloqueo

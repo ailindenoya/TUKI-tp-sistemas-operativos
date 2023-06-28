@@ -25,7 +25,11 @@
 			"*.h": "c",
 			"limits": "c",
 			"*.tcc": "c",
-			"type_traits": "c"
+			"type_traits": "c",
+			"concepts": "c",
+			"cstdio": "c",
+			"new": "c",
+			"typeinfo": "c"
 		}, 
 		"C_Cpp.errorSquiggles": "disabled", 
 	}, 

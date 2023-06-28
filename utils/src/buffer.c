@@ -1,5 +1,4 @@
 #include "../include/buffer.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -54,3 +53,4 @@ void buffer_desempaquetar_string(t_buffer* self, char** pString) {
     *pString = realloc(*pString, largoString);
     buffer_desempaquetar(self, *pString, largoString);
 }
+
