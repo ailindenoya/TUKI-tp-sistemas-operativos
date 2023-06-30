@@ -23,6 +23,7 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
         vector[i] = string[i];
 }
 
+void devolver_contexto_a_Kernel()
 
 void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
     

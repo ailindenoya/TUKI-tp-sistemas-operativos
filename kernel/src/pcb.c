@@ -112,3 +112,8 @@ t_list* pcb_obtener_tabla_de_archivos_abiertos(t_pcb* self){
 void pcb_agregar_a_tabla_de_archivos_abiertos(t_pcb* self, t_archivo_tabla_proceso* tablaArchivoAbierto){
     list_add(self->tablaDeArchivosAbiertos, (void*) tablaArchivoAbierto);
 }
+
+registros* pcb_obtener_registros(t_pcb* self)
+{
+    return &(self->registrosDeCPU);
+}

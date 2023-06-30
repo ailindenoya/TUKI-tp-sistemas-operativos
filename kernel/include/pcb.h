@@ -61,5 +61,6 @@ void pcb_setear_tabla_de_segmentos(t_pcb* self, segmento* tablaDeSegs, int canti
 void inicializar_tabla_de_segmentos(segmento* tablaDeSegmentos, int cantidadDeSegmentos);
 t_list* pcb_obtener_tabla_de_archivos_abiertos(t_pcb* self);
 void pcb_agregar_a_tabla_de_archivos_abiertos(t_pcb* self, t_archivo_tabla_proceso* tablaArchivoAbierto);
+registros* pcb_obtener_registros(t_pcb* self);
 
 #endif
