@@ -264,21 +264,28 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
 }
 
 void recibir_de_cpu(){
-    t_buffer* buffer = buffer_crear();
+
+        t_buffer* buffer = buffer_crear();
+    log_info(memoriaLogger, "llego a recibir");
 
     for(;;){
-        uint8_t headerRecibido = stream_recibir_header(socketCPU);
-        stream_recibir_buffer(socketCPU,buffer);
         uint32_t pID;
         uint32_t nroSegmento;
         uint32_t offset; 
+        uint8_t headerRecibido = stream_recibir_header(socketCPU);
+        stream_recibir_buffer(socketCPU,buffer); // NO RECIBE EL BUFFER! ACA ESTA EL ERROR
+        log_info(memoriaLogger, "recibi buffer");
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
+        log_error(memoriaLogger, "error al 1");
         buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
+        log_error(memoriaLogger, "error al 2");
         buffer_desempaquetar(buffer,&offset, sizeof(offset));
+        log_error(memoriaLogger, "error al 3");
         proceso* proceso = encontrar_proceso(pID); 
         int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
         uint32_t cantidadDeBytes;
         buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
+        log_error(memoriaLogger, "error al 4");
         sleep(memoria_config_obtener_retardo_memoria(memoriaConfig));
 
         switch (headerRecibido)
@@ -294,6 +301,7 @@ void recibir_de_cpu(){
             stream_enviar_buffer_vacio(socketCPU, HEADER_OK_puede_continuar);
             break;
         default:
+            log_error(memoriaLogger, "error al reconocer header recibido de cpu");
             break;
         }
 
