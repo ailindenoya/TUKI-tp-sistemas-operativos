@@ -9,6 +9,7 @@ struct t_contexto {
     uint32_t programCounter;
     t_list* instrucciones;
     segmento* tablaDeSegmentos;
+    registros registrosDeCPU;
 };
 
 t_contexto *crear_contexto(uint32_t pid, uint32_t programCounter){
@@ -46,4 +47,9 @@ void contexto_setear_instrucciones(t_contexto* self, t_list* instrucciones) {
 
 segmento* contexto_obtener_tabla_de_segmentos(t_contexto* self){
     return self->tablaDeSegmentos;
+}
+
+registros* contexto_obtener_registros(t_contexto* self)
+{
+    return &(self->registrosDeCPU);
 }

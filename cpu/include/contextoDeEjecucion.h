@@ -7,6 +7,7 @@
 #include <commons/log.h>
 #include "../../utils/include/instrucciones.h"
 #include "../../utils/include/funcionesDeMemoria.h"
+#include "../../utils/include/funcionesDeRegistrosDeCpu.h"
 
 typedef struct t_contexto t_contexto;
 
@@ -19,4 +20,5 @@ void contexto_destruir(t_contexto* self);
 t_list* contexto_obtener_instrucciones(t_contexto* self);
 void contexto_setear_instrucciones(t_contexto* self, t_list* instrucciones);
 segmento* contexto_obtener_tabla_de_segmentos(t_contexto* self);
+registros* contexto_obtener_registros(t_contexto* self);
 #endif

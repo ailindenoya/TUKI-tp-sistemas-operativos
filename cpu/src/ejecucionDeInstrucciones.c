@@ -23,7 +23,13 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
         vector[i] = string[i];
 }
 
-void devolver_contexto_a_Kernel()
+void empaquetar_contexto_para_kernel(t_buffer* buffer,uint32_t programCounterActualizado, t_contexto* contexto){
+    uint32_t pid = contexto_obtener_pid(contexto);
+    registros* registro = contexto_obtener_registros(contexto);
+    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
+    buffer_empaquetar_registros(buffer,registro);
+}
 
 void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
     
@@ -222,7 +228,7 @@ void ejecutar_CREATE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString, c
     buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
     buffer_empaquetar(buffer ,&tamanio_segmento , sizeof(tamanio_segmento));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_create_segment, buffer);
-    buffer_destruir(buffer);
+    buffer_destruir(buffer); 
 }  
 
 void ejecutar_DELETE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString){
@@ -237,11 +243,9 @@ void ejecutar_DELETE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString){
 }
 
 void ejecutar_WAIT(t_contexto* contexto,uint32_t programCounterActualizado, char* recurso){
-    uint32_t pid = contexto_obtener_pid(contexto);
     log_info(cpuLogger, "PID: %d - Ejecutando: WAIT", contexto_obtener_pid(contexto));
     t_buffer *bufferWAIT = buffer_crear();
-    buffer_empaquetar(bufferWAIT, &pid, sizeof(pid));
-    buffer_empaquetar(bufferWAIT, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(bufferWAIT,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_wait, bufferWAIT);
     buffer_destruir(bufferWAIT);
 
@@ -252,11 +256,9 @@ void ejecutar_WAIT(t_contexto* contexto,uint32_t programCounterActualizado, char
 }
 
 void ejecutar_SIGNAL(t_contexto* contexto,uint32_t programCounterActualizado, char* recurso){
-    uint32_t pid = contexto_obtener_pid(contexto);
     log_info(cpuLogger, "PID: %d - Ejecutando: SIGNAL", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
-    buffer_empaquetar(buffer, &pid, sizeof(pid));
-    buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_signal, buffer);
     buffer_destruir(buffer);
 
@@ -271,8 +273,7 @@ void ejecutar_IO(t_contexto* contexto, uint32_t programCounterActualizado, char*
     uint32_t tiempoDeBloqueo = atoi(tiempoDeBloqueoComoString);
     log_info(cpuLogger, "PID: %d - Ejecutando: I/O - de %d milisegundos", pid, tiempoDeBloqueo);
     t_buffer *bufferIO = buffer_crear();
-    buffer_empaquetar(bufferIO, &pid, sizeof(pid));
-    buffer_empaquetar(bufferIO, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(bufferIO,programCounterActualizado,contexto);;
     buffer_empaquetar(bufferIO, &tiempoDeBloqueo, sizeof(tiempoDeBloqueo));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_bloqueado, bufferIO);
     buffer_destruir(bufferIO);
@@ -281,31 +282,25 @@ void ejecutar_IO(t_contexto* contexto, uint32_t programCounterActualizado, char*
 
 void ejecutar_EXIT(t_contexto* contexto,uint32_t programCounterActualizado){
     log_info(cpuLogger, "PID: %d - Ejecutando: EXIT", contexto_obtener_pid(contexto));
-    uint32_t pid = contexto_obtener_pid(contexto);
     t_buffer *bufferExit = buffer_crear();
-    buffer_empaquetar(bufferExit, &pid, sizeof(pid));
-    buffer_empaquetar(bufferExit, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(bufferExit,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado, bufferExit);
     buffer_destruir(bufferExit);
 }
 
 void ejecutar_YIELD(t_contexto* contexto, uint32_t programCounterActualizado){
-    uint32_t pid = contexto_obtener_pid(contexto);
-    log_info(cpuLogger, "PID: %d - Ejecutando: YIELD", pid);
+    log_info(cpuLogger, "PID: %d - Ejecutando: YIELD", contexto_obtener_pid(contexto));
     t_buffer* bufferSalida = buffer_crear();
-    buffer_empaquetar(bufferSalida, &pid, sizeof(pid));
-    buffer_empaquetar(bufferSalida, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(bufferSalida,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_yield, bufferSalida);
     buffer_destruir(bufferSalida);
 }
 
 void ejecutar_F_OPEN(t_contexto* contexto, uint32_t programCounterActualizado, char* NombreArchivo){
-    uint32_t pid = contexto_obtener_pid(contexto);
-    log_info(cpuLogger, "PID: %d - Ejecutando: F_OPEN", pid);
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_OPEN",contexto_obtener_pid(contexto));
 
     t_buffer* bufferF_OPEN = buffer_crear();
-    buffer_empaquetar(bufferF_OPEN, &pid, sizeof(pid));
-    buffer_empaquetar(bufferF_OPEN, &programCounterActualizado, sizeof(programCounterActualizado));
+    empaquetar_contexto_para_kernel(bufferF_OPEN,programCounterActualizado,contexto);
     buffer_empaquetar_string(bufferF_OPEN, NombreArchivo);
 
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_OPEN, bufferF_OPEN);
@@ -313,13 +308,11 @@ void ejecutar_F_OPEN(t_contexto* contexto, uint32_t programCounterActualizado, c
 }
 
 void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanioEnString){
-    uint32_t pid = contexto_obtener_pid(contexto);
     uint32_t tamanio = atoi(tamanioEnString);
-    log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", pid);
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", contexto_obtener_pid(contexto));
 
     t_buffer* bufferF_TRUNCATE = buffer_crear();
-    buffer_empaquetar(bufferF_TRUNCATE, &pid, sizeof(pid));
-    buffer_empaquetar(bufferF_TRUNCATE, &programCounterActualizado, sizeof(programCounterActualizado));
+     empaquetar_contexto_para_kernel(bufferF_TRUNCATE,programCounterActualizado,contexto);
     buffer_empaquetar_string(bufferF_TRUNCATE, NombreArchivo);
     buffer_empaquetar(bufferF_TRUNCATE, &tamanio, sizeof(tamanio));
 
@@ -418,6 +411,7 @@ void dispatch_peticiones_de_kernel(void) {
             buffer_desempaquetar(bufferContexto, &pidRecibido, sizeof(pidRecibido));
             buffer_desempaquetar(bufferContexto, &programCounter, sizeof(programCounter));
             contexto = crear_contexto(pidRecibido, programCounter);
+            buffer_desempaquetar_registros(bufferContexto, contexto_obtener_registros(contexto));
             buffer_desempaquetar_tabla_de_segmentos(bufferContexto, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
             buffer_destruir(bufferContexto);
             kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));

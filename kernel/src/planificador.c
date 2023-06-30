@@ -142,12 +142,10 @@ t_pcb* iniciar_HRRN(t_estado* estado, double alfa) {
 /*                          FINALIZADOR DE PCBs                        */
 
 void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
-
     pcb_setear_estado(pcb, EXIT);
     estado_encolar_pcb_con_semaforo(estadoExit, pcb);
     loggear_cambio_estado("EXEC", "EXIT", pcb_obtener_pid(pcb));
     sem_post(estado_obtener_sem(estadoExit));
-
     switch (motivoDeFinalizacion)
     {
     case SUCCESS: // caso feliz
@@ -201,7 +199,6 @@ void  planificador_largo_plazo(void) {
     pthread_t liberarPcbsEnExitHilo;
     pthread_create(&liberarPcbsEnExitHilo, NULL, (void*)finalizar_pcbs_en_hilo_con_exit, NULL);
     pthread_detach(liberarPcbsEnExitHilo);
-
     for (;;) {
         sem_wait(&hayPcbsParaAgregarAlSistema);
         sem_wait(&gradoDeMultiprogramacion);
@@ -256,7 +253,6 @@ int obtenerDimensionDeArrayDeRecursos(char** instancias){
 }
 
 int* convertirInstanciasDeRecursoEnEnteros(char** instancias, int dimension){
-
     int* vectorAux = malloc(sizeof(int)* dimension);
     for(int i=0; i<dimension; i++){
         vectorAux[i] = atoi(instancias[i]);
@@ -272,7 +268,6 @@ void atender_wait(char* recurso, t_pcb* pcb){
     char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
     int i;
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
-
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]--;
 
@@ -280,9 +275,6 @@ void atender_wait(char* recurso, t_pcb* pcb){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-                if(algoritmoConfigurado == ALGORITMO_HRRN){
-                    actualizar_pcb_por_fin_de_rafaga(pcb);
-                }
                 hayQueReplanificar = true;
             }
             else{
@@ -290,16 +282,13 @@ void atender_wait(char* recurso, t_pcb* pcb){
             }
             break; 
         }
-
         pteroARecursos++;
-    
     }
 
     if(i == dimensionDeArrayDeRecursos){
             finalizar_proceso(pcb,WAIT_DE_RECURSO_NO_EXISTENTE);
             hayQueReplanificar = true; 
     }
-
 }
 
 
@@ -308,7 +297,6 @@ void atender_signal(char* recurso, t_pcb* pcb){
     char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
     int i;
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
-
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
             if(vectorDeInstancias[i] >= 0){
@@ -319,23 +307,17 @@ void atender_signal(char* recurso, t_pcb* pcb){
                 loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbADesbloquear));
                 pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
                 sem_post(estado_obtener_sem(estadoReady));
-
             }
             break; 
         }
         pteroARecursos++;
-
     }
-
-
     if(i == dimensionDeArrayDeRecursos){
             finalizar_proceso(pcb,SIGNAL_DE_RECURSO_NO_EXISTENTE);
             hayQueReplanificar = true;
-
     }else{
         hayQueReplanificar = false;
     }
-
 }
 
 t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
@@ -370,7 +352,6 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
                 log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
             }
         }
-
         else if (respuestaFileSystem == HEADER_archivo_abierto){
             buffer_destruir(buffer_F_OPEN);
             t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
@@ -426,9 +407,6 @@ void atender_pcb() {
                 hayQueReplanificar = true; 
                 break;
             case HEADER_proceso_bloqueado:     
-                if(algoritmoConfigurado == ALGORITMO_HRRN ){
-                    actualizar_pcb_por_fin_de_rafaga(pcb);
-                }
                     //EN FIFO NO SE HACE NADA   
                 atender_bloqueo(pcb);   // en ambos se atiende el bloqueo
                 hayQueReplanificar = true; 
@@ -452,9 +430,6 @@ void atender_pcb() {
                 buffer_destruir(bufferSIGNAL);
                 break;
             case HEADER_proceso_yield:
-                if(algoritmoConfigurado == ALGORITMO_HRRN){
-                    actualizar_pcb_por_fin_de_rafaga(pcb);
-                }
                 pcb_setear_estado(pcb, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                 loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcb));
@@ -462,7 +437,6 @@ void atender_pcb() {
                 sem_post(estado_obtener_sem(estadoReady));
                 hayQueReplanificar = true; 
                 break;
-
             case HEADER_proceso_F_OPEN:
                 t_buffer* buffer_F_OPEN = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -496,14 +470,19 @@ void atender_pcb() {
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                     sem_post(estado_obtener_sem(estadoReady));
                 }
+                hayQueReplanificar = true;
                 break;
                 case HEADER_proceso_F_CLOSE:
+                hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_READ:
+                hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_WRITE:
+                hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_SEEK:
+                hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_TRUNCATE:
                     t_buffer* bufferF_TRUNCATE = buffer_crear();
@@ -516,7 +495,7 @@ void atender_pcb() {
                     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                     sem_post(estado_obtener_sem(estadoReady));
-
+                    // hacer hilo
                     /* Logica para desbloqueo del proceso por un F_TRUNCATE*/
                     uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
 
@@ -528,6 +507,7 @@ void atender_pcb() {
                         estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                         loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
                     }
+                    
                 break;
                 case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
@@ -535,43 +515,46 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
                 stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
                 buffer_destruir(bufferCreateSegment);
-                
+
                 uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
-                switch (respuestaMemoria)
-                {
-                case HEADER_segmento_creado:
+                
+                if(respuestaMemoria == HEADER_segmento_creado ){
                     t_buffer* bufferSegCreado = buffer_crear();
                     stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                     stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig),bufferSegCreado);
                     buffer_desempaquetar_tabla_de_segmentos(bufferSegCreado,pcb_obtener_tabla_de_segmentos(pcb),cantidadDeSegmentos);
                     buffer_destruir(bufferSegCreado);
-                    break;
-                case HEADER_hay_que_compactar: 
+                    hayQueReplanificar = false;
+                }else if(respuestaMemoria == HEADER_hay_que_compactar){
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
                     // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
-                    break;
-                case HEADER_proceso_terminado_out_of_memory:
+                    hayQueReplanificar = false;
+                }else if(respuestaMemoria == HEADER_proceso_terminado_out_of_memory){
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
                     hayQueReplanificar = true; 
-                    break;
-                default:
-                    break;
+                }else{
+                    log_error(kernelLogger, "error al recibir respuesta de memoria para ejecutar create segment" );
                 }
-                
+                break;
             case HEADER_delete_segment:
                 t_buffer *bufferDeleteSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferDeleteSegment);
                 stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_delete_segment, bufferDeleteSegment);
                 buffer_destruir(bufferDeleteSegment);
+                hayQueReplanificar = false;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
                 break;
         }
+        if(hayQueReplanificar == true){
+            if(algoritmoConfigurado == ALGORITMO_HRRN){
+                actualizar_pcb_por_fin_de_rafaga(pcb);
+            }
+        }
         sem_post(&dispatchPermitido);
     }
-    // controlar que se actualice bien la rafaga con el hayQueReplanificar TODO
 }
             
 
