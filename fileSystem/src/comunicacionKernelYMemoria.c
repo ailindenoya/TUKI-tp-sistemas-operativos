@@ -95,7 +95,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
             agregarBloques(cantBloques, fcb);
         }
         else if (tamanioNuevo < tamanioViejo){
-            quitarBloques(cantBloques, fcb);
+        //    quitarBloques(cantBloques, fcb);
             // Reducir, quitar bloques
             // En bitmap poner cantBloques en 0 de ese archivo, duda: buscar los bloques en bloques.dat y borrarlos? actualizar puntero indirecto
             if (tamanioNuevo == 0){
