@@ -83,18 +83,20 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado){
 
 void pedirleAMemoria(t_buffer* buffer, int cantidadDeBytes, char* valorDeMemoria){
     buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_mov_in, buffer);
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_memoria, buffer);
 
-    int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig)); // recibimos HEADER_valor_de_memoria
+    int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
     if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
         log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
         exit(-1);
     }
-    valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
+    valorDeMemoria = realloc(valorDeMemoria,sizeof(valorDeMemoria)*cantidadDeBytes);
 
     t_buffer* recibidoDeMemoria = buffer_crear();
     stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
-    buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes);
+    log_info(cpuLogger, "CPU esta listo para empaquetar, con header recibido: %d", headerDeValorDeMemoria);
+    buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes); // ERROR : ACA NO HACE EL DESEMPAQUETADO
+    log_info(cpuLogger, "desempaqueto bloque de memoria");
     buffer_destruir(recibidoDeMemoria); 
 }
 
@@ -111,8 +113,11 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
         buffer_empaquetar(buffer,&offset, sizeof(offset));
         char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
         if (strcmp(reg, "AX") == 0){   
+            log_info(cpuLogger, "llegue a AX");
             pedirleAMemoria(buffer, 4, valorDeMemoria);
+            log_info(cpuLogger, "le pedi a memoria");
             copiarStringAVector(valorDeMemoria, registrosDeCpu.AX, 4);
+            log_info(cpuLogger, "copie el string al vector");
         }else if (strcmp(reg, "BX") == 0){   
             pedirleAMemoria(buffer, 4, valorDeMemoria);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.BX, 4);
@@ -152,8 +157,7 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
         }
         free(valorDeMemoria);
     }else{
-        buffer_empaquetar(buffer,&pid, sizeof(pid));
-        buffer_empaquetar(buffer,&programCounterActualizado, sizeof(programCounterActualizado));
+        empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
         stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
     }
     buffer_destruir(buffer);
@@ -162,7 +166,7 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
 void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
     buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
     buffer_empaquetar(buffer, reg, cantidadDeBytes);
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_mov_out, buffer);
+    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);
     int headerPuedeContinuar = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
     if(headerPuedeContinuar!= HEADER_OK_puede_continuar){
         log_error(cpuLogger, "error al escribir en MEMORIA");
@@ -213,8 +217,7 @@ void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, c
         }
         free(valorDeMemoria);
     }else{
-        buffer_empaquetar(buffer,&pid, sizeof(pid));
-        buffer_empaquetar(buffer,&programCounterActualizado, sizeof(programCounterActualizado));
+        empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
         stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
     }
     buffer_destruir(buffer);
@@ -233,13 +236,12 @@ void ejecutar_CREATE_SEGMENT(t_contexto* contexto,uint32_t programCounterActuali
     buffer_destruir(buffer); 
 }  
 
-void ejecutar_DELETE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString){
-    uint32_t pid = contexto_obtener_pid(contexto);
+void ejecutar_DELETE_SEGMENT(t_contexto* contexto,uint32_t programCounterActualizado, char* IdsegmentoComoString){
     uint32_t id_segmento = atoi(IdsegmentoComoString);
     log_info(cpuLogger, "PID: %d - Ejecutando: DELETE_SEGMENT", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
-    buffer_empaquetar(buffer, &pid, sizeof(pid));
-    buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
+    buffer_empaquetar(buffer,&id_segmento,sizeof(id_segmento));
+    empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_delete_segment, buffer);
     buffer_destruir(buffer);
 }
@@ -356,7 +358,7 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
         ejecutar_CREATE_SEGMENT(contexto, programCounterActualizado, parametro1, parametro2);
         break;
     case INSTRUCCION_delete_segment:
-        ejecutar_DELETE_SEGMENT(contexto,parametro1);
+        ejecutar_DELETE_SEGMENT(contexto,programCounterActualizado, parametro1);
         break;
     case INSTRUCCION_wait:
         ejecutar_WAIT(contexto,programCounterActualizado, parametro1);

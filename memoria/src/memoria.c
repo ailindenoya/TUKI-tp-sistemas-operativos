@@ -273,7 +273,7 @@ void recibir_de_cpu(){
         uint32_t offset; 
         uint8_t headerRecibido = stream_recibir_header(socketCPU);
         log_info(memoriaLogger, "llego a recibir header  %d", headerRecibido);
-        stream_recibir_buffer(socketCPU,buffer); // NO RECIBE EL BUFFER! ACA ESTA EL ERROR
+        stream_recibir_buffer(socketCPU,buffer); 
         log_info(memoriaLogger, "recibi buffer");
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
         log_info(memoriaLogger, "error al 1");
@@ -290,10 +290,12 @@ void recibir_de_cpu(){
         log_info(memoriaLogger, " header recibido de cpu %d ", headerRecibido);
         switch (headerRecibido)
         {   
-        case HEADER_valor_de_memoria:
+        case HEADER_valor_de_memoria: 
             t_buffer* bufferParaCPU = buffer_crear();
             buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
+            log_info(memoriaLogger,"MEMORIA llego a empaqueta bloque de memoria + dir fisica");
             stream_enviar_buffer(socketCPU, HEADER_valor_de_memoria, bufferParaCPU);
+            log_info(memoriaLogger, "MEMORIA envio el buffer a cpu");
             buffer_destruir(bufferParaCPU);
             break;
         case HEADER_valor_de_registro:
