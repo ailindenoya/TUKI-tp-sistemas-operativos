@@ -52,8 +52,9 @@ void F_OPEN(char* NombreArchivo){
     if (fd == -1){
         log_error(fileSystemLogger, "No existe el archivo FCB: %s", NombreArchivo);
 
-        stream_enviar_buffer_vacio(socketKERNEL, HEADER_no_existe_archivo);
         uint8_t respuestaKERNEL = stream_recibir_header(socketKERNEL);
+        stream_enviar_buffer_vacio(socketKERNEL, HEADER_no_existe_archivo);
+        
         stream_recibir_buffer_vacio(socketKERNEL);
 
         if(respuestaKERNEL == HEADER_crear_archivo){

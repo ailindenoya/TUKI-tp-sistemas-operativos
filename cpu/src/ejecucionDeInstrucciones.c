@@ -29,6 +29,7 @@ void empaquetar_contexto_para_kernel(t_buffer* buffer,uint32_t programCounterAct
     buffer_empaquetar(buffer, &pid, sizeof(pid));
     buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
     buffer_empaquetar_registros(buffer,registro);
+    buffer_empaquetar_tabla_de_segmentos(buffer, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
 }
 
 void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
@@ -80,9 +81,10 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado){
 
 }
 
-void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria){
+void pedirleAMemoria(t_buffer* buffer, int cantidadDeBytes, char* valorDeMemoria){
     buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
     stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_mov_in, buffer);
+
     int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig)); // recibimos HEADER_valor_de_memoria
     if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
         log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
@@ -218,16 +220,16 @@ void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, c
     buffer_destruir(buffer);
 }
 
-void ejecutar_CREATE_SEGMENT(t_contexto* contexto, char* IdsegmentoComoString, char* tamanioComoString){
-    uint32_t pid = contexto_obtener_pid(contexto);
+void ejecutar_CREATE_SEGMENT(t_contexto* contexto,uint32_t programCounterActualizado, char* IdsegmentoComoString, char* tamanioComoString){
     uint32_t id_segmento= atoi(IdsegmentoComoString);
     uint32_t tamanio_segmento = atoi(tamanioComoString);
     log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
-    buffer_empaquetar(buffer, &pid, sizeof(pid));
+    empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
     buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
     buffer_empaquetar(buffer ,&tamanio_segmento , sizeof(tamanio_segmento));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_create_segment, buffer);
+    log_info(cpuLogger, "llego a enviar buffer ");
     buffer_destruir(buffer); 
 }  
 
@@ -351,7 +353,7 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
         ejecutar_MOV_OUT(contexto,programCounterActualizado,parametro2,parametro1);
         break;
     case INSTRUCCION_create_segment:
-        ejecutar_CREATE_SEGMENT(contexto,parametro1, parametro2);
+        ejecutar_CREATE_SEGMENT(contexto, programCounterActualizado, parametro1, parametro2);
         break;
     case INSTRUCCION_delete_segment:
         ejecutar_DELETE_SEGMENT(contexto,parametro1);
@@ -405,15 +407,24 @@ void dispatch_peticiones_de_kernel(void) {
         uint8_t kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
         t_buffer* bufferContexto = NULL;
         t_contexto* contexto = NULL;
-        if (kernelRespuesta == HEADER_proceso_a_ejecutar) {
+        log_info(cpuLogger,"kernelR %d procAEjec %d", kernelRespuesta, HEADER_proceso_a_ejecutar);
+        if (kernelRespuesta != HEADER_proceso_a_ejecutar) {
+            log_error(cpuLogger, "Error al intentar recibir el CONTEXTO de Kernel");
+            exit(-1);
+        }
             bufferContexto = buffer_crear();
             stream_recibir_buffer(cpu_config_obtener_socket_kernel(cpuConfig), bufferContexto);
             buffer_desempaquetar(bufferContexto, &pidRecibido, sizeof(pidRecibido));
+            log_info(cpuLogger, "desempaquetado de pid %d", HEADER_proceso_a_ejecutar);
             buffer_desempaquetar(bufferContexto, &programCounter, sizeof(programCounter));
+            log_info(cpuLogger, "desempaquetado de prgr");
             contexto = crear_contexto(pidRecibido, programCounter);
-            buffer_desempaquetar_registros(bufferContexto, contexto_obtener_registros(contexto));
             buffer_desempaquetar_tabla_de_segmentos(bufferContexto, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
+            log_info(cpuLogger, "desempaquetado de tab");
+            buffer_desempaquetar_registros(bufferContexto, contexto_obtener_registros(contexto));
+            log_info(cpuLogger, "desempaquetado de regs");
             buffer_destruir(bufferContexto);
+
             kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
             if (kernelRespuesta == HEADER_lista_de_instrucciones) {
                 t_buffer* bufferInstrucciones = buffer_crear();
@@ -430,10 +441,6 @@ void dispatch_peticiones_de_kernel(void) {
                 pararDeEjecutar = cpu_ejecutar_ciclos_de_instruccion(contexto);
             }
             contexto_destruir(contexto);
-        } else {
-            log_error(cpuLogger, "Error al intentar recibir el CONTEXTO de Kernel");
-            exit(-1);
-        }
     }
 }
 

@@ -31,6 +31,7 @@ t_pcb* kernel_recibir_pcb_actualizado_de_cpu(t_pcb* pcbAActualizar, uint8_t cpuR
     buffer_desempaquetar(bufferPcb, &pidRecibido, sizeof(pidRecibido));
     buffer_desempaquetar(bufferPcb, &programCounterActualizado, sizeof(programCounterActualizado));
     buffer_desempaquetar_registros(bufferPcb, pcb_obtener_registros(pcbAActualizar));
+    buffer_desempaquetar_tabla_de_segmentos(bufferPcb, pcb_obtener_tabla_de_segmentos(pcbAActualizar), cantidadDeSegmentos);
     
     if (pidRecibido == pcb_obtener_pid(pcbAActualizar)) { /// si es el mismo al que tenes en kernel
         if (cpuResponse == HEADER_proceso_bloqueado) {

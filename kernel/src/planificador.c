@@ -376,7 +376,7 @@ void atender_pcb() {
 
         kernel_enviar_pcb_a_cpu(pcb, kernelConfig, kernelLogger, HEADER_proceso_a_ejecutar);
         uint8_t cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
-
+        log_info(kernelLogger, "HEADER DE RSTA CPU: %d", cpuRespuesta);
         struct timespec end;
         __set_timespec(&end);
         // tiempo real ejecutado - rafaga
@@ -510,17 +510,19 @@ void atender_pcb() {
                     
                 break;
                 case HEADER_create_segment:
+                log_info(kernelLogger, "SE LLEGO A CREATE");
                 t_buffer* bufferCreateSegment = buffer_crear();
-                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                uint8_t headerCPU = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
+                log_info(kernelLogger, "llego a recibir header  %d", headerCPU);
+
                 stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
                 buffer_destruir(bufferCreateSegment);
-
-                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                 
+                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                log_info(kernelLogger, "resp de memoria %d", respuestaMemoria);
                 if(respuestaMemoria == HEADER_segmento_creado ){
                     t_buffer* bufferSegCreado = buffer_crear();
-                    stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                     stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig),bufferSegCreado);
                     buffer_desempaquetar_tabla_de_segmentos(bufferSegCreado,pcb_obtener_tabla_de_segmentos(pcb),cantidadDeSegmentos);
                     buffer_destruir(bufferSegCreado);

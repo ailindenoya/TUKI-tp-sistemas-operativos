@@ -149,6 +149,7 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                 break;
             } else {
                 log_error(consolaLogger, "Instruccion no reconocida");
+                exit(-1);
                 break;
             }
             if (hayError) {

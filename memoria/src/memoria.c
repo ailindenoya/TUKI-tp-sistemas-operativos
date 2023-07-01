@@ -265,31 +265,31 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
 
 void recibir_de_cpu(){
 
-        t_buffer* buffer = buffer_crear();
-    log_info(memoriaLogger, "llego a recibir");
+    t_buffer* buffer = buffer_crear();
 
     for(;;){
         uint32_t pID;
         uint32_t nroSegmento;
         uint32_t offset; 
         uint8_t headerRecibido = stream_recibir_header(socketCPU);
+        log_info(memoriaLogger, "llego a recibir header  %d", headerRecibido);
         stream_recibir_buffer(socketCPU,buffer); // NO RECIBE EL BUFFER! ACA ESTA EL ERROR
         log_info(memoriaLogger, "recibi buffer");
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
-        log_error(memoriaLogger, "error al 1");
+        log_info(memoriaLogger, "error al 1");
         buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
-        log_error(memoriaLogger, "error al 2");
+        log_info(memoriaLogger, "error al 2");
         buffer_desempaquetar(buffer,&offset, sizeof(offset));
-        log_error(memoriaLogger, "error al 3");
+        log_info(memoriaLogger, "error al 3");
         proceso* proceso = encontrar_proceso(pID); 
         int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
-        uint32_t cantidadDeBytes;
+        int cantidadDeBytes;
         buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
-        log_error(memoriaLogger, "error al 4");
-        sleep(memoria_config_obtener_retardo_memoria(memoriaConfig));
-
+        log_info(memoriaLogger, "error al 4");
+        sleep(memoria_config_obtener_retardo_memoria(memoriaConfig)/1000);
+        log_info(memoriaLogger, " header recibido de cpu %d ", headerRecibido);
         switch (headerRecibido)
-        {
+        {   
         case HEADER_valor_de_memoria:
             t_buffer* bufferParaCPU = buffer_crear();
             buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
@@ -315,13 +315,14 @@ void recibir_de_cpu(){
 void recibir_de_kernel(){
 
     t_buffer * buffer = buffer_crear();
+
     
     for(; ;){
         uint8_t headerRecibido = stream_recibir_header(socketKERNEL);
+        log_info(memoriaLogger, "llego a recibir header  %d", headerRecibido);
         stream_recibir_buffer(socketKERNEL,buffer);
         uint32_t pID;
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
-
         switch (headerRecibido)
         {
         case HEADER_proceso_a_agregar_a_memoria:
@@ -337,7 +338,7 @@ void recibir_de_kernel(){
         case HEADER_create_segment:
             uint32_t  idSegmento_create;
             buffer_desempaquetar(buffer, &idSegmento_create, sizeof(idSegmento_create));  
-            log_info(memoriaLogger, "header createe dessem");
+            log_info(memoriaLogger, "header create");
             buffer_desempaquetar(buffer, &tamanioRequeridoParaSegmentoACrear,sizeof(tamanioRequeridoParaSegmentoACrear));
             atender_create_segment(pID,idSegmento_create);
             break;

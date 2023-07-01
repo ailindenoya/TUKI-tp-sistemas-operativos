@@ -73,6 +73,7 @@ int recibir_cant_segmentos_de_memoria(){
     log_info(kernelLogger, "se recibio la cantidad de segmentos de memoria");
     int segmentos;
     buffer_desempaquetar(buffer,&segmentos,sizeof(segmentos));
+    
     buffer_destruir(buffer);
     return segmentos;
 }
