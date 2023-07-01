@@ -292,14 +292,15 @@ void recibir_de_cpu(){
         {   
         case HEADER_valor_de_memoria: 
             t_buffer* bufferParaCPU = buffer_crear();
-            buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
+            buffer_empaquetar(bufferParaCPU,bloque_de_memoria+direccionFisica,cantidadDeBytes);
             log_info(memoriaLogger,"MEMORIA llego a empaqueta bloque de memoria + dir fisica");
             stream_enviar_buffer(socketCPU, HEADER_valor_de_memoria, bufferParaCPU);
             log_info(memoriaLogger, "MEMORIA envio el buffer a cpu");
             buffer_destruir(bufferParaCPU);
             break;
         case HEADER_valor_de_registro:
-            buffer_desempaquetar(buffer,bloque_de_memoria+direccionFisica, cantidadDeBytes);
+            t_buffer* bufferParaCPU2 = buffer_crear();
+            buffer_desempaquetar(bufferParaCPU2,bloque_de_memoria+direccionFisica, cantidadDeBytes);
             stream_enviar_buffer_vacio(socketCPU, HEADER_OK_puede_continuar);
             break;
         default:
