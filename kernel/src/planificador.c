@@ -395,7 +395,9 @@ void atender_pcb() {
 
         log_debug(kernelLogger, "PCB <ID %d> estuvo en ejecución por %d milisegundos", pcb_obtener_pid(pcb), realEjecutado);       
         
-        actualizar_tiempo_ejecutado(pcb, realEjecutado);    
+        actualizar_tiempo_ejecutado(pcb, realEjecutado);
+
+        uint32_t pidAEnviar = pcb_obtener_pid(pcb);
         
         switch (cpuRespuesta) {
             case HEADER_proceso_terminado_seg_fault:
@@ -515,9 +517,18 @@ void atender_pcb() {
                 uint8_t headerCPU = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
                 log_info(kernelLogger, "llego a recibir header  %d", headerCPU);
-
-                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegment);
+                uint32_t idCreate;
+                uint32_t tamanio;
+                buffer_desempaquetar(bufferCreateSegment, &idCreate, sizeof(idCreate));
+                buffer_desempaquetar(bufferCreateSegment, &tamanio, sizeof(tamanio));
                 buffer_destruir(bufferCreateSegment);
+
+                t_buffer* bufferCreateSegmentParaMemoria = buffer_crear();
+                buffer_empaquetar(bufferCreateSegmentParaMemoria, &pidAEnviar, sizeof(pidAEnviar));
+                buffer_empaquetar(bufferCreateSegmentParaMemoria, &idCreate, sizeof(idCreate));
+                buffer_empaquetar(bufferCreateSegmentParaMemoria, &tamanio, sizeof(tamanio));
+                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegmentParaMemoria);
+                buffer_destruir(bufferCreateSegmentParaMemoria);
                 
                 uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
                 log_info(kernelLogger, "resp de memoria %d", respuestaMemoria);
@@ -543,8 +554,17 @@ void atender_pcb() {
                 t_buffer *bufferDeleteSegment = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferDeleteSegment);
-                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_delete_segment, bufferDeleteSegment);
+
+                uint32_t idDelete;
+                buffer_desempaquetar(bufferDeleteSegment, &idDelete, sizeof(idDelete));
                 buffer_destruir(bufferDeleteSegment);
+
+                t_buffer* bufferDeleteSegmentParaMemoria = buffer_crear();
+                buffer_empaquetar(bufferDeleteSegmentParaMemoria, &pidAEnviar, sizeof(pidAEnviar));
+                buffer_empaquetar(bufferDeleteSegmentParaMemoria, &idDelete, sizeof(idDelete));
+                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_delete_segment, bufferDeleteSegmentParaMemoria);
+                buffer_destruir(bufferDeleteSegmentParaMemoria);
+
                 hayQueReplanificar = false;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");

@@ -26,7 +26,7 @@ t_list* listaDeProcesos;
 
 int socketKERNEL;
 int socketCPU;
-int tamanioRequeridoParaSegmentoACrear;
+uint32_t tamanioRequeridoParaSegmentoACrear;
 int tamanioLibreTotal;
 int tamanioDeSegmento0;
 segmento* pteroASegmento0;
@@ -282,12 +282,12 @@ void recibir_de_cpu(){
         buffer_desempaquetar(buffer,&offset, sizeof(offset));
         log_info(memoriaLogger, "error al 3");
         proceso* proceso = encontrar_proceso(pID); 
-        int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + proceso->tablaDeSegmentos[nroSegmento].tamanio;
+        int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + offset;
         int cantidadDeBytes;
         buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
-        log_info(memoriaLogger, "error al 4");
+        log_info(memoriaLogger, "cantidad de bytes pedidos: %d", cantidadDeBytes);
+        log_info(memoriaLogger, "direccion fisica: %d", direccionFisica);
         sleep(memoria_config_obtener_retardo_memoria(memoriaConfig)/1000);
-        log_info(memoriaLogger, " header recibido de cpu %d ", headerRecibido);
         switch (headerRecibido)
         {   
         case HEADER_valor_de_memoria: 

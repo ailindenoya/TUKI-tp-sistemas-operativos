@@ -90,7 +90,7 @@ void pedirleAMemoria(t_buffer* buffer, int cantidadDeBytes, char* valorDeMemoria
         log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
         exit(-1);
     }
-    valorDeMemoria = realloc(valorDeMemoria,sizeof(valorDeMemoria)*cantidadDeBytes);
+    valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
 
     t_buffer* recibidoDeMemoria = buffer_crear();
     stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
@@ -177,7 +177,7 @@ void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
 
 void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica){
     uint32_t pid = contexto_obtener_pid(contexto);
-    log_info(cpuLogger, "PID: %d - Ejecutando: MOV_IN ", pid);
+    log_info(cpuLogger, "PID: %d - Ejecutando: MOV_OUT ", pid);
     int direccionLogica = atoi(dirLogica);
     uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
     uint32_t offset = obtener_offset_de_segmento(direccionLogica);
@@ -229,21 +229,28 @@ void ejecutar_CREATE_SEGMENT(t_contexto* contexto,uint32_t programCounterActuali
     log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
     empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
-    buffer_empaquetar(buffer ,&id_segmento , sizeof(id_segmento));
-    buffer_empaquetar(buffer ,&tamanio_segmento , sizeof(tamanio_segmento));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_create_segment, buffer);
+    buffer_destruir(buffer);
+    t_buffer* bufferParametros = buffer_crear();
+    buffer_empaquetar(bufferParametros ,&id_segmento , sizeof(id_segmento));
+    buffer_empaquetar(bufferParametros ,&tamanio_segmento , sizeof(tamanio_segmento));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
     log_info(cpuLogger, "llego a enviar buffer ");
-    buffer_destruir(buffer); 
+    buffer_destruir(bufferParametros); 
 }  
 
 void ejecutar_DELETE_SEGMENT(t_contexto* contexto,uint32_t programCounterActualizado, char* IdsegmentoComoString){
     uint32_t id_segmento = atoi(IdsegmentoComoString);
     log_info(cpuLogger, "PID: %d - Ejecutando: DELETE_SEGMENT", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
-    buffer_empaquetar(buffer,&id_segmento,sizeof(id_segmento));
     empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_delete_segment, buffer);
     buffer_destruir(buffer);
+    t_buffer* bufferParametros = buffer_crear();
+    buffer_empaquetar(bufferParametros ,&id_segmento , sizeof(id_segmento));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    log_info(cpuLogger, "llego a enviar buffer ");
+    buffer_destruir(bufferParametros); 
 }
 
 void ejecutar_WAIT(t_contexto* contexto,uint32_t programCounterActualizado, char* recurso){
@@ -333,32 +340,43 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
     {
     case INSTRUCCION_set:
         ejecutar_SET(contexto, parametro1, parametro2);
+        pararDeEjecutar = false;
         break;
     case INSTRUCCION_f_close:
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_open:
         ejecutar_F_OPEN(contexto, programCounterActualizado, parametro1);
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_write:
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_read:
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_seek:
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_truncate:
         ejecutar_F_TRUNCATE(contexto, programCounterActualizado, parametro1, parametro2);
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_mov_in:
         ejecutar_MOV_IN(contexto,programCounterActualizado, parametro1, parametro2);
+        pararDeEjecutar = false;
         break;
     case INSTRUCCION_mov_out:
         ejecutar_MOV_OUT(contexto,programCounterActualizado,parametro2,parametro1);
+        pararDeEjecutar = false;
         break;
     case INSTRUCCION_create_segment:
         ejecutar_CREATE_SEGMENT(contexto, programCounterActualizado, parametro1, parametro2);
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_delete_segment:
         ejecutar_DELETE_SEGMENT(contexto,programCounterActualizado, parametro1);
+        pararDeEjecutar = true;
         break;
     case INSTRUCCION_wait:
         ejecutar_WAIT(contexto,programCounterActualizado, parametro1);
