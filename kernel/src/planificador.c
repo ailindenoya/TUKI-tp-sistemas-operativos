@@ -330,8 +330,8 @@ t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
 
 }
 
-t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivo, t_pcb* pcb){
-   t_archivo_tabla_proceso* tablaArchivosAbiertos = pcb_obtener_tabla_de_archivos_abiertos(pcb);
+t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivoNuevo, t_pcb* pcb){
+   t_list* tablaArchivosAbiertos = pcb_obtener_tabla_de_archivos_abiertos(pcb);
    bool encontrarArch(void* Aux){
         t_archivo_tabla_proceso* tab = (t_archivo_tabla_proceso*) Aux; 
                     return tab->nombreArchivo == nombreArchivoNuevo;
@@ -502,7 +502,7 @@ void atender_pcb() {
                     buffer_desempaquetar(buffer_F_SEEK, &puntero, sizeof(puntero));
                     buffer_desempaquetar_string(buffer_F_SEEK, &nombreArchivo);
                     
-                    t_archivo_tabla_proceso* tabladeArchivosDelProceso = encontrarArchivoTablaProcesos(nombreArchivo);
+                    t_archivo_tabla_proceso* tabladeArchivosDelProceso = encontrarArchivoTablaProcesos(nombreArchivo, pcb);
                     t_archivo_tabla_proceso_setear_puntero(tabladeArchivosDelProceso,puntero);
 
                 hayQueReplanificar = false;
