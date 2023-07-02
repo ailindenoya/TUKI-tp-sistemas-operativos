@@ -29,6 +29,7 @@ t_fcb* fcb_crear(char* Nombre){
 void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
     if (fcb_obtener_puntero_directo(fcb) == 0){
         fcb_setear_puntero_directo(fcb, bloque);
+        return;
     }
 
     uint32_t punteroIndirecto = fcb_obtener_puntero_indirecto(fcb);
@@ -36,6 +37,7 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
 
     if (punteroIndirecto == 0){
         fcb_setear_puntero_indirecto(fcb, bloque);
+        return;
     }
 
     int fd = open("bloques.dat", O_RDWR, S_IRWXU);
@@ -45,7 +47,12 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
         log_info(fileSystemLogger, "No se pudo abrir el archivo de Bloques");
     }
 
-    void* bloques = mmap(NULL, superbloque_config_obtener_block_size(superbloqueConfig), PROT_READ | PROT_WRITE, MAP_SHARED, fd, punteroIndirecto* superbloque_config_obtener_block_size(superbloqueConfig));
+    off_t offset = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
+
+    void* bloques = mmap(NULL, superbloque_config_obtener_block_size(superbloqueConfig), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
+
+    //memcpy(bloques + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Revisar
+
 /*
     void* aux = malloc(superbloque_config_obtener_block_size(superbloqueConfig));
     void* punteroAlFin = mempcpy(aux, bloques, sizeof(uint32_t));  // Copias el primer puntero dentro del bloque de punteros
@@ -55,6 +62,9 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
     memcpy(aux, bloque, sizeof(bloque));   
     memcpy(bloques, aux, sizeof(aux));     
     */
+    msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);
+    munmap(bloques, superbloque_config_obtener_block_size(superbloqueConfig));
+    close(fd);
 }
 
 t_fcb* encontrarFCB(char* nombreArchivoNuevo){
