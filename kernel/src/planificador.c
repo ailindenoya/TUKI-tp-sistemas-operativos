@@ -330,6 +330,15 @@ t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
 
 }
 
+t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivo, t_pcb* pcb){
+   t_archivo_tabla_proceso* tablaArchivosAbiertos = pcb_obtener_tabla_de_archivos_abiertos(pcb);
+   bool encontrarArch(void* Aux){
+        t_archivo_tabla_proceso* tab = (t_archivo_tabla_proceso*) Aux; 
+                    return tab->nombreArchivo == nombreArchivoNuevo;
+    }
+    return list_find(tablaArchivosAbiertos, encontrarArch);  
+}
+
 void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
     t_buffer* buffer_F_OPEN = buffer_crear();
 
@@ -484,6 +493,18 @@ void atender_pcb() {
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_SEEK:
+                    t_buffer* buffer_F_SEEK = buffer_crear();
+                    stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_SEEK);
+
+                    char* nombreArchivo;
+                    uint32_t puntero;
+                    buffer_desempaquetar(buffer_F_SEEK, &puntero, sizeof(puntero));
+                    buffer_desempaquetar_string(buffer_F_SEEK, &nombreArchivo);
+                    
+                    t_archivo_tabla_proceso* tabladeArchivosDelProceso = encontrarArchivoTablaProcesos(nombreArchivo);
+                    t_archivo_tabla_proceso_setear_puntero(tabladeArchivosDelProceso,puntero);
+
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_TRUNCATE:

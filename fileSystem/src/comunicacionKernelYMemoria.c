@@ -89,7 +89,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     int cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
 
     if (cantBloques == 0){
-
+        
     }
     else {
         if(tamanioNuevo > tamanioViejo){            
@@ -97,8 +97,6 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
         }
         else if (tamanioNuevo < tamanioViejo){
             quitarBloques(cantBloques, fcb);
-            // Reducir, quitar bloques
-            // En bitmap poner cantBloques en 0 de ese archivo, duda: buscar los bloques en bloques.dat y borrarlos? actualizar puntero indirecto
             if (tamanioNuevo == 0){
                 fcb_setear_puntero_directo(fcb, 0);
                 fcb_setear_puntero_indirecto(fcb, 0);

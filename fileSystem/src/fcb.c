@@ -52,7 +52,7 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
     void* bloques = mmap(NULL, superbloque_config_obtener_block_size(superbloqueConfig), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
 
     //int bloquesAsignadosEnPunteroIndirecto = (int) ceil((fcb_obtener_tamanio_archivo(fcb) - 64) / 64);
-    //memcpy(bloques + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Revisar
+    //memcpy(bloques + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Segmentation fault acá
 
 /*
     void* aux = malloc(superbloque_config_obtener_block_size(superbloqueConfig));

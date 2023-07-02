@@ -32,7 +32,7 @@ void ejecutar_F_CLOSE(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_F_OPEN(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo);
 void ejecutar_F_READ(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_F_WRITE(t_contexto* pcb,uint32_t programCounterActualizado);
-void ejecutar_F_SEEK(t_contexto* pcb,uint32_t programCounterActualizado);
+void ejecutar_F_SEEK(t_contexto* pcb,uint32_t programCounterActualizado, char* nombreArchivo, char* puntero);
 void ejecutar_F_TRUNCATE(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanio);
 void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica);
 void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica);

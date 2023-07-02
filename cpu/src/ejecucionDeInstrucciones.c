@@ -77,9 +77,6 @@ void ejecutar_F_READ(t_contexto* contexto,uint32_t programCounterActualizado){
 void ejecutar_F_WRITE(t_contexto* contexto,uint32_t programCounterActualizado){
 
 }
-void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado){
-
-}
 
 void pedirleAMemoria(t_buffer* buffer, int cantidadDeBytes, char* valorDeMemoria){
     buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
@@ -331,6 +328,19 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
     buffer_destruir(bufferF_TRUNCATE);   
 }
 
+void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* puntero){
+    uint32_t punteroArchivo = atoi(puntero);
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_SEEK", contexto_obtener_pid(contexto));
+
+    t_buffer* buffer_F_SEEK = buffer_crear();
+    empaquetar_contexto_para_kernel(buffer_F_SEEK, programCounterActualizado, contexto);
+    buffer_empaquetar_string(buffer_F_SEEK, nombreArchivo);
+    buffer_empaquetar(buffer_F_SEEK, punteroArchivo, sizeof(punteroArchivo));
+
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_SEEK, buffer_F_SEEK);
+    buffer_destruir(buffer_F_SEEK);
+}
+
  bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
     contexto_setear_program_counter(contexto, contexto_obtener_program_counter(contexto) + 1);
     uint32_t programCounterActualizado = contexto_obtener_program_counter(contexto);
@@ -356,6 +366,7 @@ void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizad
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_seek:
+        ejecutar_F_SEEK(contexto, programCounterActualizado, parametro1, parametro2);
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_truncate:
