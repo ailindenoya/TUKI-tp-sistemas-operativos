@@ -12,7 +12,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
     for(;;){
         char* nombreArchivo;
         char* parametro2;
-        char* parametro3;
+        //char* parametro3;
 
         t_buffer* bufferAux = buffer_crear();
         stream_recibir_buffer(socketKERNEL, bufferAux);
@@ -86,7 +86,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     fcb_setear_tamanio_archivo(fcb, tamanioNuevo); // 65 a 63 2 bloques a 1   50 a 40 1 bloque 1 bloque
 
 
-    uint32_t cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
+    int cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
 
     if (cantBloques == 0){
 
@@ -96,7 +96,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
             agregarBloques(cantBloques, fcb);
         }
         else if (tamanioNuevo < tamanioViejo){
-        //    quitarBloques(cantBloques, fcb);
+            quitarBloques(cantBloques, fcb);
             // Reducir, quitar bloques
             // En bitmap poner cantBloques en 0 de ese archivo, duda: buscar los bloques en bloques.dat y borrarlos? actualizar puntero indirecto
             if (tamanioNuevo == 0){

@@ -25,13 +25,12 @@ void agregarBloques(int cantidadBloques, t_fcb* fcb){
             }
         }
 }
-/*
-void quitarBloques(int cantidadBloques, t_fcb* fcb){
-    if(fcb_obtener_puntero_indirecto == 0){
 
-    }
+void quitarBloques(int cantidadBloques, t_fcb* fcb){
+    
+    return;
 }
-*/
+
 void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso) {
 	int i = 0;
 	for (i = posicionInicial; i < posicionInicial + tamanioProceso; i++) {
@@ -94,4 +93,5 @@ void cargarArchivoDeBloques(){
     uint32_t tamanioArchivoBloques = superbloque_config_obtener_block_count(superbloqueConfig) * superbloque_config_obtener_block_size(superbloqueConfig);
 
     ftruncate(fd, tamanioArchivoBloques);
+    close(fd);
 }

@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <commons/config.h>
 #include <sys/mman.h>
-
+#include<math.h>
 
 typedef struct t_fcb t_fcb;
 

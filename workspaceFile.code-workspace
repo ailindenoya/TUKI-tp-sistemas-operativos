@@ -29,7 +29,8 @@
 			"concepts": "c",
 			"cstdio": "c",
 			"new": "c",
-			"typeinfo": "c"
+			"typeinfo": "c",
+			"cmath": "c"
 		}, 
 		"C_Cpp.errorSquiggles": "disabled", 
 	}, 

@@ -10,7 +10,7 @@
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 extern t_superbloque_config* superbloqueConfig;
-extern t_bitarray* bitmap;
+t_bitarray* bitmap;
 t_list* listaFCBsAbiertos;
 int socketKERNEL;
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
-  //  bitmap = cargarBitMap();
+    bitmap = cargarBitMap();
     cargarArchivoDeBloques();
     listaFCBsAbiertos = list_create();
 
