@@ -31,6 +31,7 @@ bool hayQueReplanificar = true;
 t_pcb* ultimoPcbEjecutado;
 
 t_list** pteroAVectorDeListaDeRecursos;
+t_list* listaDePcbs;
 
 typedef enum{
     SUCCESS,
@@ -170,8 +171,13 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
-     // avisar a memoria que finalizo   mem_adapter_finalizar_proceso(pcbALiberar, kernelConfig, kernelLogger);
-    // ESTO YA ESTA EN FINALIZA    log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d", pcb_obtener_pid(pcbALiberar), pcb_obtener_tamanio(pcbALiberar));
+
+        t_buffer* bufferParaMemoria = buffer_crear();
+        buffer_empaquetar(bufferParaMemoria,&pcb_obtener_pid(pcbALiberar),sizeof(pcb_obtener_pid(pcbALiberar)));
+        stream_enviar_buffer(kernel_config_setear_socket_memoria(kernelConfig), HEADER_finalizar_proceso_en_memoria, bufferParaMemoria);
+        buffer_destruir(bufferParaMemoria);
+
+        // list_remove de lista de pcbs (para luego actualizar tabla de segs)
         stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HEADER_proceso_terminado);
         pcb_destruir(pcbALiberar);
         sem_post(&gradoDeMultiprogramacion);
@@ -341,31 +347,38 @@ t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivoNuevo,
 
 void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
     t_buffer* buffer_F_OPEN = buffer_crear();
-
     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
-        stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
-        
-        uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
-        stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+    // 1)
 
-        if (respuestaFileSystem == HEADER_no_existe_archivo){
-            stream_enviar_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_crear_archivo);
-            respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
-            stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
-            if(respuestaFileSystem == HEADER_archivo_abierto){
-                buffer_destruir(buffer_F_OPEN);
-                t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
-                list_add(tablaArchivosAbiertos, (void*) tabla);
-            }
-            else {
-                log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
-            }
-        }
-        else if (respuestaFileSystem == HEADER_archivo_abierto){
-            buffer_destruir(buffer_F_OPEN);
+    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+    stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+    // 4)
+    if (respuestaFileSystem == HEADER_no_existe_archivo){
+        stream_enviar_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_crear_archivo);
+        respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+        stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+        log_info(kernelLogger, "no existe el archivo");
+        if(respuestaFileSystem == HEADER_archivo_abierto){
             t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
             list_add(tablaArchivosAbiertos, (void*) tabla);
+            log_info(kernelLogger, "no existe, creo el archivo");
         }
+        else {
+            log_error(kernelLogger, "Error al abrir el archivo: %s", nombreArchivoNuevo);
+        }
+    }
+    else if (respuestaFileSystem == HEADER_archivo_abierto){
+        t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
+        list_add(tablaArchivosAbiertos, (void*) tabla);
+        log_info(kernelLogger, "abrio el archivo");
+    }
+    buffer_destruir(buffer_F_OPEN);
+}
+
+
+void atenderBloqueoDeF_TRUNCATE(){
+        
 }
 
 void atender_pcb() {
@@ -450,15 +463,19 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_F_OPEN:
                 t_buffer* buffer_F_OPEN = buffer_crear();
-                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                int recibidoDeCPU = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                if(recibidoDeCPU!= HEADER_proceso_parametros){
+                    log_error(kernelLogger,"No se recibio el mensaje de CPU");
+                    exit(-1);
+                }
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), buffer_F_OPEN);
-                char* nombreArchivoNuevo;
+                char* nombreArchivoNuevo = malloc(sizeof(*nombreArchivoNuevo));
                 buffer_desempaquetar_string(buffer_F_OPEN, &nombreArchivoNuevo);
-
+                
                 if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo,pcb_obtener_pid(pcb));
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
-                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux); // abstraer estas 3 en una funcion
                 }
                 
                 // Tabla no vacía, hay archivos abiertos
@@ -479,8 +496,10 @@ void atender_pcb() {
                     pcb_setear_estado(pcb, BLOCKED);
                     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+
                     sem_post(estado_obtener_sem(estadoReady));
                 }
+                free(nombreArchivoNuevo);
                 hayQueReplanificar = true;
                 break;
                 case HEADER_proceso_F_CLOSE:
@@ -561,7 +580,9 @@ void atender_pcb() {
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_hay_que_compactar){
                     stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    
                     // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
+
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_proceso_terminado_out_of_memory){
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
@@ -675,7 +696,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
-        
+        list_add(nuevoPCB, listaDePcbs); // TODO controlar mutex . 
         ////// PARTE DE MEMORIA 
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
         
@@ -728,8 +749,7 @@ void iniciar_planificadores(void){
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
     vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
     tablaArchivosAbiertos = list_create();
-
-
+    listaDePcbs = list_create();
 
     pteroAVectorDeListaDeRecursos = malloc(sizeof(*pteroAVectorDeListaDeRecursos)*dimensionDeArrayDeRecursos);
     
@@ -740,7 +760,7 @@ void iniciar_planificadores(void){
 
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;
-    
+    pthread_t atenderBloqueosDe_F_TRUNCATE_Hilo;
     siguientePID = 1;
     sem_init(&dispatchPermitido,0,1);
     sem_init(&hayPcbsParaAgregarAlSistema,0,0);
@@ -761,7 +781,7 @@ void iniciar_planificadores(void){
     pthread_detach(largoPlazoHilo);
     pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); 
     pthread_detach(cortoPlazoHilo);
-
-
+    pthread_create(&atenderBloqueosDe_F_TRUNCATE_Hilo, NULL, (void*) atenderBloqueoDeF_TRUNCATE, NULL);
+    pthread_detach(atenderBloqueosDe_F_TRUNCATE_Hilo);
 
 }

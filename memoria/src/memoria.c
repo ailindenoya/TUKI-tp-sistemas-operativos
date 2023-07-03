@@ -213,6 +213,8 @@ segmento encontrar_segmento(int pid, int idSegmento){
     return segINVALIDO;
 }
 
+
+
 void atender_delete_segment(int pid, int idSegmento ){
   
     segmento segmentoEncontrado = encontrar_segmento(pid,idSegmento);
@@ -248,7 +250,7 @@ void atender_delete_segment(int pid, int idSegmento ){
     
     if(huecoAledanioDeAbajo!=NULL){
         huecoLibre->tamanio += huecoAledanioDeAbajo->tamanio;
-        list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeAbajo,free);
+      //  list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeAbajo,free); AGARRAR INDICE TODO
     }
     free(indiceHuecoDeAbajo);
 
@@ -307,8 +309,6 @@ void recibir_de_cpu(){
             log_error(memoriaLogger, "error al reconocer header recibido de cpu");
             break;
         }
-
-
     }
 
 }
@@ -351,6 +351,12 @@ void recibir_de_kernel(){
             buffer_desempaquetar(buffer,&idSegmento_delete,sizeof(idSegmento_delete));
             atender_delete_segment(pID, idSegmento_delete); 
             break;
+        case HEADER_finalizar_proceso_en_memoria:
+            proceso* procesoAFinalizar = encontrar_proceso(pID);
+            for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
+                atender_delete_segment(pID, procesoAFinalizar->tablaDeSegmentos[i].id);
+            }
+            list_remove_and_destroy_element(listaDeProcesos, procesoAFinalizar, free);
         default:
             log_error(memoriaLogger, "Error al recibir mensaje de KERNEL");
             break;
