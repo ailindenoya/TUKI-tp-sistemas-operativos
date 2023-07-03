@@ -10,7 +10,7 @@
 #include "tabla_de_archivos_abiertos.h"
 
 struct t_archivo_tabla{
-    uint32_t pid;
+    uint32_t pid; // proceso que abrio el arch
     char* nombreArchivo;
     t_list* colaProcesos;
 };

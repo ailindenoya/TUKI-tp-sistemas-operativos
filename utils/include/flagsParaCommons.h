@@ -25,6 +25,7 @@ typedef enum {
     HEADER_proceso_a_agregar_a_memoria,
     HEADER_create_segment,
     HEADER_segmento_creado,
+    HEADER_finalizar_proceso_en_memoria,
     
     HEADER_delete_segment,
     HEADER_mov_in,

@@ -309,10 +309,13 @@ void ejecutar_F_OPEN(t_contexto* contexto, uint32_t programCounterActualizado, c
 
     t_buffer* bufferF_OPEN = buffer_crear();
     empaquetar_contexto_para_kernel(bufferF_OPEN,programCounterActualizado,contexto);
-    buffer_empaquetar_string(bufferF_OPEN, NombreArchivo);
-
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_OPEN, bufferF_OPEN);
-    buffer_destruir(bufferF_OPEN);   
+    buffer_destruir(bufferF_OPEN);
+    
+    t_buffer* bufferParametros = buffer_crear();
+    buffer_empaquetar_string(bufferParametros, NombreArchivo);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    buffer_destruir(bufferParametros);   
 }
 
 void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanioEnString){

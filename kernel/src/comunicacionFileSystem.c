@@ -5,8 +5,8 @@ extern t_list* tablaArchivosAbiertos;
 
 t_archivo_tabla* crearEntradaEnTabla(uint32_t pid, char* NombreArchivo){
     t_archivo_tabla* aux = malloc(sizeof(*aux));
-    aux->nombreArchivo = NombreArchivo;
     aux->pid = pid;
+    aux->nombreArchivo = NombreArchivo;
     aux->colaProcesos = list_create();
     return aux;
 }

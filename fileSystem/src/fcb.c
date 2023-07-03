@@ -20,14 +20,14 @@ t_fcb* fcb_crear(char* Nombre){
 
     self->NOMBRE_ARCHIVO = Nombre;
     self->TAMANIO_ARCHIVO = 0;
-    self->PUNTERO_DIRECTO = 0;
-    self->PUNTERO_INDIRECTO = 0;
+    self->PUNTERO_DIRECTO = -1;
+    self->PUNTERO_INDIRECTO = -1;
 
     return self;
 }
 
 void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
-    if (fcb_obtener_puntero_directo(fcb) == 0){
+    if (fcb_obtener_puntero_directo(fcb) == -1){  /// 
         fcb_setear_puntero_directo(fcb, bloque);
         return;
     }
@@ -35,7 +35,7 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
     uint32_t punteroIndirecto = fcb_obtener_puntero_indirecto(fcb);
 
 
-    if (punteroIndirecto == 0){
+    if (punteroIndirecto == -1){
         fcb_setear_puntero_indirecto(fcb, bloque);
         return;
     }
@@ -51,8 +51,9 @@ void fcb_asignar_bloque(t_fcb* fcb, uint32_t bloque){
 
     void* bloques = mmap(NULL, superbloque_config_obtener_block_size(superbloqueConfig), PROT_READ | PROT_WRITE, MAP_SHARED, fd, offset);
 
-    //int bloquesAsignadosEnPunteroIndirecto = (int) ceil((fcb_obtener_tamanio_archivo(fcb) - 64) / 64);
-    //memcpy(bloques + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Segmentation fault acá
+    int bloquesAsignadosEnPunteroIndirecto = (int) ceil((fcb_obtener_tamanio_archivo(fcb) - 64) / 64);
+    log_info(fileSystemLogger, "fcb obtener tam arch = %d", fcb_obtener_tamanio_archivo(fcb));
+    memcpy(bloques + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Segmentation fault acá
 
 /*
     void* aux = malloc(superbloque_config_obtener_block_size(superbloqueConfig));
@@ -120,8 +121,8 @@ void crearArchivoFCB(char* NombreArchivo){
 
     char* Nom = concat("NOMBRE_ARCHIVO=", NombreArchivo);
     char* Tam = "\nTAMANIO_ARCHIVO=0";
-    char* Pdi = "\nPUNTERO_DIRECTO=0";
-    char* Pin = "\nPUNTERO_INDIRECTO=0";
+    char* Pdi = "\nPUNTERO_DIRECTO=-1";
+    char* Pin = "\nPUNTERO_INDIRECTO=-1";
 
     size_t tamanioMap = strlen(Nom) + strlen(Tam) + strlen(Pdi) + strlen(Pin);
 

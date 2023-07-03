@@ -31,6 +31,7 @@ typedef struct t_pcb {
     uint8_t estado;
     t_list* tablaDeArchivosAbiertos;
     int* socketConsola; // para saber a que consola pertenece
+    pthread_mutex_t* mutex; 
 
 }t_pcb;
 

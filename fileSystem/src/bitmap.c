@@ -10,21 +10,19 @@ t_bitarray* bitArray;
 void agregarBloques(int cantidadBloques, t_fcb* fcb){
 
     int tamanioBitmap = (int) bitarray_get_max_bit(bitArray);
-
     int aux = 0;
 
-        for(int i=0; i< tamanioBitmap; i++){
-
-            if (bitarray_test_bit(bitArray, i) == false){
-                bitarray_set_bit(bitArray, i);
-                log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
-                fcb_asignar_bloque(fcb, i);
-                aux++;
-            }
-            if(aux == cantidadBloques){
-                return;
-            }
+    for (int i = 0; i < tamanioBitmap; i++){
+        if (bitarray_test_bit(bitArray, i) == false){
+            bitarray_set_bit(bitArray, i);
+            log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
+            fcb_asignar_bloque(fcb, i);
+            aux++;
         }
+        if (aux == cantidadBloques){
+            return;
+        }
+    }
 }
 
 void quitarBloques(int cantidadBloques, t_fcb* fcb){

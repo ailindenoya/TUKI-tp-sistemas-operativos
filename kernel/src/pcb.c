@@ -19,6 +19,8 @@ t_pcb* pcb_crear(uint32_t pid, uint32_t tamanio, double estimacionInicialParaHRR
     self->tablaDeSegmentos = malloc(sizeof(*(self->tablaDeSegmentos))*cantidadDeSegmentos);
     inicializar_tabla_de_segmentos(self->tablaDeSegmentos, cantidadDeSegmentos);
     self->tablaDeArchivosAbiertos = list_create();
+    self->mutex = malloc(sizeof(*(self->mutex)));
+    pthread_mutex_init(self->mutex, NULL);
     return self;
 }
 
