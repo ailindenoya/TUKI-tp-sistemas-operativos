@@ -222,7 +222,7 @@ void atender_delete_segment(int pid, int idSegmento ){
     segmentoEncontrado.base = -1;
     segmentoEncontrado.id = -1;
     segmentoEncontrado.tamanio = -1;
-    /// si hay huecos libres aledaños, compactar.
+    /// si hay huecos libres aledaños, consolidar.
     
     bool esAledanioDeArriba(void* huecoAuxArriba){
         hueco_libre* huecoArriba = (hueco_libre*) huecoAuxArriba;
@@ -250,7 +250,7 @@ void atender_delete_segment(int pid, int idSegmento ){
     
     if(huecoAledanioDeAbajo!=NULL){
         huecoLibre->tamanio += huecoAledanioDeAbajo->tamanio;
-      //  list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeAbajo,free); AGARRAR INDICE TODO
+        list_remove_and_destroy_element(listaDeHuecosLibres,*indiceHuecoDeAbajo,free);
     }
     free(indiceHuecoDeAbajo);
 
@@ -264,6 +264,7 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
     huecoLibre->direccion = dir; 
     return huecoLibre;
 }
+
 
 void recibir_de_cpu(){
 
@@ -356,7 +357,14 @@ void recibir_de_kernel(){
             for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
                 atender_delete_segment(pID, procesoAFinalizar->tablaDeSegmentos[i].id);
             }
-            list_remove_and_destroy_element(listaDeProcesos, procesoAFinalizar, free);
+            bool esProcesoATerminar(void*procesoAux){
+                proceso* procesoATerminar = (proceso*) procesoAux;
+                return procesoATerminar->pid == pID; 
+            }
+            int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
+            list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
+            list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
+            free(indiceProcesoAFinalizar);
         default:
             log_error(memoriaLogger, "Error al recibir mensaje de KERNEL");
             break;
