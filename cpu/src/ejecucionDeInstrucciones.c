@@ -319,16 +319,18 @@ void ejecutar_F_OPEN(t_contexto* contexto, uint32_t programCounterActualizado, c
 }
 
 void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanioEnString){
-    uint32_t tamanio = atoi(tamanioEnString);
     log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", contexto_obtener_pid(contexto));
 
     t_buffer* bufferF_TRUNCATE = buffer_crear();
-     empaquetar_contexto_para_kernel(bufferF_TRUNCATE,programCounterActualizado,contexto);
-    buffer_empaquetar_string(bufferF_TRUNCATE, NombreArchivo);
-    buffer_empaquetar(bufferF_TRUNCATE, &tamanio, sizeof(tamanio));
-
+    empaquetar_contexto_para_kernel(bufferF_TRUNCATE,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_TRUNCATE, bufferF_TRUNCATE);
     buffer_destruir(bufferF_TRUNCATE);   
+    
+    t_buffer* bufferParametros = buffer_crear();
+    buffer_empaquetar_string(bufferParametros, NombreArchivo);
+    buffer_empaquetar_string(bufferParametros, tamanioEnString);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    buffer_destruir(bufferParametros);
 }
 
 void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* puntero){

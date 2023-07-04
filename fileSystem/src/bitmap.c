@@ -11,8 +11,10 @@ void agregarBloques(int cantidadBloques, t_fcb* fcb){
 
     int tamanioBitmap = (int) bitarray_get_max_bit(bitArray);
     int aux = 0;
-
+    log_info(fileSystemLogger, "tamanio bitmap: %d", tamanioBitmap);
+    log_info(fileSystemLogger, "pos de bitarray %d", bitarray_test_bit(bitArray, 0));
     for (int i = 0; i < tamanioBitmap; i++){
+        
         if (bitarray_test_bit(bitArray, i) == false){
             bitarray_set_bit(bitArray, i);
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
@@ -39,7 +41,6 @@ void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioPr
 
 t_bitarray* cargarBitMap(){
     int bytes = superbloque_config_obtener_block_count(superbloqueConfig) / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
-    t_bitarray* bitArray;
     bool existeBitmap = true;   // Para chequear si el bitmap existe de una ejecución previa del sistema
 
     int fd = open("bitmap.dat", O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA, CAPAZ PODEMOS CAMBIAR LA RUTA
@@ -63,10 +64,9 @@ t_bitarray* cargarBitMap(){
         limpiarPosiciones(bitArray, 0, bytes);  // Si es la primera ejecución del sistema, se carga el bitmap con ceros, todos bloques libres
     }
     
+    int contador =0;
     // Descomentar esto de abajo si se quiere checkear los valores del bitarray en pantalla
-    // for(int x =0;x<8000;x++){  // ESTO LO HICE PARA VER QUE HAY EN EL BITARRAY
-    //     printf("%d", bitarray_test_bit(bitArray, x));
-    // }
+    log_info(fileSystemLogger, "contador: %d", contador);
     
     int sincronizacion = msync(bitmap, bytes, MS_SYNC);
     if (sincronizacion == -1){
@@ -79,11 +79,16 @@ t_bitarray* cargarBitMap(){
         log_info(fileSystemLogger, "Error al unmapear el bitmap de memoria");
         perror("munmap");
     }
-    
+
     close(fd);
 
     printf("\nSE CERRO\n"); // esto lo hice para ver si llegaba a cerrar el archivo y hacer el munmap
 
+    for(int x =0;x<8000;x++){  // ESTO LO HICE PARA VER QUE HAY EN EL BITARRAY
+         bitarray_test_bit(bitArray, x);
+         contador++;
+    }
+    
     return bitArray;
 }
 

@@ -73,7 +73,7 @@ t_fcb* encontrarFCB(char* nombreArchivoNuevo){
 
     bool encontrarArch(void* Aux){
         t_fcb* tab = (t_fcb*) Aux; 
-                    return tab->NOMBRE_ARCHIVO == nombreArchivoNuevo;
+                    return strcmp(fcb_obtener_nombre_archivo(tab),nombreArchivoNuevo) == 0;
     }
     return list_find(listaFCBsAbiertos, encontrarArch); 
 

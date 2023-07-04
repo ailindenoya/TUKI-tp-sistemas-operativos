@@ -1,6 +1,7 @@
 extern int cantidadDeSegmentos;
 #include "../include/planificador.h"
 #include "../include/comunicacionFileSystem.h"
+#include "../../utils/src/list_find_element_and_index.c"
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelConfig;
@@ -173,12 +174,13 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
 
         t_buffer* bufferParaMemoria = buffer_crear();
-        buffer_empaquetar(bufferParaMemoria,&pcb_obtener_pid(pcbALiberar),sizeof(pcb_obtener_pid(pcbALiberar)));
-        stream_enviar_buffer(kernel_config_setear_socket_memoria(kernelConfig), HEADER_finalizar_proceso_en_memoria, bufferParaMemoria);
+        uint32_t idDePcbALiberar = pcb_obtener_pid(pcbALiberar);
+        buffer_empaquetar(bufferParaMemoria,&idDePcbALiberar,sizeof(idDePcbALiberar));
+        stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_finalizar_proceso_en_memoria, bufferParaMemoria);
         buffer_destruir(bufferParaMemoria);
 
         bool esPCBATerminar(void*pcbAux){
-                pt_pcb* procesoATerminar = (proceso*) procesoAux;
+                t_pcb* procesoATerminar = (t_pcb*) pcbAux;
                 return pcb_obtener_pid(procesoATerminar) == pcb_obtener_pid(pcbALiberar); 
             }
             int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
@@ -483,8 +485,12 @@ void atender_pcb() {
                 
                 if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo,pcb_obtener_pid(pcb));
+                    log_info(kernelLogger, "se envio FOPEN a fs");
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux); // abstraer estas 3 en una funcion
+                    free(nombreArchivoNuevo);
+                    hayQueReplanificar = false;
+                    break;
                 }
                 
                 // Tabla no vacía, hay archivos abiertos
@@ -495,22 +501,23 @@ void atender_pcb() {
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo, pcb_obtener_pid(pcb));
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
+                    free(nombreArchivoNuevo);
+                    hayQueReplanificar = false;
+                    break;
                 }
                 
                 // El archivo está en la tabla, está abierto, se bloquea el proceso en la cola de bloqueados del archivo
 
                 else if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) == nombreArchivoNuevo){
                     t_archivo_tabla_actualizar_cola_procesos(tablaDeArchivoBuscado, pcb);
-
                     pcb_setear_estado(pcb, BLOCKED);
                     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-
                     sem_post(estado_obtener_sem(estadoReady));
+                    free(nombreArchivoNuevo);
+                    hayQueReplanificar = true;
+                    break;
                 }
-                free(nombreArchivoNuevo);
-                hayQueReplanificar = true;
-                break;
                 case HEADER_proceso_F_CLOSE:
                 hayQueReplanificar = false;
                 break;
@@ -537,7 +544,11 @@ void atender_pcb() {
                 break;
                 case HEADER_proceso_F_TRUNCATE:
                     t_buffer* bufferF_TRUNCATE = buffer_crear();
-                    stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    if(cpuRespuesta!= HEADER_proceso_parametros){
+                        log_info(kernelLogger, "no recibio el mensaje de cpu");
+                        exit(-1);
+                    }
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
                     buffer_destruir(bufferF_TRUNCATE);
@@ -545,10 +556,11 @@ void atender_pcb() {
                     pcb_setear_estado(pcb, BLOCKED);
                     estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-                    sem_post(estado_obtener_sem(estadoReady));
+                  //  sem_post(estado_obtener_sem(estadoBlocked));
+                    hayQueReplanificar = true;
                     // hacer hilo
                     /* Logica para desbloqueo del proceso por un F_TRUNCATE*/
-                    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+                   /* uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
 
                     if(respuestaFileSystem == HEADER_ERROR_F_TRUNCATE){
                         log_error(kernelLogger, "Error al ejecutar F_TRUNCATE");
@@ -557,7 +569,7 @@ void atender_pcb() {
                         pcb_setear_estado(pcb, READY);
                         estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                         loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
-                    }
+                    }*/
                     
                 break;
                 case HEADER_create_segment:
@@ -705,7 +717,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
-        list_add(nuevoPCB, listaDePcbs); // TODO controlar mutex . 
+        list_add(listaDePcbs, nuevoPCB); // TODO controlar mutex . 
         ////// PARTE DE MEMORIA 
         avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
         

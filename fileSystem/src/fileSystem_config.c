@@ -112,7 +112,7 @@ void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int sock
 int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) {
      return self->SOCKET_MEMORIA;
 }
-int superbloque_config_obtener_block_size(t_superbloque_config* self) {
+uint32_t superbloque_config_obtener_block_size(t_superbloque_config* self) {
      return self->BLOCK_SIZE;
 }
 int superbloque_config_obtener_block_count(t_superbloque_config* self) {

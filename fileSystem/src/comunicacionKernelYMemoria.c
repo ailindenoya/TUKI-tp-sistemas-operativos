@@ -24,7 +24,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 F_OPEN(nombreArchivo);
                 break;
             case HEADER_F_TRUNCATE:
+                log_info(fileSystemLogger, "apertura de archivo en ftrunc: %s", nombreArchivo);
+                log_info(fileSystemLogger, "a empaquetar");
                 buffer_desempaquetar_string(bufferAux, &parametro2);
+                log_info(fileSystemLogger, "empaqueto string: %s", parametro2);
                 uint32_t tamanio = atoi(parametro2);
                 F_TRUNCATE(nombreArchivo, tamanio);
                 break;
@@ -67,8 +70,8 @@ void F_OPEN(char* NombreArchivo){
         }
     }
     t_fcb* fcbAbierto = fcb_config_crear(ruta, fileSystemLogger);
-    list_add(listaFCBsAbiertos, (void*) fcbAbierto);
-
+    list_add(listaFCBsAbiertos, fcbAbierto);
+    log_info(fileSystemLogger, "apertura de archivo: %s", NombreArchivo);
     t_buffer* mensajeOK = buffer_crear();
     buffer_empaquetar_string(mensajeOK, NombreArchivo);
     stream_enviar_buffer(socketKERNEL, HEADER_archivo_abierto, mensajeOK);
@@ -87,9 +90,11 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
 
     fcb_setear_tamanio_archivo(fcb, tamanioNuevo); // 65 a 63 2 bloques a 1   50 a 40 1 bloque 1 bloque
 
-
-    int cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
+    
+    uint32_t cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) 
+    - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
 // cant de bloques a agregar o quitar. 
+    log_info(fileSystemLogger, "cant de bloques: %d", cantBloques);
     if (cantBloques == 0){
         
     }
