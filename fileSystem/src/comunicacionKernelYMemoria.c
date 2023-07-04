@@ -7,12 +7,14 @@ extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
 
 
+
+
 void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucciones
 
     for(;;){
         char* nombreArchivo = malloc(sizeof(*nombreArchivo));
         char* parametro2 = malloc(sizeof(*parametro2));
-        //char* parametro3;
+        char* parametro3 = malloc(sizeof(*parametro3));
 
         t_buffer* bufferAux = buffer_crear();
         uint8_t kernelRespuesta = stream_recibir_header(socketKERNEL);
@@ -31,6 +33,11 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 uint32_t tamanio = atoi(parametro2);
                 F_TRUNCATE(nombreArchivo, tamanio);
                 break;
+            case HEADER_F_READ:
+                log_info(fileSystemLogger, "se recibio FREAD");
+                buffer_desempaquetar_string(bufferAux, &parametro2);
+                buffer_desempaquetar_string(bufferAux, &parametro3); 
+            
             default:
                 log_error(fileSystemLogger, "Error al recibir la instrucción de Kernel");
                 break;

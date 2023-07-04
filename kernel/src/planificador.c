@@ -522,6 +522,12 @@ void atender_pcb() {
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_READ:
+                    t_buffer* bufferFREAD = buffer_crear();
+                    stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferFREAD);
+
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferFREAD);
+                    /// logica para bloquearlo 
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_WRITE:

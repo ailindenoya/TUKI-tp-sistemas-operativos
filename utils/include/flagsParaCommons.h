@@ -28,8 +28,6 @@ typedef enum {
     HEADER_finalizar_proceso_en_memoria,
     
     HEADER_delete_segment,
-    HEADER_mov_in,
-    HEADER_mov_out,
     HEADER_existe_archivo,
     HEADER_proceso_terminado_out_of_memory,
     HEADER_hay_que_compactar,
@@ -44,7 +42,8 @@ typedef enum {
     HEADER_F_OPEN,
     HEADER_F_TRUNCATE,
     HEADER_ERROR_F_TRUNCATE,
-    HEADER_F_TRUNCATE_REALIZADO
+    HEADER_F_TRUNCATE_REALIZADO,
+    HEADER_F_READ
 } t_header;
 
 typedef enum {

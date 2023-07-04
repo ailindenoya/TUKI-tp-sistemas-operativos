@@ -78,11 +78,13 @@ void ejecutar_F_WRITE(t_contexto* contexto,uint32_t programCounterActualizado){
 
 }
 
-void pedirleAMemoria(t_buffer* buffer, int cantidadDeBytes, char* valorDeMemoria){
+void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria){
     buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
     stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_memoria, buffer);
 
     int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
+    log_info(cpuLogger,"header valor mem %d", headerDeValorDeMemoria);
+
     if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
         log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
         exit(-1);
@@ -263,6 +265,34 @@ void ejecutar_WAIT(t_contexto* contexto,uint32_t programCounterActualizado, char
     buffer_destruir(bufferParametros);
 }
 
+
+void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
+    log_info(cpuLogger, "PID: %d - Ejecutando: FREAD", contexto_obtener_pid(contexto));
+    int direccionLogica = atoi(dirLogica);
+    uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
+    uint32_t offset = obtener_offset_de_segmento(direccionLogica);
+    
+    t_buffer *bufferFREAD = buffer_crear();
+    empaquetar_contexto_para_kernel(bufferFREAD,programCounterActualizado,contexto);
+
+    if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_wait, bufferFREAD);
+        buffer_destruir(bufferFREAD);
+
+        t_buffer *bufferParametros = buffer_crear();
+        uint32_t pid = contexto_obtener_pid(contexto);
+        buffer_empaquetar_string(bufferParametros, nombreArchivo);
+        buffer_empaquetar_string(bufferParametros, cantBytes);
+        buffer_empaquetar(bufferParametros, &pid,sizeof(pid));
+        buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
+        buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+        buffer_destruir(bufferParametros);
+    }else{
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+    }
+}
+
 void ejecutar_SIGNAL(t_contexto* contexto,uint32_t programCounterActualizado, char* recurso){
     log_info(cpuLogger, "PID: %d - Ejecutando: SIGNAL", contexto_obtener_pid(contexto));
     t_buffer *buffer = buffer_crear();
@@ -368,6 +398,7 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_read:
+        ejecutar_FREAD(contexto,programCounterActualizado,parametro1,parametro2, parametro3);
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_seek:

@@ -26,6 +26,7 @@ t_list* listaDeProcesos;
 
 int socketKERNEL;
 int socketCPU;
+int socketFilesystem;
 uint32_t tamanioRequeridoParaSegmentoACrear;
 int tamanioLibreTotal;
 int tamanioDeSegmento0;
@@ -265,55 +266,86 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
     return huecoLibre;
 }
 
+void leer_de_memoria(uint32_t cantidadDeBytes, int direccionFisica, int socket, uint8_t header){
+    t_buffer* buffer = buffer_crear();
+    buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
+    stream_enviar_buffer(socket, header, buffer);
+    buffer_destruir(buffer);
+}
+
+void escribir_en_memoria(t_buffer* buffer, int direccionFisica, uint32_t cantidadDeBytes, uint8_t header, int socket){
+    buffer_desempaquetar(buffer,bloque_de_memoria+direccionFisica, cantidadDeBytes);
+    stream_enviar_buffer_vacio(socket, header);
+}
+
 
 void recibir_de_cpu(){
-
     t_buffer* buffer = buffer_crear();
-
     for(;;){
         uint32_t pID;
         uint32_t nroSegmento;
         uint32_t offset; 
         uint8_t headerRecibido = stream_recibir_header(socketCPU);
-        log_info(memoriaLogger, "llego a recibir header  %d", headerRecibido);
-        stream_recibir_buffer(socketCPU,buffer); 
-        log_info(memoriaLogger, "recibi buffer");
+        stream_recibir_buffer(socketCPU,buffer);
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
-        log_info(memoriaLogger, "error al 1");
         buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
-        log_info(memoriaLogger, "error al 2");
         buffer_desempaquetar(buffer,&offset, sizeof(offset));
-        log_info(memoriaLogger, "error al 3");
         proceso* proceso = encontrar_proceso(pID); 
         int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + offset;
-        int cantidadDeBytes;
+        uint32_t cantidadDeBytes;
         buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
-        log_info(memoriaLogger, "cantidad de bytes pedidos: %d", cantidadDeBytes);
-        log_info(memoriaLogger, "direccion fisica: %d", direccionFisica);
         sleep(memoria_config_obtener_retardo_memoria(memoriaConfig)/1000);
         switch (headerRecibido)
         {   
         case HEADER_valor_de_memoria: 
-            t_buffer* bufferParaCPU = buffer_crear();
-            buffer_empaquetar(bufferParaCPU,bloque_de_memoria+direccionFisica,cantidadDeBytes);
-            log_info(memoriaLogger,"MEMORIA llego a empaqueta bloque de memoria + dir fisica");
-            stream_enviar_buffer(socketCPU, HEADER_valor_de_memoria, bufferParaCPU);
-            log_info(memoriaLogger, "MEMORIA envio el buffer a cpu");
-            buffer_destruir(bufferParaCPU);
+            log_info(memoriaLogger, "PID: %d - Acción: LEER  - Dirección física: %d - Tamaño: %d - Origen: CPU", pID, direccionFisica, cantidadDeBytes);
+            leer_de_memoria(cantidadDeBytes, direccionFisica, socketCPU, HEADER_valor_de_memoria);
             break;
         case HEADER_valor_de_registro:
-            t_buffer* bufferParaCPU2 = buffer_crear();
-            buffer_desempaquetar(bufferParaCPU2,bloque_de_memoria+direccionFisica, cantidadDeBytes);
-            stream_enviar_buffer_vacio(socketCPU, HEADER_OK_puede_continuar);
+            log_info(memoriaLogger, "PID: %d - Acción: ESCRIBIR  - Dirección física: %d - Tamaño: %d - Origen: CPU", pID, direccionFisica, cantidadDeBytes);
+            escribir_en_memoria(buffer, direccionFisica, cantidadDeBytes, HEADER_OK_puede_continuar, socketCPU);
             break;
         default:
-            log_error(memoriaLogger, "error al reconocer header recibido de cpu");
+            log_error(memoriaLogger, "error al reconocer header de CPU");
             break;
         }
     }
-
+    buffer_destruir(buffer);
 }
 
+void recibir_de_fileSystem(){
+    t_buffer* buffer = buffer_crear();
+    for(;;){
+        uint32_t pID;
+        uint32_t nroSegmento;
+        uint32_t offset; 
+        uint8_t headerRecibido = stream_recibir_header(socketFilesystem);
+        stream_recibir_buffer(socketFilesystem,buffer);
+        buffer_desempaquetar(buffer,&pID,sizeof(pID));
+        buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
+        buffer_desempaquetar(buffer,&offset, sizeof(offset));
+        proceso* proceso = encontrar_proceso(pID); 
+        int direccionFisica = proceso->tablaDeSegmentos[nroSegmento].base + offset;
+        uint32_t cantidadDeBytes;
+        buffer_desempaquetar(buffer,&cantidadDeBytes, sizeof(cantidadDeBytes));
+        sleep(memoria_config_obtener_retardo_memoria(memoriaConfig)/1000);
+        switch (headerRecibido)
+        {   
+        case HEADER_valor_de_memoria: 
+            log_info(memoriaLogger, "PID: %d - Acción: LEER  - Dirección física: %d - Tamaño: %d - Origen: FILE SYSTEM", pID, direccionFisica, cantidadDeBytes);
+            leer_de_memoria(cantidadDeBytes, direccionFisica, socketFilesystem, HEADER_valor_de_memoria);
+            break;
+        case HEADER_valor_de_registro:
+            log_info(memoriaLogger, "PID: %d - Acción: ESCRIBIR  - Dirección física: %d - Tamaño: %d - Origen: FILE SYSTEM", pID, direccionFisica, cantidadDeBytes);
+            escribir_en_memoria(buffer, direccionFisica, cantidadDeBytes, HEADER_OK_puede_continuar, socketFilesystem);
+            break;
+        default:
+            log_error(memoriaLogger, "error al reconocer header de FILE SYSTEM");
+            break;
+        }
+    }
+    buffer_destruir(buffer);
+}
 
 
 void recibir_de_kernel(){
@@ -409,7 +441,7 @@ int main(int argc, char* argv[]){
 
     // acepta conexion con FILESYSTEM 
 
-    int socketFilesystem = accept(socketESCUCHA, &cliente, &len);
+    socketFilesystem = accept(socketESCUCHA, &cliente, &len);
 
     handshake_filesystem(socketFilesystem);
 
@@ -443,9 +475,14 @@ int main(int argc, char* argv[]){
 
     listaDeProcesos = list_create(); // al crear pcb
     pthread_t hiloParaEscuchaDeCPU;
-    pthread_create(&hiloParaEscuchaDeCPU, NULL, (void*)recibir_de_cpu, NULL);
+    pthread_create(&hiloParaEscuchaDeCPU, NULL, (void*) recibir_de_cpu, NULL);
     pthread_detach(hiloParaEscuchaDeCPU);
-    recibir_de_kernel();
 
+
+    pthread_t hiloParaEscuchaDeFileSystem; 
+    pthread_create(&hiloParaEscuchaDeFileSystem, NULL, (void*)recibir_de_fileSystem, NULL);
+    pthread_detach(hiloParaEscuchaDeFileSystem);
+    
+    recibir_de_kernel();
 }
 
