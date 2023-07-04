@@ -39,5 +39,5 @@ void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int sock
 t_superbloque_config* superbloque_config_crear(char* superbloqueConfigPath, t_log* fileSystemLogger);
 void superbloque_config_iniciar(void* moduleConfig, t_config* tempCfg);
 
-int superbloque_config_obtener_block_size(t_superbloque_config* self);
+uint32_t superbloque_config_obtener_block_size(t_superbloque_config* self);
 int superbloque_config_obtener_block_count(t_superbloque_config* self);

@@ -6,24 +6,10 @@
 #include <sys/mman.h>
 #include<math.h>
 
-typedef struct t_fcb t_fcb;
-
-t_fcb* fcb_crear(char*);
-
-char* fcb_obtener_nombre_archivo(t_fcb*);
-uint32_t fcb_obtener_tamanio_archivo(t_fcb*);
-uint32_t fcb_obtener_puntero_directo(t_fcb*);
-uint32_t fcb_obtener_puntero_indirecto(t_fcb*);
-void fcb_setear_tamanio_archivo(t_fcb*, uint32_t);
-void fcb_setear_puntero_directo(t_fcb* , uint32_t );
-void fcb_setear_puntero_indirecto(t_fcb*, uint32_t);
-
 void crearArchivoFCB(char*);
 char* concat(const char*, const char*);
 
-void fcb_config_iniciar(void*, t_config*);
-t_fcb* fcb_config_crear(char*, t_log*);
-int config_iniciar_fcb(void* config, char* pathAlConfig, t_log* logger,void (*config_initializer)(void* moduleConfig, t_config* configTemp));
+t_config* config_iniciar_fcb(char*);
 
-t_fcb* encontrarFCB(char*);
-void fcb_asignar_bloque(t_fcb*, uint32_t);
+t_config* encontrarFCB(char*);
+void fcb_asignar_bloque(t_config*, uint32_t);

@@ -8,8 +8,9 @@
 #include <fcntl.h>
 #include "fcb.h"
 
-t_bitarray* cargarBitMap();
+void cargarBitMap(void);
 void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso);
-void agregarBloques(int, t_fcb*);
-void quitarBloques(int, t_fcb*);
-void cargarArchivoDeBloques();
+void agregarBloques(int, t_config*, char*);
+void quitarBloques(int, t_config*);
+void cargarArchivoDeBloques(void);
+uint32_t buscarBloqueLibre(void);

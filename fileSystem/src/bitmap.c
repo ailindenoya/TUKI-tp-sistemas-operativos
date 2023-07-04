@@ -5,29 +5,44 @@ extern int errno;
 extern t_log* fileSystemLogger;
 extern t_superbloque_config* superbloqueConfig;
 
-t_bitarray* bitArray;
+extern t_bitarray* bitmapBitarray;
+int fdBitmap;
+int fdBloques;
+void* bitmap;
+void* bloques;
 
-void agregarBloques(int cantidadBloques, t_fcb* fcb){
+void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta){
 
-    int tamanioBitmap = (int) bitarray_get_max_bit(bitArray);
+    int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     int aux = 0;
     log_info(fileSystemLogger, "tamanio bitmap: %d", tamanioBitmap);
-    log_info(fileSystemLogger, "pos de bitarray %d", bitarray_test_bit(bitArray, 0));
     for (int i = 0; i < tamanioBitmap; i++){
         
-        if (bitarray_test_bit(bitArray, i) == false){
-            bitarray_set_bit(bitArray, i);
+        if (bitarray_test_bit(bitmapBitarray, i) == false){
+            bitarray_set_bit(bitmapBitarray, i);
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
             fcb_asignar_bloque(fcb, i);
             aux++;
         }
         if (aux == cantidadBloques){
+            config_save_in_file(fcb, ruta);
             return;
         }
     }
 }
 
-void quitarBloques(int cantidadBloques, t_fcb* fcb){
+uint32_t buscarBloqueLibre(){
+    int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
+    for (int i = 0; i < tamanioBitmap; i++){
+        if (bitarray_test_bit(bitmapBitarray, i)){
+            bitarray_set_bit(bitmapBitarray, i);
+            return i;
+        }
+    }
+    return -1;
+}
+
+void quitarBloques(int cantidadBloques, t_config* fcb){
     
     return;
 }
@@ -39,33 +54,37 @@ void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioPr
 	}
 }
 
-t_bitarray* cargarBitMap(){
+void cargarBitMap(){
     int bytes = superbloque_config_obtener_block_count(superbloqueConfig) / 8;  // Dividis cantidad de bloques por 8 para obtener los bytes
     bool existeBitmap = true;   // Para chequear si el bitmap existe de una ejecución previa del sistema
 
-    int fd = open("bitmap.dat", O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA, CAPAZ PODEMOS CAMBIAR LA RUTA
+    fdBitmap = open("bitmap.dat", O_CREAT | O_RDWR, S_IRWXU); // SI NO EXISTE EL ARCHIVO LO CREA, CAPAZ PODEMOS CAMBIAR LA RUTA
 
-    if (fd == -1){
+    if (fdBitmap == -1){
         log_info(fileSystemLogger, "No se pudo abrir el archivo Bitmap");
     }
 
-    ftruncate(fd, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\0'
+    ftruncate(fdBitmap, bytes);  // SI EL ARCHIVO ES DE MENOS TAMAÑO QUE "bytes" ENTONCES LO EXTIENDE LLENANDOLO CON '\0'
 
-    void* bitmap = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    bitmap = mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fdBitmap, 0);
 
     if(bitmap == MAP_FAILED){
         log_error(fileSystemLogger, "Error al usar mmap");
     }
 
-    bitArray = bitarray_create_with_mode((char*) bitmap, bytes , LSB_FIRST);
+    bitmapBitarray = bitarray_create_with_mode((char*) bitmap, bytes , LSB_FIRST);
     
     //marco libres todos las posiciones del array
     if (existeBitmap == false){
-        limpiarPosiciones(bitArray, 0, bytes);  // Si es la primera ejecución del sistema, se carga el bitmap con ceros, todos bloques libres
+        limpiarPosiciones(bitmapBitarray, 0, bytes);  // Si es la primera ejecución del sistema, se carga el bitmap con ceros, todos bloques libres
     }
     
     int contador =0;
     // Descomentar esto de abajo si se quiere checkear los valores del bitarray en pantalla
+    for(int x =0;x<8000;x++){  // ESTO LO HICE PARA VER QUE HAY EN EL BITARRAY
+         bitarray_test_bit(bitmapBitarray, x);
+         contador++;
+    }
     log_info(fileSystemLogger, "contador: %d", contador);
     
     int sincronizacion = msync(bitmap, bytes, MS_SYNC);
@@ -73,29 +92,21 @@ t_bitarray* cargarBitMap(){
         log_info(fileSystemLogger, "Error al sincronizar el mmap de bitmap con disco");
         perror("msync");
     }
-
+    /*
     int finMmap = munmap(bitmap, bytes);
     if (finMmap == -1){
         log_info(fileSystemLogger, "Error al unmapear el bitmap de memoria");
         perror("munmap");
     }
 
-    close(fd);
-
+    close(fdBitmap);
+    */
     printf("\nSE CERRO\n"); // esto lo hice para ver si llegaba a cerrar el archivo y hacer el munmap
-
-    for(int x =0;x<8000;x++){  // ESTO LO HICE PARA VER QUE HAY EN EL BITARRAY
-         bitarray_test_bit(bitArray, x);
-         contador++;
-    }
-    
-    return bitArray;
 }
 
 void cargarArchivoDeBloques(){
-    int fd = open("bloques.dat", O_CREAT | O_RDWR, S_IRWXU);
+    fdBloques = open("bloques.dat", O_CREAT | O_RDWR, S_IRWXU);
     uint32_t tamanioArchivoBloques = superbloque_config_obtener_block_count(superbloqueConfig) * superbloque_config_obtener_block_size(superbloqueConfig);
-
-    ftruncate(fd, tamanioArchivoBloques);
-    close(fd);
+    ftruncate(fdBloques, tamanioArchivoBloques);
+    bloques = mmap(NULL, tamanioArchivoBloques, PROT_READ | PROT_WRITE, MAP_SHARED, fdBloques, 0);
 }

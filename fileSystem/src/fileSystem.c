@@ -10,9 +10,14 @@
 extern t_log* fileSystemLogger;
 extern t_fileSystem_config* fileSystemConfig;
 extern t_superbloque_config* superbloqueConfig;
-t_bitarray* bitmap;
+t_bitarray* bitmapBitarray;
 t_list* listaFCBsAbiertos;
 int socketKERNEL;
+
+extern int fdBitmap;
+extern int fdBloques;
+extern void* bitmap;
+extern void* bloques;
 
 void fileSystem_destruir(t_fileSystem_config* fileSystemConfig, t_log* fileSystemLogger) {
     fileSystem_config_destruir(fileSystemConfig);
@@ -73,7 +78,7 @@ int main(int argc, char* argv[]){
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
-    bitmap = cargarBitMap();
+    cargarBitMap();
     cargarArchivoDeBloques();
     listaFCBsAbiertos = list_create();
 
@@ -92,5 +97,6 @@ int main(int argc, char* argv[]){
     
     atenderPeticionesDeKernel();
 
+    
 }
 

@@ -69,13 +69,12 @@ void F_OPEN(char* NombreArchivo){
             exit(-1);
         }
     }
-    t_fcb* fcbAbierto = fcb_config_crear(ruta, fileSystemLogger);
+    t_config* fcbAbierto = config_iniciar_fcb(ruta);
     list_add(listaFCBsAbiertos, fcbAbierto);
     log_info(fileSystemLogger, "apertura de archivo: %s", NombreArchivo);
     t_buffer* mensajeOK = buffer_crear();
     buffer_empaquetar_string(mensajeOK, NombreArchivo);
     stream_enviar_buffer(socketKERNEL, HEADER_archivo_abierto, mensajeOK);
-    // 3)
     buffer_destruir(mensajeOK);
     free(ruta);
 }
@@ -85,28 +84,31 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     char* ruta = concat(PATH_FCB, NombreArchivo);
    // int fd = open(ruta, O_RDWR);
 
-    t_fcb* fcb = encontrarFCB(NombreArchivo);
-    uint32_t tamanioViejo = fcb_obtener_tamanio_archivo(fcb);
-
-    fcb_setear_tamanio_archivo(fcb, tamanioNuevo); // 65 a 63 2 bloques a 1   50 a 40 1 bloque 1 bloque
-
+    t_config* fcb = encontrarFCB(NombreArchivo);
+    uint32_t tamanioViejo = config_get_int_value(fcb,"TAMANIO_ARCHIVO");
+    char* tam = string_itoa(tamanioNuevo);
+    config_set_value(fcb, "TAMANIO_ARCHIVO", tam); // 65 a 63 2 bloques a 1   50 a 40 1 bloque 1 bloque
+    config_save_in_file(fcb, ruta);
     
     uint32_t cantBloques = abs(ceil(tamanioNuevo / superbloque_config_obtener_block_size(superbloqueConfig)) 
     - ceil(tamanioViejo / superbloque_config_obtener_block_size(superbloqueConfig)));
 // cant de bloques a agregar o quitar. 
     log_info(fileSystemLogger, "cant de bloques: %d", cantBloques);
+    log_info(fileSystemLogger, "tamNUevo-: %d", tamanioNuevo);
+    log_info(fileSystemLogger, "tamViejo: %d", tamanioViejo);
     if (cantBloques == 0){
         
     }
     else {
         if(tamanioNuevo > tamanioViejo){            
-            agregarBloques(cantBloques, fcb);
+            agregarBloques(cantBloques, fcb, ruta );
         }
         else if (tamanioNuevo < tamanioViejo){
             quitarBloques(cantBloques, fcb);
             if (tamanioNuevo == 0){
-                fcb_setear_puntero_directo(fcb, 0);
-                fcb_setear_puntero_indirecto(fcb, 0);
+                config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
+                config_set_value(fcb, "PUNTERO_DIRECTO", "-1");
+                config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
             }     
         }
     }
