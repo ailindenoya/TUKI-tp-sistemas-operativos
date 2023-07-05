@@ -25,10 +25,9 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
 
 void empaquetar_contexto_para_kernel(t_buffer* buffer,uint32_t programCounterActualizado, t_contexto* contexto){
     uint32_t pid = contexto_obtener_pid(contexto);
-    registros* registro = contexto_obtener_registros(contexto);
     buffer_empaquetar(buffer, &pid, sizeof(pid));
     buffer_empaquetar(buffer, &programCounterActualizado, sizeof(programCounterActualizado));
-    buffer_empaquetar_registros(buffer,registro);
+    buffer_empaquetar_registros(buffer,&registrosDeCpu);
     buffer_empaquetar_tabla_de_segmentos(buffer, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
 }
 
@@ -171,6 +170,7 @@ void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
         log_error(cpuLogger, "error al escribir en MEMORIA");
         exit(-1);
     }
+    stream_recibir_buffer_vacio(cpu_config_obtener_socket_memoria(cpuConfig));
 }
 
 

@@ -286,6 +286,7 @@ void recibir_de_cpu(){
         uint32_t nroSegmento;
         uint32_t offset; 
         uint8_t headerRecibido = stream_recibir_header(socketCPU);
+        log_info(memoriaLogger, "recibe de cpu: %d", headerRecibido);
         stream_recibir_buffer(socketCPU,buffer);
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
         buffer_desempaquetar(buffer,&nroSegmento,sizeof(nroSegmento));
@@ -355,7 +356,7 @@ void recibir_de_kernel(){
     
     for(; ;){
         uint8_t headerRecibido = stream_recibir_header(socketKERNEL);
-        log_info(memoriaLogger, "llego a recibir header  %d", headerRecibido);
+        log_info(memoriaLogger, "recibe de kernel: %d", headerRecibido);
         stream_recibir_buffer(socketKERNEL,buffer);
         uint32_t pID;
         buffer_desempaquetar(buffer,&pID,sizeof(pID));

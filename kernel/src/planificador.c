@@ -438,6 +438,7 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_terminado:
                 finalizar_proceso(pcb,SUCCESS);
+                registros_imprimir(pcb_obtener_registros(pcb));
                 hayQueReplanificar = true; 
                 break;
             case HEADER_proceso_bloqueado:     

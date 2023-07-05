@@ -22,6 +22,7 @@ typedef struct registros {
 
 void buffer_empaquetar_registros(t_buffer* buffer, registros* reg);
 void buffer_desempaquetar_registros(t_buffer* buffer, registros* reg);
+void registros_imprimir(registros*);
 
 
 #endif
