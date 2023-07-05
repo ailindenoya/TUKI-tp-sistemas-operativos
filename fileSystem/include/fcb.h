@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <commons/config.h>
 #include <sys/mman.h>
-#include<math.h>
+#include <inttypes.h>
 
 void crearArchivoFCB(char*);
 char* concat(const char*, const char*);
@@ -13,3 +13,4 @@ t_config* config_iniciar_fcb(char*);
 
 t_config* encontrarFCB(char*);
 void fcb_asignar_bloque(t_config*, uint32_t);
+double my_ceil(double);

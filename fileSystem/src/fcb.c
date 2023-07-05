@@ -2,7 +2,7 @@
 #include "../include/fcb.h"
 #include "../include/bitmap.h"
 #define PATH_FCB "fcb/"
-
+#define INTMAX_MAX_P1 ((INTMAX_MAX/2 + 1)*2.0)
 
 extern t_log* fileSystemLogger;
 extern t_list* listaFCBsAbiertos;
@@ -13,6 +13,19 @@ extern int fdBloques;
 extern void* bitmap;
 extern void* bloques;
 
+double my_ceil(double x) {
+  if (x >= INTMAX_MAX_P1) {
+    return x;
+  }
+  if (x < INTMAX_MIN) {
+    return x;
+  }
+
+  intmax_t i = (intmax_t) x;      // this rounds towards 0
+  if (i < 0 || x == i) return i;  // negative x is already rounded up.
+  return i + 1.0;
+}
+
 void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
     if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  /// 
         char* bloq = string_itoa(bloque);
@@ -20,6 +33,7 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
         return;
     }
     
+    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
     uint32_t punteroIndirecto = config_get_int_value(fcb,"PUNTERO_INDIRECTO");
 
     if (punteroIndirecto == -1){   //HAY QUE ASIGNAR OTRO BLOQUE 
@@ -31,19 +45,8 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
     }
     int posicionBloqueIndirecto = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
 
-    int bloquesAsignadosEnPunteroIndirecto = (int) ceil((config_get_int_value(fcb,"TAMANIO_ARCHIVO") - 64) / 64);
-    log_info(fileSystemLogger, "fcb obtener tam arch = %d", config_get_int_value(fcb,"TAMANIO_ARCHIVO"));
-    memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));  // Segmentation fault acá
-
-/*
-    void* aux = malloc(superbloque_config_obtener_block_size(superbloqueConfig));
-    void* punteroAlFin = mempcpy(aux, bloques, sizeof(uint32_t));  // Copias el primer puntero dentro del bloque de punteros
-    while ((uint32_t*) aux != '/0'){
-        punteroAlFin = mempcpy(aux, bloques, sizeof(uint32_t))
-    }
-    memcpy(aux, bloque, sizeof(bloque));   
-    memcpy(bloques, aux, sizeof(aux));     
-    */
+    int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (config_get_int_value(fcb,"TAMANIO_ARCHIVO") - tamanioBloque) / tamanioBloque);
+    memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
     msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);
 }
 
