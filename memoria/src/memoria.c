@@ -397,6 +397,7 @@ void recibir_de_kernel(){
             list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
             list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
             free(indiceProcesoAFinalizar);
+            break;
         default:
             log_error(memoriaLogger, "Error al recibir mensaje de KERNEL");
             break;

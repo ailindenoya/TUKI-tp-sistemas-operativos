@@ -183,11 +183,10 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
                 t_pcb* procesoATerminar = (t_pcb*) pcbAux;
                 return pcb_obtener_pid(procesoATerminar) == pcb_obtener_pid(pcbALiberar); 
             }
-            int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
-            list_find_element_and_index(listaDePcbs, esPCBATerminar, indiceProcesoAFinalizar);
-            list_remove_and_destroy_element(listaDePcbs, *indiceProcesoAFinalizar, free); 
-            free(indiceProcesoAFinalizar);
-
+        int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
+        list_find_element_and_index(listaDePcbs, esPCBATerminar, indiceProcesoAFinalizar);
+        list_remove(listaDePcbs, *indiceProcesoAFinalizar);
+        free(indiceProcesoAFinalizar);
         // list_remove de lista de pcbs (para luego actualizar tabla de segs)
         stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HEADER_proceso_terminado);
         pcb_destruir(pcbALiberar);
