@@ -57,8 +57,8 @@ bool consola_parsear_instrucciones(t_buffer *buffer, const char *pathInstruccion
                     string_from_format(fscanfError, "%s argumentos de MOV_IN: %s", fscanfErrorPrefix, strerror(errno));
                 }
             } else if (strcmp(instruccion, "MOV_OUT") == 0) {
-                if (fscanf(archivoInstrucciones, "%s %s", parametro2, parametro1)) {
-                   consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_mov_out, parametro2, parametro1);
+                if (fscanf(archivoInstrucciones, "%s %s", parametro1, parametro2)) {
+                   consola_serializador_empaquetar_dos_parametros(buffer,INSTRUCCION_mov_out, parametro1, parametro2);
                    hayDosParametros = true;
                 } else {
                     hayError = true;

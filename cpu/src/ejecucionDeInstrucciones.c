@@ -5,7 +5,7 @@ extern int cantidadDeSegmentos;
 extern t_log* cpuLogger;
 extern t_cpu_config* cpuConfig;
 
-
+bool pararDeEjecutar;
 
 registros registrosDeCpu;
 
@@ -77,25 +77,33 @@ void ejecutar_F_WRITE(t_contexto* contexto,uint32_t programCounterActualizado){
 
 }
 
-void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria){
-    buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_memoria, buffer);
-
-    int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
-    log_info(cpuLogger,"header valor mem %d", headerDeValorDeMemoria);
-
-    if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
-        log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
-        exit(-1);
+void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria, uint32_t offset, t_contexto* contexto, uint32_t nroSegmento, uint32_t programCounterActualizado){
+    if((offset + cantidadDeBytes) > contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
+        pararDeEjecutar = true;
     }
-    valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
+    else{
+        buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
+        stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_memoria, buffer);
 
-    t_buffer* recibidoDeMemoria = buffer_crear();
-    stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
-    log_info(cpuLogger, "CPU esta listo para empaquetar, con header recibido: %d", headerDeValorDeMemoria);
-    buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes); // ERROR : ACA NO HACE EL DESEMPAQUETADO
-    log_info(cpuLogger, "desempaqueto bloque de memoria");
-    buffer_destruir(recibidoDeMemoria); 
+        int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
+        log_info(cpuLogger,"header valor mem %d", headerDeValorDeMemoria);
+
+        if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
+            log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
+            exit(-1);
+        }
+        valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
+
+        t_buffer* recibidoDeMemoria = buffer_crear();
+        stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
+        log_info(cpuLogger, "CPU esta listo para empaquetar, con header recibido: %d", headerDeValorDeMemoria);
+        buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes); // ERROR : ACA NO HACE EL DESEMPAQUETADO
+        log_info(cpuLogger, "desempaqueto bloque de memoria");
+        buffer_destruir(recibidoDeMemoria);
+        pararDeEjecutar = false;
+    }
 }
 
 void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, char* reg, char* dirLogica){
@@ -112,42 +120,42 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
         char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
         if (strcmp(reg, "AX") == 0){   
             log_info(cpuLogger, "llegue a AX");
-            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             log_info(cpuLogger, "le pedi a memoria");
             copiarStringAVector(valorDeMemoria, registrosDeCpu.AX, 4);
             log_info(cpuLogger, "copie el string al vector");
         }else if (strcmp(reg, "BX") == 0){   
-            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.BX, 4);
         }else if (strcmp(reg, "CX") == 0){
-            pedirleAMemoria(buffer, 4, valorDeMemoria);
+            pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.CX, 4);
         }else if (strcmp(reg, "DX") == 0){
-            pedirleAMemoria(buffer, 4, valorDeMemoria);    
+            pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);    
             copiarStringAVector(valorDeMemoria, registrosDeCpu.DX, 4);
         }else if (strcmp(reg, "EAX") == 0){
-            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            pedirleAMemoria(buffer, 8, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.EAX, 8);
         }else if (strcmp(reg, "EBX") == 0){
-            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            pedirleAMemoria(buffer, 8, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.EBX, 8);
         }else if (strcmp(reg, "ECX") == 0){
-            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            pedirleAMemoria(buffer, 8, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.ECX, 8);
         }else if (strcmp(reg, "EDX") == 0){
-            pedirleAMemoria(buffer, 8, valorDeMemoria);
+            pedirleAMemoria(buffer, 8, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.EDX, 8);
         }else if (strcmp(reg, "RAX") == 0){
-            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            pedirleAMemoria(buffer, 16, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.RAX, 16);
         }else if (strcmp(reg, "RBX") == 0){
-            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            pedirleAMemoria(buffer, 16, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.RBX, 16);
         }else if (strcmp(reg, "RCX") == 0){
-            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            pedirleAMemoria(buffer, 16, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.RCX, 16);
         }else if (strcmp(reg, "RDX") == 0){
-            pedirleAMemoria(buffer, 16, valorDeMemoria);
+            pedirleAMemoria(buffer, 16, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.RDX, 16);
         } else {
             log_error(cpuLogger, "no se reconocio el registro para ejecutar MOV_IN");
@@ -161,16 +169,24 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
     buffer_destruir(buffer);
 }
 
-void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
-    buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
-    buffer_empaquetar(buffer, reg, cantidadDeBytes);
-    stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);
-    int headerPuedeContinuar = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
-    if(headerPuedeContinuar!= HEADER_OK_puede_continuar){
-        log_error(cpuLogger, "error al escribir en MEMORIA");
-        exit(-1);
+void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg, uint32_t offset, t_contexto* contexto, uint32_t nroSegmento, uint32_t programCounterActualizado){
+    if((offset + cantidadDeBytes) > contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
+        pararDeEjecutar = true;
     }
-    stream_recibir_buffer_vacio(cpu_config_obtener_socket_memoria(cpuConfig));
+    else{
+        buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
+        buffer_empaquetar(buffer, reg, cantidadDeBytes);
+        stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);
+        int headerPuedeContinuar = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
+        if(headerPuedeContinuar!= HEADER_OK_puede_continuar){
+            log_error(cpuLogger, "error al escribir en MEMORIA");
+            exit(-1);
+        }
+        stream_recibir_buffer_vacio(cpu_config_obtener_socket_memoria(cpuConfig));
+        pararDeEjecutar = false;
+    }
 }
 
 
@@ -187,29 +203,29 @@ void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, c
         buffer_empaquetar(buffer,&offset, sizeof(offset));
         char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
         if (strcmp(reg, "AX") == 0){   
-            escribirEnMemoria(buffer, 4, registrosDeCpu.AX);
+            escribirEnMemoria(buffer, 4, registrosDeCpu.AX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "BX") == 0){
-            escribirEnMemoria(buffer, 4, registrosDeCpu.BX);
+            escribirEnMemoria(buffer, 4, registrosDeCpu.BX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "CX") == 0){
-            escribirEnMemoria(buffer, 4, registrosDeCpu.CX);
+            escribirEnMemoria(buffer, 4, registrosDeCpu.CX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "DX") == 0){
-            escribirEnMemoria(buffer, 4, registrosDeCpu.DX);
+            escribirEnMemoria(buffer, 4, registrosDeCpu.DX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "EAX") == 0){
-            escribirEnMemoria(buffer, 8, registrosDeCpu.EAX);
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EAX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "EBX") == 0){
-            escribirEnMemoria(buffer, 8, registrosDeCpu.EBX);
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EBX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "ECX") == 0){
-            escribirEnMemoria(buffer, 8, registrosDeCpu.ECX);
+            escribirEnMemoria(buffer, 8, registrosDeCpu.ECX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "EDX") == 0){
-            escribirEnMemoria(buffer, 8, registrosDeCpu.EDX);
+            escribirEnMemoria(buffer, 8, registrosDeCpu.EDX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "RAX") == 0){
-            escribirEnMemoria(buffer, 16, registrosDeCpu.RAX);
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RAX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "RBX") == 0){
-            escribirEnMemoria(buffer, 16, registrosDeCpu.RBX);
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RBX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "RCX") == 0){
-            escribirEnMemoria(buffer, 16, registrosDeCpu.RCX);
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RCX, offset, contexto, nroSegmento, programCounterActualizado);
         }else if (strcmp(reg, "RDX") == 0){
-            escribirEnMemoria(buffer, 16, registrosDeCpu.RDX);
+            escribirEnMemoria(buffer, 16, registrosDeCpu.RDX, offset, contexto, nroSegmento, programCounterActualizado);
         } else {
             log_error(cpuLogger, "no se reconocio el registro para ejecutar MOV_OUT");
             exit(-1);
@@ -266,32 +282,6 @@ void ejecutar_WAIT(t_contexto* contexto,uint32_t programCounterActualizado, char
 }
 
 
-void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
-    log_info(cpuLogger, "PID: %d - Ejecutando: FREAD", contexto_obtener_pid(contexto));
-    int direccionLogica = atoi(dirLogica);
-    uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
-    uint32_t offset = obtener_offset_de_segmento(direccionLogica);
-    
-    t_buffer *bufferFREAD = buffer_crear();
-    empaquetar_contexto_para_kernel(bufferFREAD,programCounterActualizado,contexto);
-
-    if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_wait, bufferFREAD);
-        buffer_destruir(bufferFREAD);
-
-        t_buffer *bufferParametros = buffer_crear();
-        uint32_t pid = contexto_obtener_pid(contexto);
-        buffer_empaquetar_string(bufferParametros, nombreArchivo);
-        buffer_empaquetar_string(bufferParametros, cantBytes);
-        buffer_empaquetar(bufferParametros, &pid,sizeof(pid));
-        buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
-        buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
-        buffer_destruir(bufferParametros);
-    }else{
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
-    }
-}
 
 void ejecutar_SIGNAL(t_contexto* contexto,uint32_t programCounterActualizado, char* recurso){
     log_info(cpuLogger, "PID: %d - Ejecutando: SIGNAL", contexto_obtener_pid(contexto));
@@ -376,10 +366,78 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
     buffer_destruir(buffer_F_SEEK);
 }
 
- bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
+void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
+    log_info(cpuLogger, "PID: %d - Ejecutando: FREAD", contexto_obtener_pid(contexto));
+    int bytes = atoi(cantBytes);
+    int direccionLogica = atoi(dirLogica);
+    uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
+    uint32_t offset = obtener_offset_de_segmento(direccionLogica);
+    
+    t_buffer *bufferFREAD = buffer_crear();
+    empaquetar_contexto_para_kernel(bufferFREAD,programCounterActualizado,contexto);
+
+    if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_WRITE, bufferFREAD);
+            buffer_destruir(bufferFREAD);
+
+            t_buffer *bufferParametros = buffer_crear();
+            uint32_t pid = contexto_obtener_pid(contexto);
+            buffer_empaquetar_string(bufferParametros, nombreArchivo);
+            buffer_empaquetar_string(bufferParametros, cantBytes);
+            buffer_empaquetar(bufferParametros, &pid,sizeof(pid));
+            buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
+            buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+            buffer_destruir(bufferParametros);
+        }
+        else{
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+        }
+    }
+    else{
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+    }
+}
+
+void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
+    log_info(cpuLogger, "PID: %d - Ejecutando: FWRITE", contexto_obtener_pid(contexto));
+    int bytes = atoi(cantBytes);
+    int direccionLogica = atoi(dirLogica);
+    uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
+    uint32_t offset = obtener_offset_de_segmento(direccionLogica);
+    
+    t_buffer *bufferFREAD = buffer_crear();
+    empaquetar_contexto_para_kernel(bufferFREAD,programCounterActualizado,contexto);
+
+    if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+        if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_WRITE, bufferFREAD);
+            buffer_destruir(bufferFREAD);
+
+            t_buffer *bufferParametros = buffer_crear();
+            uint32_t pid = contexto_obtener_pid(contexto);
+            buffer_empaquetar_string(bufferParametros, nombreArchivo);
+            buffer_empaquetar_string(bufferParametros, cantBytes);
+            buffer_empaquetar(bufferParametros, &pid,sizeof(pid));
+            buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
+            buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+            buffer_destruir(bufferParametros);
+        }
+        else{
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+        }
+    }
+    else{
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+    }
+}
+
+bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
     contexto_setear_program_counter(contexto, contexto_obtener_program_counter(contexto) + 1);
     uint32_t programCounterActualizado = contexto_obtener_program_counter(contexto);
-    bool pararDeEjecutar = false;
+    pararDeEjecutar = false;
 
     switch (tipoInstruccion)
     {
@@ -395,6 +453,7 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_write:
+        ejecutar_FREAD(contexto,programCounterActualizado,parametro1,parametro2, parametro3);
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_read:
@@ -411,11 +470,9 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
         break;
     case INSTRUCCION_mov_in:
         ejecutar_MOV_IN(contexto,programCounterActualizado, parametro1, parametro2);
-        pararDeEjecutar = false;
         break;
     case INSTRUCCION_mov_out:
         ejecutar_MOV_OUT(contexto,programCounterActualizado,parametro2,parametro1);
-        pararDeEjecutar = false;
         break;
     case INSTRUCCION_create_segment:
         ejecutar_CREATE_SEGMENT(contexto, programCounterActualizado, parametro1, parametro2);

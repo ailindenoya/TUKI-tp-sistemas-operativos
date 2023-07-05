@@ -43,7 +43,8 @@ typedef enum {
     HEADER_F_TRUNCATE,
     HEADER_ERROR_F_TRUNCATE,
     HEADER_F_TRUNCATE_REALIZADO,
-    HEADER_F_READ
+    HEADER_F_READ,
+    HEADER_F_WRITE
 } t_header;
 
 typedef enum {
