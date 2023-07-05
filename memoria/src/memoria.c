@@ -268,8 +268,13 @@ hueco_libre* crear_hueco_libre(int tamanio, int dir){
 
 void leer_de_memoria(uint32_t cantidadDeBytes, int direccionFisica, int socket, uint8_t header){
     t_buffer* buffer = buffer_crear();
+    log_info(memoriaLogger, "llego a crear el buffer para leer memoria");
+    log_info(memoriaLogger, "la dir fisica es %d", direccionFisica);
+    log_info(memoriaLogger, "la cantidad de bytes es %d", cantidadDeBytes);
     buffer_empaquetar(buffer,bloque_de_memoria+direccionFisica,cantidadDeBytes);
+    log_info(memoriaLogger, "empaqueto bloque de memoria + dir fisica");
     stream_enviar_buffer(socket, header, buffer);
+    log_info(memoriaLogger, "envio el buffer con el header %d", header);
     buffer_destruir(buffer);
 }
 

@@ -19,8 +19,10 @@ t_instruccion* cpu_fetch_instruccion(t_contexto* contexto) {
 }
 
 void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro) {
-    for(int i = 0; i < tamanioDeRegistro; i++)
+    for(int i = 0; i < tamanioDeRegistro; i++){
         vector[i] = string[i];
+        log_info(cpuLogger, "copiado: %c", vector[i]);
+    }
 }
 
 void empaquetar_contexto_para_kernel(t_buffer* buffer,uint32_t programCounterActualizado, t_contexto* contexto){
@@ -167,6 +169,7 @@ void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg){
     buffer_empaquetar(buffer, reg, cantidadDeBytes);
     stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);
     int headerPuedeContinuar = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
+    log_info(cpuLogger, "header para escribir en memoria: %d", headerPuedeContinuar);
     if(headerPuedeContinuar!= HEADER_OK_puede_continuar){
         log_error(cpuLogger, "error al escribir en MEMORIA");
         exit(-1);
