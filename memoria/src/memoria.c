@@ -186,8 +186,21 @@ void atender_create_segment(int pid, int idSegmento){
     }else if(obtener_tamanio_libre_total() >= tamanioRequeridoParaSegmentoACrear){
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_hay_que_compactar);
         /// kernel valida que puede compactar TODO
-        compactar();
-        ocupar_hueco(pid, idSegmento);
+        uint8_t respuestaKernel = stream_recibir_header(socketKERNEL);
+        stream_recibir_buffer_vacio(socketKERNEL);
+        if(respuestaKernel == HEADER_bueno_compacta){
+            compactar();
+            t_buffer* bufferProcesos = buffer_crear();
+            buffer_empaquetar_lista_de_procesos_de_memoria(bufferProcesos, listaDeProcesos, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
+            stream_enviar_buffer(socketKERNEL, HEADER_lista_de_tablas_de_segmentos, bufferProcesos);
+            // lo siguiente es despues que el kernel vuelva a confirmar la operacion
+            ocupar_hueco(pid, idSegmento);
+            buffer_destruir(bufferProcesos);
+        }
+        else{
+            log_error(memoriaLogger, "NO recibi confirmacion de compactar, recibido: %d", respuestaKernel);
+        }
+        
     }else{
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_proceso_terminado_out_of_memory);
     }

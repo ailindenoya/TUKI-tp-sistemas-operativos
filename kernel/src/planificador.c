@@ -387,8 +387,34 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
 }
 
 
-void atenderBloqueoDeF_TRUNCATE(){
-        
+t_pcb* encontrar_pcb(int pid){
+     bool es_proceso(void* procesoAux){
+        t_pcb* procesoN = (t_pcb*) procesoAux;
+        return procesoN->pid == pid;
+    }
+    return list_find(listaDePcbs,es_proceso); 
+}
+
+
+void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){ //FALTA CHEQUEO DE CARRI
+    int cantidad;
+    buffer_desempaquetar(bufferProcesos, &cantidad, sizeof(cantidad));
+    proceso* unProceso = malloc(sizeof(*unProceso));
+    for (int i = 0; i < cantidad; i++){
+        buffer_desempaquetar_proceso_de_memoria(bufferProcesos, unProceso, cantidadDeSegmentos);
+        t_pcb* pcbAActualizar = encontrar_pcb(proceso_obtener_pid(unProceso));
+        for (int i = 0; i < cantidadDeSegmentos; i++)
+        {
+            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].id = proceso_obtener_tabla_de_segmentos(unProceso)[i].id;
+            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].base = proceso_obtener_tabla_de_segmentos(unProceso)[i].base;
+            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].tamanio = proceso_obtener_tabla_de_segmentos(unProceso)[i].tamanio;
+        }
+    }
+    free(unProceso);
+}
+
+void atenderBloqueoDe_Filesystem(){
+    
 }
 
 void atender_pcb() {
@@ -610,6 +636,17 @@ void atender_pcb() {
                     
                     // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
 
+                    stream_enviar_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_bueno_compacta);
+
+                    // DESPUES DE COMPACTAR
+                    respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                    if(respuestaMemoria != HEADER_lista_de_tablas_de_segmentos){
+                        log_error(kernelLogger, "NO recbibi lista de tablas de segmentos, recibi: %d", respuestaMemoria);
+                    }
+                    t_buffer* bufferProcesos = buffer_crear();
+                    stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferProcesos);
+                    buffer_desempaquetar_y_actualizar_lista_procesos(bufferProcesos);
+                    buffer_destruir(bufferProcesos);
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_proceso_terminado_out_of_memory){
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
@@ -787,7 +824,7 @@ void iniciar_planificadores(void){
 
     pthread_t largoPlazoHilo;
     pthread_t cortoPlazoHilo;
-    pthread_t atenderBloqueosDe_F_TRUNCATE_Hilo;
+    pthread_t atenderBloqueoDeFilesystem;
     siguientePID = 1;
     sem_init(&dispatchPermitido,0,1);
     sem_init(&hayPcbsParaAgregarAlSistema,0,0);
@@ -808,7 +845,7 @@ void iniciar_planificadores(void){
     pthread_detach(largoPlazoHilo);
     pthread_create(&cortoPlazoHilo, NULL, (void*)planificador_corto_plazo, NULL); 
     pthread_detach(cortoPlazoHilo);
-    pthread_create(&atenderBloqueosDe_F_TRUNCATE_Hilo, NULL, (void*) atenderBloqueoDeF_TRUNCATE, NULL);
-    pthread_detach(atenderBloqueosDe_F_TRUNCATE_Hilo);
+    pthread_create(&atenderBloqueoDeFilesystem, NULL, (void*) atenderBloqueoDe_Filesystem, NULL);
+    pthread_detach(atenderBloqueoDeFilesystem);
 
 }

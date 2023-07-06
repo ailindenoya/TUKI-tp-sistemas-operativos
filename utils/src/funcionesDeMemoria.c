@@ -1,5 +1,6 @@
 
 #include "../include/funcionesDeMemoria.h"
+
 #include <stdint.h>
 #include <string.h>
 
@@ -49,6 +50,15 @@ void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso,
     buffer_desempaquetar_tabla_de_segmentos(self,unProceso->tablaDeSegmentos, cantidadDeSegmentos);
 }
 
+void buffer_empaquetar_lista_de_procesos_de_memoria(t_buffer* bufferProcesos,t_list* listaDeProcesos, int cantidadDeSegmentos){
+    int cantidadDeProcesos = list_size(listaDeProcesos);
+    buffer_empaquetar(bufferProcesos, &cantidadDeProcesos, sizeof(cantidadDeProcesos));
+    for (int i = 0; i < cantidadDeProcesos; i++){
+        buffer_empaquetar_proceso_de_memoria(bufferProcesos, list_get(listaDeProcesos, i), cantidadDeSegmentos);
+    }
+}
+
+
 proceso* proceso_crear(uint32_t pid, int cantidadDeSegs){
     proceso* procesoNuevo = malloc(sizeof(*procesoNuevo));
     procesoNuevo->pid = pid; 
@@ -62,3 +72,10 @@ void proceso_destruir(proceso* procesoADestruir){
     free(procesoADestruir);
 }
 
+uint32_t proceso_obtener_pid(proceso* unProceso){
+    return unProceso->pid;
+}
+
+segmento* proceso_obtener_tabla_de_segmentos(proceso* unProceso){
+    return unProceso->tablaDeSegmentos;
+}

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "buffer.h"
+#include "commons/collections/list.h"
 
 struct segmento{
     uint32_t id;
@@ -24,6 +25,8 @@ void buffer_empaquetar_proceso_de_memoria(t_buffer* self, proceso* proceso, int 
 void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos);
 proceso* proceso_crear(uint32_t pid, int cantidadDeSegs);
 void proceso_destruir(proceso* procesoADestruir);
+void buffer_empaquetar_lista_de_procesos_de_memoria(t_buffer* buffer,t_list* listaDeProcesos, int cantidadDeSegmentos);
 void buffer_desempaquetar_tabla_de_segmentos(t_buffer* self, segmento* tablaDeSegs, int cantidadDeSegs);
-void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos);
+uint32_t proceso_obtener_pid(proceso* unProceso);
+segmento* proceso_obtener_tabla_de_segmentos(proceso* unProceso);
 #endif

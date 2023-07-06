@@ -31,6 +31,8 @@ typedef enum {
     HEADER_existe_archivo,
     HEADER_proceso_terminado_out_of_memory,
     HEADER_hay_que_compactar,
+    HEADER_bueno_compacta,
+    HEADER_lista_de_tablas_de_segmentos,
     HEADER_proceso_terminado_seg_fault,
     HEADER_valor_de_memoria,
     HEADER_valor_de_registro,
