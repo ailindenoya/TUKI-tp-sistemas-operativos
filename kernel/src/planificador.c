@@ -534,6 +534,7 @@ void atender_pcb() {
                     log_info(kernelLogger, "se envio FOPEN a fs");
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux); // abstraer estas 3 en una funcion
+                    log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = false;
                     break;
@@ -547,6 +548,7 @@ void atender_pcb() {
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo, pcb_obtener_pid(pcb));
                     t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
+                    log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = false;
                     break;
@@ -565,6 +567,7 @@ void atender_pcb() {
                     break;
                 }
                 case HEADER_proceso_F_CLOSE:
+                
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_READ:
@@ -591,6 +594,7 @@ void atender_pcb() {
                     
                     t_archivo_tabla_proceso* tabladeArchivosDelProceso = encontrarArchivoTablaProcesos(nombreArchivo, pcb);
                     t_archivo_tabla_proceso_setear_puntero(tabladeArchivosDelProceso,puntero);
+                    log_info(kernelLogger, "PID: %d - Actualizar puntero Archivo: %s - Puntero: %d", pcb_obtener_pid(pcb), nombreArchivo, puntero);
 
                 hayQueReplanificar = false;
                 break;
@@ -603,6 +607,12 @@ void atender_pcb() {
                     }
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
+                    
+                    char* nombreArchivo;
+                    uint32_t tamanio;
+                    buffer_desempaquetar_string(bufferF_TRUNCATE, &nombreArchivo);
+                    buffer_desempaquetar(bufferF_TRUNCATE, &tamanio, sizeof(tamanio));
+
                     buffer_destruir(bufferF_TRUNCATE);
                     
                     pcb_setear_estado(pcb, BLOCKED);
@@ -621,6 +631,7 @@ void atender_pcb() {
                         pcb_setear_estado(pcb, READY);
                         estado_encolar_pcb_con_semaforo(estadoReady, pcb);
                         loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
+                        log_info(kernelLogger, "PID: %d - Archivo: %s - Tamaño: %d", pcb_obtener_pid(pcb), nombreArchivo, tamanio);
                     }*/
                     
                 break;

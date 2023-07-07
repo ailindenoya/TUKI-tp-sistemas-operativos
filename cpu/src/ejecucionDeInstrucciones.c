@@ -67,16 +67,6 @@ void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
 
 }
 
-void ejecutar_F_CLOSE(t_contexto* contexto,uint32_t programCounterActualizado){
-
-}
-void ejecutar_F_READ(t_contexto* contexto,uint32_t programCounterActualizado){
-
-}
-void ejecutar_F_WRITE(t_contexto* contexto,uint32_t programCounterActualizado){
-
-}
-
 void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMemoria, uint32_t offset, t_contexto* contexto, uint32_t nroSegmento, uint32_t programCounterActualizado){
     if((offset + cantidadDeBytes) > contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
@@ -338,6 +328,20 @@ void ejecutar_F_OPEN(t_contexto* contexto, uint32_t programCounterActualizado, c
     buffer_destruir(bufferParametros);   
 }
 
+void ejecutar_F_CLOSE(t_contexto* contexto, uint32_t programCounterActualizado, char* nombreArchivo){
+    log_info(cpuLogger, "PID: %d - Ejecutando: F_CLOSE - Archivo: %s", contexto_obtener_pid(contexto), nombreArchivo);
+
+    t_buffer* buffer_F_CLOSE = buffer_crear();
+    empaquetar_contexto_para_kernel(buffer_F_CLOSE, programCounterActualizado, contexto);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_CLOSE, buffer_F_CLOSE);
+    buffer_destruir(buffer_F_CLOSE);
+
+    t_buffer* bufferParametros = buffer_crear();
+    buffer_empaquetar_string(bufferParametros, NombreArchivo);
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+    buffer_destruir(bufferParametros);
+}
+
 void ejecutar_F_TRUNCATE(t_contexto* contexto, uint32_t programCounterActualizado, char* NombreArchivo, char* tamanioEnString){
     log_info(cpuLogger, "PID: %d - Ejecutando: F_TRUNCATE", contexto_obtener_pid(contexto));
 
@@ -365,6 +369,7 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_SEEK, buffer_F_SEEK);
     buffer_destruir(buffer_F_SEEK);
 }
+
 
 void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
     log_info(cpuLogger, "PID: %d - Ejecutando: FREAD", contexto_obtener_pid(contexto));
@@ -446,6 +451,7 @@ bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoIns
         pararDeEjecutar = false;
         break;
     case INSTRUCCION_f_close:
+        ejecutar_F_CLOSE(contexto, programCounterActualizado, parametro1);
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_open:
