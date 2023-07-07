@@ -115,7 +115,10 @@ void pcb_agregar_a_tabla_de_archivos_abiertos(t_pcb* self, t_archivo_tabla_proce
     list_add(self->tablaDeArchivosAbiertos, (void*) tablaArchivoAbierto);
 }
 
-registros* pcb_obtener_registros(t_pcb* self)
-{
+registros* pcb_obtener_registros(t_pcb* self){
     return &(self->registrosDeCPU);
+}
+
+pthread_mutex_t* pcb_obtener_mutex(t_pcb* self) {
+    return self->mutex;
 }

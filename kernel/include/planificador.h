@@ -17,6 +17,8 @@ void iniciar_planificadores(void);
 bool encontrarArchivoEnTabla(char*);
 void enviar_F_OPEN_a_FS(char*, uint32_t);
 
+void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb);
+
 t_pcb* iniciar_fifo(t_estado* estado);
 
 double siguiente_estimacion(double realAnterior, double estimacionAnterior) ;

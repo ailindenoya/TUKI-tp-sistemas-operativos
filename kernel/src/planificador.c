@@ -24,6 +24,7 @@ time_t tiempoLocalActual;
 
 
 pthread_mutex_t siguientePIDmutex;
+pthread_mutex_t controlListaPcbs;
 
 char** arrayDeRecursos;
 int* vectorDeInstancias;
@@ -187,7 +188,6 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
         list_find_element_and_index(listaDePcbs, esPCBATerminar, indiceProcesoAFinalizar);
         list_remove(listaDePcbs, *indiceProcesoAFinalizar);
         free(indiceProcesoAFinalizar);
-        // list_remove de lista de pcbs (para luego actualizar tabla de segs)
         stream_enviar_buffer_vacio(pcb_obtener_socket_consola(pcbALiberar), HEADER_proceso_terminado);
         pcb_destruir(pcbALiberar);
         sem_post(&gradoDeMultiprogramacion);
@@ -223,10 +223,30 @@ void  planificador_largo_plazo(void) {
         t_pcb* pcbQuePasaAReady = list_remove(estado_obtener_lista(estadoNew), 0);
         pthread_mutex_unlock(estado_obtener_mutex(estadoNew));
         // controlar con memoria el espacio (ver tp)
-            estado_encolar_pcb_con_semaforo(estadoReady, pcbQuePasaAReady);
-            loggear_cambio_estado("NEW", "READY", pcb_obtener_pid(pcbQuePasaAReady));
-            pcb_setear_tiempoDellegadaAReady(pcbQuePasaAReady);
-            sem_post(estado_obtener_sem(estadoReady));
+        
+        pthread_mutex_lock(&controlListaPcbs);
+        list_add(listaDePcbs, pcbQuePasaAReady); // TODO controlar mutex . 
+        pthread_mutex_unlock(&controlListaPcbs);
+        ////// PARTE DE MEMORIA 
+        avisar_a_memoria_de_crear_segmentos_de_proceso(pcbQuePasaAReady);
+        
+        t_buffer* bufferSegmentoCreado = buffer_crear();
+        uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+        if (respuestaDeMemoria != HEADER_proceso_agregado_a_memoria) {
+            log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(pcbQuePasaAReady));
+            exit(-1);
+        }
+        stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferSegmentoCreado);
+        buffer_desempaquetar_tabla_de_segmentos(bufferSegmentoCreado,pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady),cantidadDeSegmentos);
+        buffer_destruir(bufferSegmentoCreado);
+
+        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(pcbQuePasaAReady), pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady)[0].tamanio);
+        ///////////
+        
+        estado_encolar_pcb_con_semaforo(estadoReady, pcbQuePasaAReady);
+        loggear_cambio_estado("NEW", "READY", pcb_obtener_pid(pcbQuePasaAReady));
+        pcb_setear_tiempoDellegadaAReady(pcbQuePasaAReady);
+        sem_post(estado_obtener_sem(estadoReady));
 
         pcbQuePasaAReady = NULL;
     }
@@ -388,27 +408,27 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
 
 
 t_pcb* encontrar_pcb(int pid){
-     bool es_proceso(void* procesoAux){
+    bool es_proceso(void* procesoAux){
         t_pcb* procesoN = (t_pcb*) procesoAux;
         return procesoN->pid == pid;
     }
-    return list_find(listaDePcbs,es_proceso); 
+    pthread_mutex_lock(&controlListaPcbs);
+    t_pcb* unPcb = list_find(listaDePcbs,es_proceso); 
+    pthread_mutex_unlock(&controlListaPcbs);
+    return unPcb;
 }
 
 
-void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){ //FALTA CHEQUEO DE CARRI
+void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){ //CARRI SEAL OF APPROVAL
     int cantidad;
     buffer_desempaquetar(bufferProcesos, &cantidad, sizeof(cantidad));
     proceso* unProceso = malloc(sizeof(*unProceso));
     for (int i = 0; i < cantidad; i++){
         buffer_desempaquetar_proceso_de_memoria(bufferProcesos, unProceso, cantidadDeSegmentos);
         t_pcb* pcbAActualizar = encontrar_pcb(proceso_obtener_pid(unProceso));
-        for (int i = 0; i < cantidadDeSegmentos; i++)
-        {
-            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].id = proceso_obtener_tabla_de_segmentos(unProceso)[i].id;
-            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].base = proceso_obtener_tabla_de_segmentos(unProceso)[i].base;
-            pcb_obtener_tabla_de_segmentos(pcbAActualizar)[i].tamanio = proceso_obtener_tabla_de_segmentos(unProceso)[i].tamanio;
-        }
+        pthread_mutex_lock(pcb_obtener_mutex(pcbAActualizar));
+        buffer_desempaquetar_tabla_de_segmentos(bufferProcesos, pcb_obtener_tabla_de_segmentos(pcbAActualizar), cantidadDeSegmentos);
+        pthread_mutex_unlock(pcb_obtener_mutex(pcbAActualizar));
     }
     free(unProceso);
 }
@@ -645,7 +665,9 @@ void atender_pcb() {
                     }
                     t_buffer* bufferProcesos = buffer_crear();
                     stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferProcesos);
+
                     buffer_desempaquetar_y_actualizar_lista_procesos(bufferProcesos);
+                    
                     buffer_destruir(bufferProcesos);
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_proceso_terminado_out_of_memory){
@@ -760,22 +782,6 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
 
         uint32_t nuevoPID = obtener_siguiente_pid();
         t_pcb* nuevoPCB = pcb_crear(nuevoPID, tamanio, kernel_config_obtener_estimacion_inicial(kernelConfig));
-        list_add(listaDePcbs, nuevoPCB); // TODO controlar mutex . 
-        ////// PARTE DE MEMORIA 
-        avisar_a_memoria_de_crear_segmentos_de_proceso(nuevoPCB);
-        
-        t_buffer* bufferSegmentoCreado = buffer_crear();
-        uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
-        if (respuestaDeMemoria != HEADER_proceso_agregado_a_memoria) {
-            log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(nuevoPCB));
-            return NULL;
-        }
-        stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferSegmentoCreado);
-        buffer_desempaquetar_tabla_de_segmentos(bufferSegmentoCreado,pcb_obtener_tabla_de_segmentos(nuevoPCB),cantidadDeSegmentos);
-        buffer_destruir(bufferSegmentoCreado);
-
-        log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(nuevoPCB), pcb_obtener_tabla_de_segmentos(nuevoPCB)[0].tamanio);
-        ///////////
 
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
@@ -829,6 +835,9 @@ void iniciar_planificadores(void){
     sem_init(&dispatchPermitido,0,1);
     sem_init(&hayPcbsParaAgregarAlSistema,0,0);
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
+
+    pthread_mutex_init(&controlListaPcbs, NULL);
+    pthread_mutex_init(&siguientePIDmutex, NULL);
 
     if (kernel_config_es_algoritmo_hrrn(kernelConfig)) {        
         algoritmoConfigurado = ALGORITMO_HRRN;

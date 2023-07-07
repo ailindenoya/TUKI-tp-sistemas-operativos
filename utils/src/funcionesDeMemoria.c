@@ -51,7 +51,7 @@ void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso,
 }
 
 void buffer_empaquetar_lista_de_procesos_de_memoria(t_buffer* bufferProcesos,t_list* listaDeProcesos, int cantidadDeSegmentos){
-    int cantidadDeProcesos = list_size(listaDeProcesos);
+    uint32_t cantidadDeProcesos = list_size(listaDeProcesos);
     buffer_empaquetar(bufferProcesos, &cantidadDeProcesos, sizeof(cantidadDeProcesos));
     for (int i = 0; i < cantidadDeProcesos; i++){
         buffer_empaquetar_proceso_de_memoria(bufferProcesos, list_get(listaDeProcesos, i), cantidadDeSegmentos);
