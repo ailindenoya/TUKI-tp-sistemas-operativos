@@ -1,5 +1,6 @@
 extern int socketFILESYSTEM;
 #include "../include/comunicacionFileSystem.h"
+#include "../../utils/src/list_find_element_and_index.c"
 extern t_log* kernelLogger;
 extern t_list* tablaArchivosAbiertos;
 
@@ -34,9 +35,21 @@ void t_archivo_tabla_setear_nombre_archivo(t_archivo_tabla* self, char* NombreNu
     self->nombreArchivo = NombreNuevo;
 }
 
-void t_archivo_tabla_actualizar_cola_procesos(t_archivo_tabla* self, t_pcb* pcb){
+void t_archivo_tabla_agregar_proceso_a_cola_de_bloqueados(t_archivo_tabla* self, t_pcb* pcb){
     list_add(self->colaProcesos,(void*) pcb);
 }
+
+void t_archivo_tabla_quitar_proceso_de_cola_de_bloqueados(t_archivo_tabla* self, t_pcb* pcb){
+    bool esPCBATerminar(void*pcbAux){
+                t_pcb* procesoATerminar = (t_pcb*) pcbAux;
+                return pcb_obtener_pid(procesoATerminar) == pcb_obtener_pid(pcb);  
+    }
+    int* indiceAQuitar =  malloc(sizeof(*indiceAQuitar));
+    list_find_element_and_index(t_archivo_tabla_obtener_cola_procesos(self), esPCBATerminar, indiceAQuitar);
+    list_remove(t_archivo_tabla_obtener_cola_procesos(self), *indiceAQuitar);
+    free(indiceAQuitar);
+}
+
 void t_archivo_tabla_proceso_setear_puntero(t_archivo_tabla_proceso* self, uint32_t puntero){
     self->puntero = puntero;
 }

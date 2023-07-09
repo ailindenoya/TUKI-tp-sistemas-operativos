@@ -14,7 +14,6 @@ void loggear_cambio_estado(const char *prev, const char *post, int pid);
 uint32_t obtener_siguiente_pid(void);
 void* encolar_en_new_nuevo_pcb_entrante(void*);
 void iniciar_planificadores(void);
-bool encontrarArchivoEnTabla(char*);
 void enviar_F_OPEN_a_FS(char*, uint32_t);
 
 void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb);

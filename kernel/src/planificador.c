@@ -356,21 +356,21 @@ void atender_signal(char* recurso, t_pcb* pcb){
     }
 }
 
-t_archivo_tabla* encontrarArchivo(char* nombreArchivoNuevo){
+t_archivo_tabla* encontrarEntradaEnTablaGlobal(char* nombreArchivo){
 
     bool encontrarArch(void* Aux){
         t_archivo_tabla* tab = (t_archivo_tabla*) Aux; 
-                    return tab->nombreArchivo == nombreArchivoNuevo;
+                    return strcmp(t_archivo_tabla_obtener_nombre_archivo(tab), nombreArchivo);
     }
     return list_find(tablaArchivosAbiertos, encontrarArch); 
 
 }
 
-t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivoNuevo, t_pcb* pcb){
+t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivo, t_pcb* pcb){
    t_list* tablaArchivosAbiertos = pcb_obtener_tabla_de_archivos_abiertos(pcb);
    bool encontrarArch(void* Aux){
         t_archivo_tabla_proceso* tab = (t_archivo_tabla_proceso*) Aux; 
-                    return tab->nombreArchivo == nombreArchivoNuevo;
+                    return strcmp(t_archivo_tabla_proceso_obtener_puntero(tab), nombreArchivo)
     }
     return list_find(tablaArchivosAbiertos, encontrarArch);  
 }
@@ -390,8 +390,8 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
         stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
         log_info(kernelLogger, "no existe el archivo");
         if(respuestaFileSystem == HEADER_archivo_abierto){
-            t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
-            list_add(tablaArchivosAbiertos, (void*) tabla);
+            t_archivo_tabla* entradaDeTabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
+            list_add(tablaArchivosAbiertos, (void*) entradaDeTabla);
             log_info(kernelLogger, "no existe, creo el archivo");
         }
         else {
@@ -399,8 +399,8 @@ void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
         }
     }
     else if (respuestaFileSystem == HEADER_archivo_abierto){
-        t_archivo_tabla* tabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
-        list_add(tablaArchivosAbiertos, (void*) tabla);
+        t_archivo_tabla* entradaDeTabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
+        list_add(tablaArchivosAbiertos, (void*) entradaDeTabla);
         log_info(kernelLogger, "abrio el archivo");
     }
     buffer_destruir(buffer_F_OPEN);
@@ -434,7 +434,7 @@ void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){
 }
 
 void atenderBloqueoDe_Filesystem(){
-    
+
 }
 
 void atender_pcb() {
@@ -532,8 +532,8 @@ void atender_pcb() {
                 if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo,pcb_obtener_pid(pcb));
                     log_info(kernelLogger, "se envio FOPEN a fs");
-                    t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
-                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux); // abstraer estas 3 en una funcion
+                    t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreArchivoNuevo);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, entradaDeTablaDeProceso); 
                     log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = false;
@@ -542,12 +542,12 @@ void atender_pcb() {
                 
                 // Tabla no vacía, hay archivos abiertos
 
-                t_archivo_tabla* tablaDeArchivoBuscado = encontrarArchivo(nombreArchivoNuevo);  //Buscas el archivo en la tabla
+                t_archivo_tabla* tablaDeArchivoBuscado = encontrarEntradaEnTablaGlobal(nombreArchivoNuevo);  //Buscas el archivo en la tabla
 
                 if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) != nombreArchivoNuevo){    // Si no está, lo abris
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo, pcb_obtener_pid(pcb));
-                    t_archivo_tabla_proceso* aux = crearEntradaEnTablaProceso(nombreArchivoNuevo);
-                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, aux);
+                    t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreArchivoNuevo);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcb, entradaDeTablaDeProceso);
                     log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = false;
@@ -555,26 +555,40 @@ void atender_pcb() {
                 }
                 
                 // El archivo está en la tabla, está abierto, se bloquea el proceso en la cola de bloqueados del archivo
-
                 else if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) == nombreArchivoNuevo){
-                    t_archivo_tabla_actualizar_cola_procesos(tablaDeArchivoBuscado, pcb);
+                    t_archivo_tabla_agregar_proceso_a_cola_de_bloqueados(tablaDeArchivoBuscado, pcb);
                     pcb_setear_estado(pcb, BLOCKED);
-                    estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-                    sem_post(estado_obtener_sem(estadoReady));
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = true;
                     break;
                 }
                 case HEADER_proceso_F_CLOSE:
-                
+                    t_buffer* bufferFCLOSE =buffer_crear();
+                    cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    if(cpuRespuesta!= HEADER_proceso_parametros){
+                        log_error(kernelLogger, "error al recibir nombre de archivo");
+                        exit(-1);
+                    }
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig));
+                    char* nombreDeArch = malloc(sizeof(*nombreDeArch));
+                    buffer_desempaquetar_string(bufferFCLOSE, &nombreDeArch);
+                    t_archivo_tabla entradaDeTabla = encontrarEntradaEnTablaGlobal(nombreDeArch);
+                    t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
+                    t_archivo_tabla_setear_pid(entradaDeTabla, pcb_obtener_pid(pcbQueAgarraArchivo));
+                    pcb_setear_estado(pcbQueAgarraArchivo, READY);
+                    estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
+                    loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
+                    sem_post(estado_obtener_sem(estadoReady));
+                    free(nombreDeArch);
+                    buffer_destruir(bufferFCLOSE);
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_READ:
                     t_buffer* bufferFREAD = buffer_crear();
                     stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferFREAD);
-
+                    
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferFREAD);
                     /// logica para bloquearlo 
                 hayQueReplanificar = false;
