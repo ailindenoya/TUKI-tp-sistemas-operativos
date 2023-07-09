@@ -73,6 +73,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
         buffer_destruir(bufferAux);
         free(nombreArchivo);
         free(parametro2);
+        free(parametro3);
     }
 }
 
