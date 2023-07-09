@@ -48,6 +48,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                     exit(-1);
                 }
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                break;
             case HEADER_F_WRITE:
                 log_info(fileSystemLogger, "Se recibió FREAD");
                 t_config* fcb = encontrarFCB(nombreArchivo);
@@ -66,6 +67,13 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                     exit(-1);
                 }
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                break;
+            case HEADER_F_CLOSE:
+                t_config* fcbABorrar = encontrarFCB(nombreArchivo);
+                if(list_remove_element(listaFCBsAbiertos, fcbABorrar) == false){
+                    log_error(fileSystemLogger, "error al encontrar FCB a borrar");
+                }
+                break;
             default:
                 log_error(fileSystemLogger, "Error al recibir la instrucción de Kernel");
                 break;

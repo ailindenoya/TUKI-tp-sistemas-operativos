@@ -4,6 +4,7 @@
 extern int errno;
 extern t_log* fileSystemLogger;
 extern t_superbloque_config* superbloqueConfig;
+extern t_fileSystem_config* fileSystemConfig;
 
 extern t_bitarray* bitmapBitarray;
 int fdBitmap;

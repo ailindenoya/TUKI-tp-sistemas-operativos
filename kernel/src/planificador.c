@@ -574,16 +574,24 @@ void atender_pcb() {
                     char* nombreDeArch = malloc(sizeof(*nombreDeArch));
                     buffer_desempaquetar_string(bufferFCLOSE, &nombreDeArch);
                     t_archivo_tabla* entradaDeTabla = encontrarEntradaEnTablaGlobal(nombreDeArch);
-                    t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
-                    t_archivo_tabla_setear_pid(entradaDeTabla, pcb_obtener_pid(pcbQueAgarraArchivo));
-                    pcb_setear_estado(pcbQueAgarraArchivo, READY);
-                    estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
-                    loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
-                    sem_post(estado_obtener_sem(estadoReady));
+                    if(list_is_empty(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla))){
+                        t_buffer* buffer_FCLOSE_FS = buffer_crear();
+                        buffer_empaquetar_string(buffer_FCLOSE_FS, nombreDeArch);
+                        stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
+                        buffer_destruir(buffer_FCLOSE_FS);
+                    }
+                    else{
+                        t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
+                        t_archivo_tabla_setear_pid(entradaDeTabla, pcb_obtener_pid(pcbQueAgarraArchivo));
+                        pcb_setear_estado(pcbQueAgarraArchivo, READY);
+                        estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
+                        loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
+                        sem_post(estado_obtener_sem(estadoReady));
+                    }
                     free(nombreDeArch);
                     buffer_destruir(bufferFCLOSE);
-                hayQueReplanificar = false;
-                break;
+                    hayQueReplanificar = false;
+                    break;
                 case HEADER_proceso_F_READ:
                     t_buffer* bufferFREAD =buffer_crear();
                     cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -618,8 +626,8 @@ void atender_pcb() {
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferParaMANDARaFS);
                     
                     /// logica para bloquearlo 
-                hayQueReplanificar = false;
-                break;
+                    hayQueReplanificar = false;
+                    break;
                 case HEADER_proceso_F_WRITE:
                     t_buffer* bufferWRITE =buffer_crear();
                     cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
@@ -679,10 +687,6 @@ void atender_pcb() {
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
                     
-                    char* nombreArchivo;
-                    uint32_t tamanio;
-                    buffer_desempaquetar_string(bufferF_TRUNCATE, &nombreArchivo);
-                    buffer_desempaquetar(bufferF_TRUNCATE, &tamanio, sizeof(tamanio));
 
                     buffer_destruir(bufferF_TRUNCATE);
                     
@@ -704,8 +708,7 @@ void atender_pcb() {
                         loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
                         log_info(kernelLogger, "PID: %d - Archivo: %s - Tamaño: %d", pcb_obtener_pid(pcb), nombreArchivo, tamanio);
                     }*/
-                    
-                break;
+                    break;
                 case HEADER_create_segment:
                 log_info(kernelLogger, "SE LLEGO A CREATE");
                 t_buffer* bufferCreateSegment = buffer_crear();

@@ -7,6 +7,7 @@
 extern t_log* fileSystemLogger;
 extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
+extern t_fileSystem_config* fileSystemConfig;
 
 extern int fdBitmap;
 extern int fdBloques;
@@ -46,6 +47,7 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
     int posicionBloqueIndirecto = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
 
     int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (config_get_int_value(fcb,"TAMANIO_ARCHIVO") - tamanioBloque) / tamanioBloque);
+    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
     memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
     msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);
 }
