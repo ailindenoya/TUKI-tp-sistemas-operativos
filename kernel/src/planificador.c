@@ -360,7 +360,7 @@ t_archivo_tabla* encontrarEntradaEnTablaGlobal(char* nombreArchivo){
 
     bool encontrarArch(void* Aux){
         t_archivo_tabla* tab = (t_archivo_tabla*) Aux; 
-                    return strcmp(t_archivo_tabla_obtener_nombre_archivo(tab), nombreArchivo);
+                    return strcmp(t_archivo_tabla_obtener_nombre_archivo(tab), nombreArchivo)== 0;
     }
     return list_find(tablaArchivosAbiertos, encontrarArch); 
 
@@ -370,7 +370,7 @@ t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivo, t_pc
    t_list* tablaArchivosAbiertos = pcb_obtener_tabla_de_archivos_abiertos(pcb);
    bool encontrarArch(void* Aux){
         t_archivo_tabla_proceso* tab = (t_archivo_tabla_proceso*) Aux; 
-                    return strcmp(t_archivo_tabla_proceso_obtener_puntero(tab), nombreArchivo)
+                    return strcmp(t_archivo_tabla_proceso_obtener_nombre_archivo(tab), nombreArchivo)== 0;
     }
     return list_find(tablaArchivosAbiertos, encontrarArch);  
 }
@@ -573,7 +573,7 @@ void atender_pcb() {
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig));
                     char* nombreDeArch = malloc(sizeof(*nombreDeArch));
                     buffer_desempaquetar_string(bufferFCLOSE, &nombreDeArch);
-                    t_archivo_tabla entradaDeTabla = encontrarEntradaEnTablaGlobal(nombreDeArch);
+                    t_archivo_tabla* entradaDeTabla = encontrarEntradaEnTablaGlobal(nombreDeArch);
                     t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
                     t_archivo_tabla_setear_pid(entradaDeTabla, pcb_obtener_pid(pcbQueAgarraArchivo));
                     pcb_setear_estado(pcbQueAgarraArchivo, READY);
@@ -585,15 +585,72 @@ void atender_pcb() {
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_READ:
-                    t_buffer* bufferFREAD = buffer_crear();
-                    stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
-                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferFREAD);
+                    t_buffer* bufferFREAD =buffer_crear();
+                    cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    if(cpuRespuesta!= HEADER_proceso_parametros){
+                        log_error(kernelLogger, "error al recibir nombre de archivo");
+                        exit(-1);
+                    }
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig));
+                    char* nombreDeArch = malloc(sizeof(*nombreDeArch));
+                    char* cantBytes =malloc(sizeof(*cantBytes));
+                    uint32_t pidParaFREAD, nroSegmentoFREAD, offsetFREAD; 
+                    buffer_desempaquetar_string(bufferFREAD, &nombreDeArch);
+                    buffer_desempaquetar_string(bufferFREAD, &cantBytes);
+                    buffer_desempaquetar(bufferFREAD, &pidParaFREAD, sizeof(pidParaFREAD));
+                    buffer_desempaquetar(bufferFREAD, &nroSegmentoFREAD, sizeof(nroSegmentoFREAD));
+                    buffer_desempaquetar(bufferFREAD, &offsetFREAD, sizeof(offsetFREAD));
+                    buffer_destruir(bufferFREAD);
+
+                    t_buffer* bufferParaMANDARaFS = buffer_crear();
+                    t_archivo_tabla_proceso* entradaDeTablaDeProceso = encontrarArchivoTablaProcesos(nombreDeArch, pcb);
+                    uint32_t puntero = t_archivo_tabla_proceso_obtener_puntero(entradaDeTablaDeProceso);
+                    buffer_empaquetar_string(bufferParaMANDARaFS, nombreDeArch);
+                    buffer_empaquetar(bufferParaMANDARaFS, &puntero, sizeof(puntero));
+                    buffer_empaquetar_string(bufferParaMANDARaFS, cantBytes);
+                    // para fs
+
+                    buffer_empaquetar(bufferParaMANDARaFS, &pidParaFREAD, sizeof(pidParaFREAD));
+                    buffer_empaquetar(bufferParaMANDARaFS, &nroSegmentoFREAD, sizeof(nroSegmentoFREAD));
+                    buffer_empaquetar(bufferParaMANDARaFS, &offsetFREAD, sizeof(offsetFREAD));
+                    // para fs que se lo envia a memoria 
+
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferParaMANDARaFS);
                     
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferFREAD);
                     /// logica para bloquearlo 
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_WRITE:
+                    t_buffer* bufferWRITE =buffer_crear();
+                    cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                    if(cpuRespuesta!= HEADER_proceso_parametros){
+                        log_error(kernelLogger, "error al recibir nombre de archivo");
+                        exit(-1);
+                    }
+                    stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig));
+                    char* nombreDeArchFWRITE = malloc(sizeof(*nombreDeArchFWRITE));
+                    char* cantBytesFWRITE =malloc(sizeof(*cantBytesFWRITE));
+                    uint32_t pidParaFWRITE, nroSegmentoFWRITE, offsetFWRITE; 
+                    buffer_desempaquetar_string(bufferWRITE, &nombreDeArchFWRITE);
+                    buffer_desempaquetar_string(bufferWRITE, &cantBytesFWRITE);
+                    buffer_desempaquetar(bufferWRITE, &pidParaFWRITE, sizeof(pidParaFWRITE));
+                    buffer_desempaquetar(bufferWRITE, &nroSegmentoFWRITE, sizeof(nroSegmentoFWRITE));
+                    buffer_desempaquetar(bufferWRITE, &offsetFWRITE, sizeof(offsetFWRITE));
+                    buffer_destruir(bufferWRITE);
+
+                    t_buffer* bufferParaMANDARFWRITE = buffer_crear();
+                    t_archivo_tabla_proceso* entradaDeTablaDeProceso = encontrarArchivoTablaProcesos(nombreDeArchFWRITE, pcb);
+                    uint32_t puntero = t_archivo_tabla_proceso_obtener_puntero(entradaDeTablaDeProceso);
+                    buffer_empaquetar_string(bufferParaMANDARFWRITE, nombreDeArchFWRITE);
+                    buffer_empaquetar(bufferParaMANDARFWRITE, &puntero, sizeof(puntero));
+                    buffer_empaquetar_string(bufferParaMANDARFWRITE, cantBytes);
+                    // para fs
+                    buffer_empaquetar(bufferParaMANDARFWRITE, &pidParaFWRITE, sizeof(pidParaFWRITE));
+                    buffer_empaquetar(bufferParaMANDARFWRITE, &nroSegmentoFWRITE, sizeof(nroSegmentoFWRITE));
+                    buffer_empaquetar(bufferParaMANDARFWRITE, &offsetFWRITE, sizeof(offsetFWRITE));
+                    // para fs que se lo envia a memoria 
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_WRITE, bufferParaMANDARFWRITE);
+
                 hayQueReplanificar = false;
                 break;
                 case HEADER_proceso_F_SEEK:

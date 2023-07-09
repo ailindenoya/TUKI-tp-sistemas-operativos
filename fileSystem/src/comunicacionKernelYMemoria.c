@@ -5,6 +5,7 @@ extern t_log* fileSystemLogger;
 extern int socketKERNEL;
 extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
+extern t_fileSystem_config* fileSystemConfig;
 
 void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucciones
 
@@ -29,9 +30,42 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_READ:
                 log_info(fileSystemLogger, "Se recibió FREAD");
-                buffer_desempaquetar_string(bufferAux, &parametro2);
-                buffer_desempaquetar_string(bufferAux, &parametro3); 
-            
+                t_config* fcb = encontrarFCB(nombreArchivo);
+                uint32_t puntero, cantBytes;
+                buffer_desempaquetar(bufferAux,&puntero, sizeof(puntero));
+                buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
+                cantBytes = atoi(parametro3); 
+
+
+                /// manejar logica FREAD TODO
+
+
+                buffer_empaquetar(bufferAux, &cantBytes, sizeof(cantBytes));
+                stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_registro, bufferAux);
+                int respuestaMemoria = stream_stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                if(respuestaMemoria!= HEADER_OK_puede_continuar){
+                    log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir"); 
+                    exit(-1);
+                }
+                stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+            case HEADER_F_WRITE:
+                log_info(fileSystemLogger, "Se recibió FREAD");
+                t_config* fcb = encontrarFCB(nombreArchivo);
+                uint32_t puntero, cantBytes;
+                buffer_desempaquetar(bufferAux,&puntero, sizeof(puntero));
+                buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
+                cantBytes = atoi(parametro3); 
+                
+                // manejar logica FWRITE TODO
+
+                buffer_empaquetar(bufferAux, &cantBytes, sizeof(cantBytes));
+                stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_memoria, bufferAux);
+                int respuestaMemoria = stream_stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                if(respuestaMemoria!= HEADER_OK_puede_continuar){
+                    log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir"); 
+                    exit(-1);
+                }
+                stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
             default:
                 log_error(fileSystemLogger, "Error al recibir la instrucción de Kernel");
                 break;
