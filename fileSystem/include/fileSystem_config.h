@@ -35,6 +35,10 @@ char* fileSystem_config_obtener_path_fcb(t_fileSystem_config*);
 int fileSystem_config_obtener_retardo_acceso_bloque(t_fileSystem_config*);
 int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) ;
 void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int socket);
+int fileSystem_config_obtener_socket_kernel_peticiones(t_fileSystem_config* self) ;
+void fileSystem_config_setear_socket_kernel_peticiones(t_fileSystem_config* self, int socket);
+int fileSystem_config_obtener_socket_kernel_desbloqueos(t_fileSystem_config* self) ;
+void fileSystem_config_setear_socket_kernel_desbloqueos(t_fileSystem_config* self, int socket);
 
 t_superbloque_config* superbloque_config_crear(char* superbloqueConfigPath, t_log* fileSystemLogger);
 void superbloque_config_iniciar(void* moduleConfig, t_config* tempCfg);

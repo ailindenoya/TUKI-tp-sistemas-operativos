@@ -2,7 +2,6 @@
 #define PATH_FCB "fcb/"
 
 extern t_log* fileSystemLogger;
-extern int socketKERNEL;
 extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
 extern t_fileSystem_config* fileSystemConfig;
@@ -11,7 +10,8 @@ extern void* bitmap;
 extern void* bloques;
 
 void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucciones
-
+    int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
+    
     for(;;){
         char* nombreArchivo = malloc(sizeof(*nombreArchivo));
         char* parametro2 = malloc(sizeof(*parametro2));
@@ -94,6 +94,7 @@ void atenderPeticionesDeKernel(void){
 }
 
 void F_OPEN(char* NombreArchivo){
+    int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
 
     char* ruta = concat(PATH_FCB, NombreArchivo);
     int fd = open(ruta, O_RDWR);

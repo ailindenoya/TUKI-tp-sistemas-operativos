@@ -17,7 +17,8 @@ struct t_kernel_config {
     int GRADO_MAX_MULTIPROGRAMACION;
     int SOCKET_CPU;
     int SOCKET_MEMORIA;
-    int SOCKET_FILESYSTEM;
+    int SOCKET_FILESYSTEM_PETICIONES;
+    int SOCKET_FILESYSTEM_DESBLOQUEOS;
     char** RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema 
     char** INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
@@ -38,7 +39,8 @@ void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->GRADO_MAX_MULTIPROGRAMACION = config_get_int_value(tempCfg, "GRADO_MAX_MULTIPROGRAMACION");
     kernelConfig->SOCKET_CPU = -1;
     kernelConfig->SOCKET_MEMORIA = -1;
-    kernelConfig->SOCKET_FILESYSTEM = -1;
+    kernelConfig->SOCKET_FILESYSTEM_PETICIONES = -1;
+    kernelConfig->SOCKET_FILESYSTEM_DESBLOQUEOS = -1;
     kernelConfig->RECURSOS = copiar_array(config_get_array_value(tempCfg,"RECURSOS"));
     kernelConfig->INSTANCIAS_RECURSOS = copiar_array(config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS"));
 }
@@ -106,8 +108,11 @@ int kernel_config_obtener_socket_cpu(t_kernel_config* self) {
 int kernel_config_obtener_socket_memoria(t_kernel_config* self) {
     return self->SOCKET_MEMORIA;
 }
-int kernel_config_obtener_socket_filesystem(t_kernel_config* self) {
-    return self->SOCKET_FILESYSTEM;
+int kernel_config_obtener_socket_filesystem_peticiones(t_kernel_config* self) {
+    return self->SOCKET_FILESYSTEM_PETICIONES;
+}
+int kernel_config_obtener_socket_filesystem_desbloqueos(t_kernel_config* self) {
+    return self->SOCKET_FILESYSTEM_DESBLOQUEOS;
 }
 char** kernel_config_obtener_recursos(t_kernel_config* self){
     return self->RECURSOS;
@@ -121,6 +126,9 @@ void kernel_config_setear_socket_cpu(t_kernel_config* self, int socket) {
 void kernel_config_setear_socket_memoria(t_kernel_config* self, int socket) {
      self->SOCKET_MEMORIA = socket;
 }
-void kernel_config_setear_socket_filesystem(t_kernel_config* self, int socket) {
-     self->SOCKET_FILESYSTEM = socket;
+void kernel_config_setear_socket_filesystem_peticiones(t_kernel_config* self, int socket) {
+     self->SOCKET_FILESYSTEM_PETICIONES = socket;
+}
+void kernel_config_setear_socket_filesystem_desbloqueos(t_kernel_config* self, int socket) {
+     self->SOCKET_FILESYSTEM_DESBLOQUEOS = socket;
 }

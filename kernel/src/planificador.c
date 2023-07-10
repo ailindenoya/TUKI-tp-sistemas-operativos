@@ -376,18 +376,19 @@ t_archivo_tabla_proceso* encontrarArchivoTablaProcesos(char* nombreArchivo, t_pc
 }
 
 void enviar_F_OPEN_a_FS(char* nombreArchivoNuevo, uint32_t pid){
+    int socket_fs_peticiones = kernel_config_obtener_socket_filesystem_peticiones(kernelConfig);
     t_buffer* buffer_F_OPEN = buffer_crear();
     buffer_empaquetar_string(buffer_F_OPEN, nombreArchivoNuevo);
-    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_OPEN, buffer_F_OPEN);
+    stream_enviar_buffer(socket_fs_peticiones, HEADER_F_OPEN, buffer_F_OPEN);
     // 1)
 
-    uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
-    stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+    uint8_t respuestaFileSystem = stream_recibir_header(socket_fs_peticiones);
+    stream_recibir_buffer_vacio(socket_fs_peticiones);
     // 4)
     if (respuestaFileSystem == HEADER_no_existe_archivo){
-        stream_enviar_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_crear_archivo);
-        respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
-        stream_recibir_buffer_vacio(kernel_config_obtener_socket_filesystem(kernelConfig));
+        stream_enviar_buffer_vacio(socket_fs_peticiones, HEADER_crear_archivo);
+        respuestaFileSystem = stream_recibir_header(socket_fs_peticiones);
+        stream_recibir_buffer_vacio(socket_fs_peticiones);
         log_info(kernelLogger, "no existe el archivo");
         if(respuestaFileSystem == HEADER_archivo_abierto){
             t_archivo_tabla* entradaDeTabla = crearEntradaEnTabla(pid, nombreArchivoNuevo);
@@ -577,7 +578,7 @@ void atender_pcb() {
                     if(list_is_empty(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla))){
                         t_buffer* buffer_FCLOSE_FS = buffer_crear();
                         buffer_empaquetar_string(buffer_FCLOSE_FS, nombreDeArchFClose);
-                        stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
+                        stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
                         buffer_destruir(buffer_FCLOSE_FS);
                     }
                     else{
@@ -623,7 +624,7 @@ void atender_pcb() {
                     buffer_empaquetar(bufferParaMANDARaFS, &offsetFREAD, sizeof(offsetFREAD));
                     // para fs que se lo envia a memoria 
 
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_READ, bufferParaMANDARaFS);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig),HEADER_F_READ, bufferParaMANDARaFS);
                     
                     /// logica para bloquearlo 
                     hayQueReplanificar = false;
@@ -657,7 +658,7 @@ void atender_pcb() {
                     buffer_empaquetar(bufferParaMANDARFWRITE, &nroSegmentoFWRITE, sizeof(nroSegmentoFWRITE));
                     buffer_empaquetar(bufferParaMANDARFWRITE, &offsetFWRITE, sizeof(offsetFWRITE));
                     // para fs que se lo envia a memoria 
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig),HEADER_F_WRITE, bufferParaMANDARFWRITE);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig),HEADER_F_WRITE, bufferParaMANDARFWRITE);
 
                 hayQueReplanificar = false;
                 break;
@@ -685,7 +686,7 @@ void atender_pcb() {
                         exit(-1);
                     }
                     stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
-                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
+                    stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
                     
 
                     buffer_destruir(bufferF_TRUNCATE);
@@ -697,7 +698,7 @@ void atender_pcb() {
                     hayQueReplanificar = true;
                     // hacer hilo
                     /* Logica para desbloqueo del proceso por un F_TRUNCATE*/
-                   /* uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem(kernelConfig));
+                   /* uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig));
 
                     if(respuestaFileSystem == HEADER_ERROR_F_TRUNCATE){
                         log_error(kernelLogger, "Error al ejecutar F_TRUNCATE");

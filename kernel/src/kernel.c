@@ -34,6 +34,29 @@ int cantidadDeSegmentos;
     }
 }
 
+void conectar_con_file_system(int* socket, uint8_t handshake)
+{
+    char* servidor = handshake == HANDSHAKE_kernel ? "FILESYSTEM-PETICIONES" : "FILESYSTEM-DESBLOQUEOS";
+    log_info(kernelLogger, "Conectando con %s...", servidor);
+    *socket = conectar_a_servidor(kernel_config_obtener_ip_filesystem(kernelConfig), kernel_config_obtener_puerto_filesystem(kernelConfig));
+    if (*socket == -1) {
+        log_error(kernelLogger, "Error al intentar conectar con %s", servidor);
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+
+    stream_enviar_buffer_vacio(*socket, handshake);
+    
+    uint8_t FILESYSTEMRespuesta = stream_recibir_header(*socket);
+    stream_recibir_buffer_vacio(*socket);
+    if (FILESYSTEMRespuesta != HANDSHAKE_puede_continuar) {
+        log_error(kernelLogger, "no se pudo conectar con %s", servidor);
+        kernel_destruir(kernelConfig, kernelLogger);
+        exit(-1);
+    }
+    log_info(kernelLogger, "se establecio conexion con %s", servidor);
+}
+
 void kernel_destruir(t_kernel_config* kernelConfig, t_log* kernelLog) {
     kernel_config_destruir(kernelConfig);
     log_destroy(kernelLog);
@@ -140,24 +163,14 @@ int main(int argc, char* argv[]){
 
     // conexion con FILESYSTEM
 
-    socketFILESYSTEM = conectar_a_servidor(kernel_config_obtener_ip_filesystem(kernelConfig), kernel_config_obtener_puerto_filesystem(kernelConfig));
-    if (socketFILESYSTEM == -1) {
-        log_error(kernelLogger, "Error al intentar conectar con FILESYSTEM");
-        kernel_destruir(kernelConfig, kernelLogger);
-        exit(-1);
-    }
-    kernel_config_setear_socket_filesystem(kernelConfig, socketFILESYSTEM);
+    conectar_con_file_system(&socketFILESYSTEM, HANDSHAKE_kernel);
+    kernel_config_setear_socket_filesystem_peticiones(kernelConfig, socketFILESYSTEM);
 
-    stream_enviar_buffer_vacio(socketFILESYSTEM, HANDSHAKE_kernel);
+    int socketFilesystemDesbloqueos;
+    conectar_con_file_system(&socketFilesystemDesbloqueos, HANDSHAKE_kernel_desbloqueos);
+    kernel_config_setear_socket_filesystem_desbloqueos(kernelConfig, socketFilesystemDesbloqueos);
+
     
-    uint8_t FILESYSTEMRespuesta = stream_recibir_header(socketFILESYSTEM);
-    stream_recibir_buffer_vacio(socketFILESYSTEM);
-    if (FILESYSTEMRespuesta != HANDSHAKE_puede_continuar) {
-        log_error(kernelLogger, "no se pudo conectar con FILESYSTEM");
-        kernel_destruir(kernelConfig, kernelLogger);
-        exit(-1);
-    }
-    log_info(kernelLogger, "se establecio conexion con FILESYSTEM");
 
     // inicializa servidor de instancias CONSOLA /// ARREGLAR 
     int socketESCUCHA = iniciar_servidor("0.0.0.0", kernel_config_obtener_puerto_escucha(kernelConfig));

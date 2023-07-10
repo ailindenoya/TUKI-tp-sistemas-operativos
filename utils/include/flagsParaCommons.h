@@ -56,6 +56,7 @@ typedef enum {
     HANDSHAKE_cpu,
     HANDSHAKE_filesystem,
     HANDSHAKE_kernel,
+    HANDSHAKE_kernel_desbloqueos,
     HANDSHAKE_interrupcion,
     HANDSHAKE_puede_continuar
 } t_handshake;

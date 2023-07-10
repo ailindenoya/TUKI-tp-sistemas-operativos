@@ -20,6 +20,8 @@ struct t_fileSystem_config{
     char* PATH_FCB;
     int RETARDO_ACCESO_BLOQUE;
     int SOCKET_MEMORIA;
+    int SOCKET_KERNEL_PETICIONES;
+    int SOCKET_KERNEL_DESBLOQUEOS;
 };
 
 struct t_superbloque_config{
@@ -111,6 +113,18 @@ void fileSystem_config_setear_socket_memoria(t_fileSystem_config* self, int sock
 }
 int fileSystem_config_obtener_socket_memoria(t_fileSystem_config* self) {
      return self->SOCKET_MEMORIA;
+}
+void fileSystem_config_setear_socket_kernel_peticiones(t_fileSystem_config* self, int socket) {
+     self->SOCKET_KERNEL_PETICIONES = socket;
+}
+int fileSystem_config_obtener_socket_kernel_peticiones(t_fileSystem_config* self) {
+     return self->SOCKET_KERNEL_PETICIONES;
+}
+void fileSystem_config_setear_socket_kernel_desbloqueos(t_fileSystem_config* self, int socket) {
+     self->SOCKET_KERNEL_DESBLOQUEOS = socket;
+}
+int fileSystem_config_obtener_socket_kernel_desbloqueos(t_fileSystem_config* self) {
+     return self->SOCKET_KERNEL_DESBLOQUEOS;
 }
 uint32_t superbloque_config_obtener_block_size(t_superbloque_config* self) {
      return self->BLOCK_SIZE;
