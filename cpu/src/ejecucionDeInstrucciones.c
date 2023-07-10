@@ -337,7 +337,7 @@ void ejecutar_F_CLOSE(t_contexto* contexto, uint32_t programCounterActualizado, 
     buffer_destruir(buffer_F_CLOSE);
 
     t_buffer* bufferParametros = buffer_crear();
-    buffer_empaquetar_string(bufferParametros, NombreArchivo);
+    buffer_empaquetar_string(bufferParametros, nombreArchivo);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
     buffer_destruir(bufferParametros);
 }

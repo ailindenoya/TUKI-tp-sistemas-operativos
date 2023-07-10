@@ -1,6 +1,6 @@
 #include "../include/memoria_config.h"
 #include "../../utils/include/funcionesDeMemoria.h"
-#include "../../utils/src/list_find_element_and_index.c"
+#include "../../utils/include/list_find_element_and_index.h"
 #include "../include/memoria.h"
 
 

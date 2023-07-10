@@ -28,7 +28,7 @@ void copiarStringAVector(char* string, char* vector, int tamanioDeRegistro);
 void ejecutar_SET(t_contexto* pcb, char* reg, char* param);
 void ejecutar_YIELD(t_contexto* pcb,uint32_t programCounterActualizado);
 void ejecutar_EXIT(t_contexto* pcb,uint32_t programCounterActualizado);
-void ejecutar_F_CLOSE(t_contexto* pcb,uint32_t programCounterActualizado);
+void ejecutar_F_CLOSE(t_contexto*, uint32_t, char*);
 void ejecutar_F_OPEN(t_contexto* pcb, uint32_t programCounterActualizado, char* NombreArchivo);
 void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes);
 void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes);

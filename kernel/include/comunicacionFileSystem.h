@@ -27,7 +27,7 @@ t_list* t_archivo_tabla_obtener_cola_procesos(t_archivo_tabla* self);
 void t_archivo_tabla_setear_pid(t_archivo_tabla* self, uint32_t pidNuevo);
 void t_archivo_tabla_setear_nombre_archivo(t_archivo_tabla* self, char* NombreNuevo);
 void t_archivo_tabla_agregar_proceso_a_cola_de_bloqueados(t_archivo_tabla* self, t_pcb* pcb); // chequear inclusion de pcb.h (?)
-t_archivo_tabla_quitar_proceso_de_cola_de_bloqueados(t_archivo_tabla* self, t_pcb* pcb);
+void t_archivo_tabla_quitar_proceso_de_cola_de_bloqueados(t_archivo_tabla* self, t_pcb* pcb);
 
 void t_archivo_tabla_proceso_setear_puntero(t_archivo_tabla_proceso*, uint32_t);
 char* t_archivo_tabla_proceso_obtener_nombre_archivo(t_archivo_tabla_proceso*);

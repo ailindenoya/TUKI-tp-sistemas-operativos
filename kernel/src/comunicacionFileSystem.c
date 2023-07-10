@@ -1,6 +1,6 @@
 extern int socketFILESYSTEM;
 #include "../include/comunicacionFileSystem.h"
-#include "../../utils/src/list_find_element_and_index.c"
+#include "../../utils/include/list_find_element_and_index.h"
 extern t_log* kernelLogger;
 extern t_list* tablaArchivosAbiertos;
 
