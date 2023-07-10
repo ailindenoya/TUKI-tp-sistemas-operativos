@@ -27,7 +27,7 @@ double my_ceil(double x) {
   return i + 1.0;
 }
 
-void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
+void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignadosEnPunteroIndirecto){
     if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  
         char* bloq = string_itoa(bloque);
         config_set_value(fcb, "PUNTERO_DIRECTO",bloq);
@@ -41,14 +41,13 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
         char* bloq = string_itoa(bloque);   
         config_set_value(fcb, "PUNTERO_INDIRECTO",bloq);
         uint32_t blqueNuevoAAsignar = buscarBloqueLibre();
-        fcb_asignar_bloque(fcb,blqueNuevoAAsignar);
+        fcb_asignar_bloque(fcb,blqueNuevoAAsignar, bloquesAsignadosEnPunteroIndirecto);
         return;
     }
-    int posicionBloqueIndirecto = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
+    int posicionBloqueIndirecto = punteroIndirecto * tamanioBloque;
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, bloque);
 
-    int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (config_get_int_value(fcb,"TAMANIO_ARCHIVO") - tamanioBloque) / tamanioBloque);
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
     memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
     msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);

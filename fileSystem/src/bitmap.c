@@ -12,7 +12,7 @@ int fdBloques;
 void* bitmap;
 void* bloques;
 
-void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta){
+void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta, uint32_t bloquesAsignadosEnPunteroIndirecto){
 
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     int aux = 0;
@@ -23,7 +23,7 @@ void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta){
             bitarray_set_bit(bitmapBitarray, i);
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
             msync(bitmap, 1, MS_SYNC);
-            fcb_asignar_bloque(fcb, i);
+            fcb_asignar_bloque(fcb, i, bloquesAsignadosEnPunteroIndirecto);
             aux++;
         }
         if (aux == cantidadBloques){

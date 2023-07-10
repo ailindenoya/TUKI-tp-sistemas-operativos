@@ -7,6 +7,9 @@ extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
 extern t_fileSystem_config* fileSystemConfig;
 
+extern void* bitmap;
+extern void* bloques;
+
 void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucciones
 
     for(;;){
@@ -36,8 +39,8 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
                 cantBytesF_READ = atoi(parametro3); 
 
-
-                /// manejar logica FREAD TODO
+                char* datosLeidos = malloc(cantBytesF_READ);
+                datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
 
 
                 buffer_empaquetar(bufferAux, &cantBytesF_READ, sizeof(cantBytesF_READ));
@@ -140,6 +143,8 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     double tamanioEnBloquesViejo = my_ceil((double) tamanioViejo / tamanioBloque);
     double tamanioEnBloquesNuevo = my_ceil((double) tamanioNuevo / tamanioBloque);
 
+    int bloquesAsignadosEnPunteroIndirecto = tamanioEnBloquesViejo - 1;
+
     int cantBloques = abs(tamanioEnBloquesNuevo - tamanioEnBloquesViejo);    // Cantidad de bloques a agregar o quitar
     log_info(fileSystemLogger,"Cantidad de Bloques: %d", cantBloques);
     if (cantBloques == 0){
@@ -147,7 +152,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     }
     else {
         if(tamanioNuevo > tamanioViejo){            
-            agregarBloques(cantBloques, fcb, ruta );
+            agregarBloques(cantBloques, fcb, ruta, bloquesAsignadosEnPunteroIndirecto);
         }
         else if (tamanioNuevo < tamanioViejo){
             quitarBloques(cantBloques, fcb, tamanioViejo, ruta);
@@ -159,4 +164,45 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
         }
     }
     log_info(fileSystemLogger, "Truncar Archivo: %s - Tamaño: %d", NombreArchivo, tamanioNuevo);
+}
+
+char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
+    char* datos = malloc(cantBytes);
+    char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+
+    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
+    uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
+    uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+
+    if (cantBytes <= 64 && puntero == 0){   // estas parado en el inicio del archivo y hay que leer bloque del puntero directo nada más
+        memcpy(datos, bloques + punteroDirecto * tamanioBloque, cantBytes);
+        log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
+        return datos;
+    }
+    else if(cantBytes > 64 && puntero ==0){  // estas parado en el inicio del archivo y Hay que leer el bloque del puntero directo y uno o más del indirecto
+        memcpy(datos, bloques + punteroDirecto * tamanioBloque, tamanioBloque); // Copias lo del directo primeramente
+        log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
+        
+        uint32_t bloquesALeerDePunteroIndirecto = my_ceil((double) (cantBytes - tamanioBloque) / tamanioBloque); 
+        uint32_t aux = cantBytes;
+        for(int i=0;i<bloquesALeerDePunteroIndirecto;i++){
+
+            if(aux < 64){  // Ultima iteración básicamente, no tenes necesariamente que leer el último bloque ENTERO (64 bytes)
+                uint32_t bloqueAAcceder;
+                memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + i * 4, 4);
+                memcpy(datos, bloqueAAcceder * tamanioBloque, aux);
+                log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);                        
+                return datos;
+            }
+            uint32_t bloqueAAcceder;
+            memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + i * 4, 4); // Lees el primer bloque del puntero indirecto, el primer uint32_t
+            memcpy(datos, bloqueAAcceder * tamanioBloque , tamanioBloque);
+            log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);            
+            aux = aux - tamanioBloque;
+        }
+    }
+    else {  // No estas parado en el inicio del archivo y hay que leer el bloque de puntero directo y uno o más del indirecto
+        
+    }
+    return datos;
 }
