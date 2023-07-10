@@ -22,6 +22,7 @@ void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta){
         if (bitarray_test_bit(bitmapBitarray, i) == false){
             bitarray_set_bit(bitmapBitarray, i);
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
+            msync(bitmap, 1, MS_SYNC);
             fcb_asignar_bloque(fcb, i);
             aux++;
         }
@@ -30,6 +31,25 @@ void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta){
             return;
         }
     }
+}
+
+void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, char* ruta){
+    // sí o sí se deben quitar bloques del puntero indirecto, mínimo 1 máximo 64
+    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
+
+    int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (tamanioViejo - tamanioBloque) / tamanioBloque);
+    log_info(fileSystemLogger, "Cantidad de bloques en puntero indirecto: %d", bloquesAsignadosEnPunteroIndirecto);
+
+    if(bloquesAsignadosEnPunteroIndirecto == 1){
+        config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
+    }
+    else{
+        for(int i=0;i<cantidadBloques;i++){
+            fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
+            bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
+        }
+    }
+    config_save_in_file(fcb, ruta);
 }
 
 uint32_t buscarBloqueLibre(){
@@ -43,10 +63,6 @@ uint32_t buscarBloqueLibre(){
     return -1;
 }
 
-void quitarBloques(int cantidadBloques, t_config* fcb){
-    
-    return;
-}
 
 void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso) {
 	int i = 0;

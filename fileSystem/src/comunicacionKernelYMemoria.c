@@ -13,7 +13,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
         char* nombreArchivo = malloc(sizeof(*nombreArchivo));
         char* parametro2 = malloc(sizeof(*parametro2));
         char* parametro3 = malloc(sizeof(*parametro3));
-
+        t_config* fcb;
         t_buffer* bufferAux = buffer_crear();
         uint8_t kernelRespuesta = stream_recibir_header(socketKERNEL);
         stream_recibir_buffer(socketKERNEL, bufferAux);
@@ -30,20 +30,20 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_READ:
                 log_info(fileSystemLogger, "Se recibió FREAD");
-                t_config* fcb = encontrarFCB(nombreArchivo);
-                uint32_t puntero, cantBytes;
-                buffer_desempaquetar(bufferAux,&puntero, sizeof(puntero));
+                fcb = encontrarFCB(nombreArchivo);
+                uint32_t punteroF_READ, cantBytesF_READ;
+                buffer_desempaquetar(bufferAux,&punteroF_READ, sizeof(punteroF_READ));
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
-                cantBytes = atoi(parametro3); 
+                cantBytesF_READ = atoi(parametro3); 
 
 
                 /// manejar logica FREAD TODO
 
 
-                buffer_empaquetar(bufferAux, &cantBytes, sizeof(cantBytes));
+                buffer_empaquetar(bufferAux, &cantBytesF_READ, sizeof(cantBytesF_READ));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_registro, bufferAux);
-                int respuestaMemoria = stream_stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
-                if(respuestaMemoria!= HEADER_OK_puede_continuar){
+                int respuestaMemoriaF_READ = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                if(respuestaMemoriaF_READ!= HEADER_OK_puede_continuar){
                     log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir"); 
                     exit(-1);
                 }
@@ -51,18 +51,18 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_WRITE:
                 log_info(fileSystemLogger, "Se recibió FREAD");
-                t_config* fcb = encontrarFCB(nombreArchivo);
-                uint32_t puntero, cantBytes;
-                buffer_desempaquetar(bufferAux,&puntero, sizeof(puntero));
+                fcb = encontrarFCB(nombreArchivo);
+                uint32_t punteroF_WRITE, cantBytesF_WRITE;
+                buffer_desempaquetar(bufferAux,&punteroF_WRITE, sizeof(punteroF_WRITE));
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
-                cantBytes = atoi(parametro3); 
+                cantBytesF_WRITE = atoi(parametro3); 
                 
                 // manejar logica FWRITE TODO
 
-                buffer_empaquetar(bufferAux, &cantBytes, sizeof(cantBytes));
+                buffer_empaquetar(bufferAux, &cantBytesF_WRITE, sizeof(cantBytesF_WRITE));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_memoria, bufferAux);
-                int respuestaMemoria = stream_stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
-                if(respuestaMemoria!= HEADER_OK_puede_continuar){
+                int respuestaMemoriaF_WRITE = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                if(respuestaMemoriaF_WRITE!= HEADER_OK_puede_continuar){
                     log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir"); 
                     exit(-1);
                 }
@@ -150,7 +150,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
             agregarBloques(cantBloques, fcb, ruta );
         }
         else if (tamanioNuevo < tamanioViejo){
-            quitarBloques(cantBloques, fcb);
+            quitarBloques(cantBloques, fcb, tamanioViejo, ruta);
             if (tamanioNuevo == 0){
                 config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
                 config_set_value(fcb, "PUNTERO_DIRECTO", "-1");

@@ -28,7 +28,7 @@ double my_ceil(double x) {
 }
 
 void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
-    if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  /// 
+    if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  
         char* bloq = string_itoa(bloque);
         config_set_value(fcb, "PUNTERO_DIRECTO",bloq);
         return;
@@ -45,11 +45,28 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque){
         return;
     }
     int posicionBloqueIndirecto = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
+    char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, bloque);
 
     int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (config_get_int_value(fcb,"TAMANIO_ARCHIVO") - tamanioBloque) / tamanioBloque);
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
     memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
     msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);
+}
+
+void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto){
+    uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+    char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+
+    log_info(fileSystemLogger, "Puntero Indirecto: %d", punteroIndirecto);
+
+    int posicionBloqueIndirecto = punteroIndirecto * superbloque_config_obtener_block_size(superbloqueConfig);
+    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
+    uint32_t aux = -1;
+    memcpy(bloques + posicionBloqueIndirecto + (cantBloquesEnPunteroIndirecto - 4 ) * 4, &aux, sizeof(aux));
+
+    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, punteroIndirecto);
+    msync(bloques, 4, MS_SYNC);
 }
 
 t_config* encontrarFCB(char* nombreArchivoNuevo){

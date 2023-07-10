@@ -13,4 +13,5 @@ t_config* config_iniciar_fcb(char*);
 
 t_config* encontrarFCB(char*);
 void fcb_asignar_bloque(t_config*, uint32_t);
+void fcb_quitar_bloque(t_config*, int);
 double my_ceil(double);

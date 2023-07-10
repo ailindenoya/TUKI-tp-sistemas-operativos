@@ -383,7 +383,7 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
 
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
-            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_WRITE, bufferFREAD);
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_READ, bufferFREAD);
             buffer_destruir(bufferFREAD);
 
             t_buffer *bufferParametros = buffer_crear();
