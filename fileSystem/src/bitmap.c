@@ -1,6 +1,7 @@
 #include "../include/bitmap.h"
 #include <errno.h>
  
+extern uint32_t tamanioBloque;
 extern int errno;
 extern t_log* fileSystemLogger;
 extern t_superbloque_config* superbloqueConfig;
@@ -22,7 +23,7 @@ void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta, uint32_t blo
         if (bitarray_test_bit(bitmapBitarray, i) == false){
             bitarray_set_bit(bitmapBitarray, i);
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
-            msync(bitmap, 1, MS_SYNC);
+            msync(bitmap, tamanioBitmap, MS_SYNC);
             fcb_asignar_bloque(fcb, i, bloquesAsignadosEnPunteroIndirecto);
             aux++;
         }
@@ -39,16 +40,15 @@ void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, ch
 
     int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (tamanioViejo - tamanioBloque) / tamanioBloque);
     log_info(fileSystemLogger, "Cantidad de bloques en puntero indirecto: %d", bloquesAsignadosEnPunteroIndirecto);
-
-    if(bloquesAsignadosEnPunteroIndirecto == 1){
-        config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
-    }
-    else{
-        for(int i=0;i<cantidadBloques;i++){
-            fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
-            bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
+    
+    for(int i=0;i<cantidadBloques;i++){
+        fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
+        if(bloquesAsignadosEnPunteroIndirecto == 1){
+            config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
         }
+        bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
     }
+    
     config_save_in_file(fcb, ruta);
 }
 

@@ -1,6 +1,7 @@
 #include "../include/comunicacionKernelYMemoria.h"
 #define PATH_FCB "fcb/"
 
+extern uint32_t tamanioBloque;
 extern t_log* fileSystemLogger;
 extern t_list* listaFCBsAbiertos;
 extern t_superbloque_config* superbloqueConfig;
@@ -53,7 +54,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
                 break;
             case HEADER_F_WRITE:
-                log_info(fileSystemLogger, "Se recibió FREAD");
+                log_info(fileSystemLogger, "Se recibió F_WRITE");
                 fcb = encontrarFCB(nombreArchivo);
                 uint32_t punteroF_WRITE, cantBytesF_WRITE;
                 buffer_desempaquetar(bufferAux,&punteroF_WRITE, sizeof(punteroF_WRITE));
@@ -61,7 +62,6 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 cantBytesF_WRITE = atoi(parametro3); 
                 
                 // manejar logica FWRITE TODO
-
                 buffer_empaquetar(bufferAux, &cantBytesF_WRITE, sizeof(cantBytesF_WRITE));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_memoria, bufferAux);
                 int respuestaMemoriaF_WRITE = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
@@ -171,39 +171,21 @@ char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
     char* datos = malloc(cantBytes);
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
 
-    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
     uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
     uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
 
-    if (cantBytes <= 64 && puntero == 0){   // estas parado en el inicio del archivo y hay que leer bloque del puntero directo nada más
-        memcpy(datos, bloques + punteroDirecto * tamanioBloque, cantBytes);
-        log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
+    if (puntero<64 && cantBytes <= tamanioBloque - puntero){   // hay que leer bloque del puntero directo nada más
+        datos = leerBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo);
         return datos;
     }
-    else if(cantBytes > 64 && puntero ==0){  // estas parado en el inicio del archivo y Hay que leer el bloque del puntero directo y uno o más del indirecto
-        memcpy(datos, bloques + punteroDirecto * tamanioBloque, tamanioBloque); // Copias lo del directo primeramente
-        log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
-        
-        uint32_t bloquesALeerDePunteroIndirecto = my_ceil((double) (cantBytes - tamanioBloque) / tamanioBloque); 
-        uint32_t aux = cantBytes;
-        for(int i=0;i<bloquesALeerDePunteroIndirecto;i++){
-
-            if(aux < 64){  // Ultima iteración básicamente, no tenes necesariamente que leer el último bloque ENTERO (64 bytes)
-                uint32_t bloqueAAcceder;
-                memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + i * 4, 4);
-                memcpy(datos, bloqueAAcceder * tamanioBloque, aux);
-                log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);                        
-                return datos;
-            }
-            uint32_t bloqueAAcceder;
-            memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + i * 4, 4); // Lees el primer bloque del puntero indirecto, el primer uint32_t
-            memcpy(datos, bloqueAAcceder * tamanioBloque , tamanioBloque);
-            log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);            
-            aux = aux - tamanioBloque;
-        }
+    else if(cantBytes > 64 && puntero == 0){  // Hay que leer del puntero indirecto y puntero igual a cero
+        datos = leerBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo);
+        uint32_t cantBytesRestantes = cantBytes - tamanioBloque;
+        datos = concat(datos, leerBloqueIndirecto(punteroIndirecto, cantBytesRestantes, puntero, nombreArchivo));
+        return datos;
     }
     else {  // No estas parado en el inicio del archivo y hay que leer el bloque de puntero directo y uno o más del indirecto
-        
+        datos = leerBloquesAPartirDePuntero(punteroIndirecto, cantBytes, puntero, nombreArchivo);
+        return datos;
     }
-    return datos;
 }

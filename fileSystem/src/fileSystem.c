@@ -6,6 +6,7 @@
 #define MODULO_FILESYSTEM "fileSystem"
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 3
 
+uint32_t tamanioBloque;
 extern t_log *fileSystemLogger;
 extern t_fileSystem_config *fileSystemConfig;
 extern t_superbloque_config *superbloqueConfig;
@@ -87,6 +88,7 @@ int main(int argc, char *argv[])
     }
     log_info(fileSystemLogger, "se establecio conexion con MEMORIA");
 
+    tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
     cargarBitMap();
     cargarArchivoDeBloques();
     listaFCBsAbiertos = list_create();
