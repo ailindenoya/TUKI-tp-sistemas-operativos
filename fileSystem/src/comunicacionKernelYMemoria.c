@@ -52,6 +52,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                     exit(-1);
                 }
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                free(datosLeidos);
                 break;
             case HEADER_F_WRITE:
                 log_info(fileSystemLogger, "Se recibió F_WRITE");
@@ -94,6 +95,7 @@ void atenderPeticionesDeKernel(void){
 }
 
 void F_OPEN(char* NombreArchivo){
+    log_info(fileSystemLogger, "Ejecutando: F_OPEN - Archivo: %s", NombreArchivo);
     int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
 
     char* ruta = concat(PATH_FCB, NombreArchivo);
@@ -129,9 +131,8 @@ void F_OPEN(char* NombreArchivo){
 
 void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
 
+    log_info(fileSystemLogger, "Ejecutando: F_TRUNCATE - Archivo: %s", NombreArchivo);
     char* ruta = concat(PATH_FCB, NombreArchivo);
-    // int fd = open(ruta, O_RDWR);
-    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);  // Para no escribir el getter de block size a cada rato
 
     t_config* fcb = encontrarFCB(NombreArchivo);
 
@@ -149,27 +150,31 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     int cantBloques = abs(tamanioEnBloquesNuevo - tamanioEnBloquesViejo);    // Cantidad de bloques a agregar o quitar
     log_info(fileSystemLogger,"Cantidad de Bloques: %d", cantBloques);
     if (cantBloques == 0){
-        
+        // El tamaño del truncate no implica asignar o quitar bloques
     }
     else {
         if(tamanioNuevo > tamanioViejo){            
-            agregarBloques(cantBloques, fcb, ruta, bloquesAsignadosEnPunteroIndirecto);
+            agregarBloques(cantBloques, fcb, bloquesAsignadosEnPunteroIndirecto);
+            config_save_in_file(fcb, ruta);
         }
         else if (tamanioNuevo < tamanioViejo){
-            quitarBloques(cantBloques, fcb, tamanioViejo, ruta);
-            if (tamanioNuevo == 0){
-                config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
-                config_set_value(fcb, "PUNTERO_DIRECTO", "-1");
-                config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
-            }     
+            quitarBloques(cantBloques, fcb, tamanioViejo);
+            config_save_in_file(fcb, ruta);
         }
+        else if (tamanioNuevo == 0){
+            config_set_value(fcb, "TAMANIO_ARCHIVO", "0");
+            config_set_value(fcb, "PUNTERO_DIRECTO", "-1");
+            config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
+        }     
     }
     log_info(fileSystemLogger, "Truncar Archivo: %s - Tamaño: %d", NombreArchivo, tamanioNuevo);
 }
 
+
 char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
     char* datos = malloc(cantBytes);
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+    log_info(fileSystemLogger, "Ejecutando: F_READ - Archivo: %s - Bytes: %d - Puntero: %d", nombreArchivo, cantBytes, puntero);
 
     uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
     uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");

@@ -35,11 +35,9 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
         config_set_value(fcb, "PUNTERO_DIRECTO",bloq);
         return;
     }
-    
-    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
     uint32_t punteroIndirecto = config_get_int_value(fcb,"PUNTERO_INDIRECTO");
 
-    if (punteroIndirecto == -1){   //HAY QUE ASIGNAR OTRO BLOQUE 
+    if (punteroIndirecto == -1){   //HAY QUE ASIGNAR OTRO BLOQUE  aparte del asignado a puntero directo
         char* bloq = string_itoa(bloque);   
         config_set_value(fcb, "PUNTERO_INDIRECTO",bloq);
         uint32_t blqueNuevoAAsignar = buscarBloqueLibre();
@@ -52,32 +50,21 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
 
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
     memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
-    msync(bloques, superbloque_config_obtener_block_size(superbloqueConfig), MS_SYNC);
+    log_info(fileSystemLogger, "Acceso a Puntero Indirecto: %d - Archivo: %s", punteroIndirecto, nombreArchivo);
+    msync(bloques, sizeof(bloques), MS_SYNC);
 }
 
-void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto){
+void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto, uint32_t bloqueDelArchivo){
     uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
-    char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
-
-    log_info(fileSystemLogger, "Puntero Indirecto: %d", punteroIndirecto);  // Log de checkeo
-
     int posicionBloqueIndirecto = punteroIndirecto * tamanioBloque; // Posicion en bloques, en bytes, del puntero indirecto, dentro de bloques.dat
-    char* aux = '\0';   // Lo que vamos a copiar para "eliminar" el bloque
-    char* bloqueAQuitar = malloc(sizeof(bloqueAQuitar)); // Variable para guardar el bloque que estamos sacand
-    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
 
-    memcpy(&bloqueAQuitar, bloques + posicionBloqueIndirecto + (cantBloquesEnPunteroIndirecto * 4 - 4 ) * 4, 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
-    uint32_t bloqueQuitado = atoi(bloqueAQuitar);
+    uint32_t bloqueAQuitar; // Variable para guardar el bloque que estamos sacando
+    memcpy(&bloqueAQuitar, bloques + posicionBloqueIndirecto * 64 + (cantBloquesEnPunteroIndirecto * 4 - 4 ), 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
 
-    memcpy(bloques + posicionBloqueIndirecto + (cantBloquesEnPunteroIndirecto * 4 - 4 ) * 4, &aux, sizeof(aux));    // Copias \0 en donde estaba el último bloque, el último uint32_t en el puntero indirecto, acá eliminamos el bloque del puntero indirecto
-
-    bitarray_clean_bit(bitmapBitarray, bloqueQuitado);  // Actualizamos bitmap
-    log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 1 a 0", bloqueQuitado);
+    bitarray_clean_bit(bitmapBitarray, bloqueAQuitar);  // Actualizamos bitmap
+    log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 1 a 0", bloqueAQuitar);
     msync(bitmap, tamanioBitmap, MS_SYNC);
-
-    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, punteroIndirecto);
-    msync(bloques, 4, MS_SYNC);
 }
 
 char* leerBloqueDirecto(uint32_t punteroDirecto, uint32_t cantBytes, uint32_t puntero, char* nombreArchivo){

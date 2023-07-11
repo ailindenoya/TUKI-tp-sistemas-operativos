@@ -13,7 +13,7 @@ int fdBloques;
 void* bitmap;
 void* bloques;
 
-void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta, uint32_t bloquesAsignadosEnPunteroIndirecto){
+void agregarBloques(int cantidadBloques, t_config* fcb, uint32_t bloquesAsignadosEnPunteroIndirecto){
 
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     int aux = 0;
@@ -21,35 +21,31 @@ void agregarBloques(int cantidadBloques, t_config* fcb, char* ruta, uint32_t blo
     for (int i = 0; i < tamanioBitmap; i++){
         
         if (bitarray_test_bit(bitmapBitarray, i) == false){
-            bitarray_set_bit(bitmapBitarray, i);
+            bitarray_set_bit(bitmapBitarray, i);    // Modificación de Bitmap
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
             msync(bitmap, tamanioBitmap, MS_SYNC);
-            fcb_asignar_bloque(fcb, i, bloquesAsignadosEnPunteroIndirecto);
+            fcb_asignar_bloque(fcb, i, bloquesAsignadosEnPunteroIndirecto); // Modificación de Bloque
             aux++;
         }
         if (aux == cantidadBloques){
-            config_save_in_file(fcb, ruta);
             return;
         }
     }
 }
 
-void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, char* ruta){
-    // sí o sí se deben quitar bloques del puntero indirecto, mínimo 1 máximo 64
-    uint32_t tamanioBloque = superbloque_config_obtener_block_size(superbloqueConfig);
+void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo){
 
     int bloquesAsignadosEnPunteroIndirecto = (int) my_ceil((double) (tamanioViejo - tamanioBloque) / tamanioBloque);
     log_info(fileSystemLogger, "Cantidad de bloques en puntero indirecto: %d", bloquesAsignadosEnPunteroIndirecto);
     
     for(int i=0;i<cantidadBloques;i++){
-        fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
+        uint32_t bloqueDelArchivo = i + 2;  // El 1 es el Directo, que solo se quita en caso de F_TRUNCATE(nombreArchivo, 0)
+        fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto, bloqueDelArchivo);
         if(bloquesAsignadosEnPunteroIndirecto == 1){
             config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
         }
         bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
     }
-    
-    config_save_in_file(fcb, ruta);
 }
 
 uint32_t buscarBloqueLibre(){
