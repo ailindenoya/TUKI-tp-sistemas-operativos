@@ -159,6 +159,12 @@ void compactar(){
     
     list_iterate(listaDeProcesos, copiarProcesoAListaCompactada); 
 
+    list_clean_and_destroy_elements(listaDeHuecosLibres, free);
+    int direccionNuevoHueco = cursor; 
+    int tamanioNuevoHueco = memoria_config_obtener_tamanio_memoria(memoriaConfig) - cursor;
+
+    hueco_libre* nuevoHueco = crear_hueco_libre(tamanioNuevoHueco, direccionNuevoHueco);
+    list_add(listaDeHuecosLibres, nuevoHueco);
     free(bloque_de_memoria);
     bloque_de_memoria = bloque_espejo_para_compactar;
 }
@@ -170,18 +176,18 @@ void ocupar_hueco(int pid, int idSegmento){
     segmento *segmentoCreado = segmento_crear(idSegmento, huecoDisponible->direccion, tamanioRequeridoParaSegmentoACrear);
     procesoEncontrado->tablaDeSegmentos[idSegmento] = *segmentoCreado;
     int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio;
+    huecoDisponible->direccion += segmentoCreado->tamanio;
     huecoDisponible->tamanio = tamanioNuevoDeHueco;
-
-    bool esHuecoAEliminar(void*huecoAux){
-                hueco_libre* hueco = (hueco_libre*) huecoAux;
-                return hueco->direccion == huecoDisponible->direccion;  
+    if(huecoDisponible->tamanio == tamanioRequeridoParaSegmentoACrear){
+        bool esHuecoAEliminar(void*huecoAux){
+            hueco_libre* hueco = (hueco_libre*) huecoAux;
+            return hueco->direccion == huecoDisponible->direccion;  
+        }
+        int* indiceAQuitar =  malloc(sizeof(*indiceAQuitar));
+        list_find_element_and_index(listaDeHuecosLibres, esHuecoAEliminar, indiceAQuitar);
+        list_remove(listaDeHuecosLibres, *indiceAQuitar);
+        free(indiceAQuitar);
     }
-
-    int* indiceAQuitar =  malloc(sizeof(*indiceAQuitar));
-    list_find_element_and_index(listaDeHuecosLibres, esHuecoAEliminar, indiceAQuitar);
-    list_remove(listaDeHuecosLibres, *indiceAQuitar);
-    free(indiceAQuitar);
-
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar_tabla_de_segmentos(buffer, procesoEncontrado->tablaDeSegmentos, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
     stream_enviar_buffer(socketKERNEL, HEADER_segmento_creado, buffer);
