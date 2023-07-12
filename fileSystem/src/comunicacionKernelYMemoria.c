@@ -88,9 +88,9 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_CLOSE:
                 t_config* fcbABorrar = encontrarFCB(nombreArchivo);
-                if(list_remove_element(listaFCBsAbiertos, fcbABorrar) == false){
-                    log_error(fileSystemLogger, "error al encontrar FCB a borrar");
-                }
+               // if(list_remove_element(listaFCBsAbiertos, fcbABorrar) == false){
+               //     log_error(fileSystemLogger, "error al encontrar FCB a borrar");
+                //}
                 break;
             default:
                 log_error(fileSystemLogger, "Error al recibir la instrucción de Kernel");
