@@ -1,4 +1,5 @@
 #include "../include/comunicacionKernelYMemoria.h"
+#include "../../utils/include/stream.h"
 #define PATH_FCB "fcb/"
 
 extern uint32_t tamanioBloque;
@@ -12,6 +13,7 @@ extern void* bloques;
 
 void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucciones
     int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
+    int socketKERNELDESBLOQUEOS = fileSystem_config_obtener_socket_kernel_desbloqueos(fileSystemConfig);
     
     for(;;){
         char* nombreArchivo = malloc(sizeof(*nombreArchivo));
@@ -31,6 +33,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_desempaquetar_string(bufferAux, &parametro2);
                 uint32_t tamanio = atoi(parametro2);
                 F_TRUNCATE(nombreArchivo, tamanio);
+                t_buffer* bufferDesbloqueoTruncate = buffer_crear();
+                buffer_empaquetar_string(bufferDesbloqueoTruncate, nombreArchivo);
+                stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoTruncate);
+                buffer_destruir(bufferDesbloqueoTruncate);
                 break;
             case HEADER_F_READ:
                 log_info(fileSystemLogger, "Se recibió FREAD");
@@ -53,6 +59,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 }
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
                 free(datosLeidos);
+                t_buffer* bufferDesbloqueoFREAD = buffer_crear();
+                buffer_empaquetar_string(bufferDesbloqueoFREAD, nombreArchivo);
+                stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFREAD);
+                buffer_destruir(bufferDesbloqueoFREAD);
                 break;
             case HEADER_F_WRITE:
                 log_info(fileSystemLogger, "Se recibió F_WRITE");
@@ -71,6 +81,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                     exit(-1);
                 }
                 stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                t_buffer* bufferDesbloqueoFWRITE = buffer_crear();
+                buffer_empaquetar_string(bufferDesbloqueoFWRITE, nombreArchivo);
+                stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFWRITE);
+                buffer_destruir(bufferDesbloqueoFWRITE);
                 break;
             case HEADER_F_CLOSE:
                 t_config* fcbABorrar = encontrarFCB(nombreArchivo);

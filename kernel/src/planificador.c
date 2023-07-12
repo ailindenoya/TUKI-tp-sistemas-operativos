@@ -434,8 +434,35 @@ void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){
     free(unProceso);
 }
 
-void atenderBloqueoDe_Filesystem(){
+void desbloquearProcesoDesdeFS(char* nombreArchivo) {
+    t_archivo_tabla* entradaTablaGlobal = encontrarEntradaEnTablaGlobal(nombreArchivo);
+    uint32_t pid = t_archivo_tabla_obtener_pid(entradaTablaGlobal);
+    t_pcb* pcbADesbloquear = encontrar_pcb(pid);
+    pcb_setear_estado(pcbADesbloquear, READY);
+    estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
+    loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcbADesbloquear));
+    sem_post(estado_obtener_sem(estadoReady));
+}
 
+void atenderBloqueoDe_Filesystem(){
+    int socketFSDesbloqueos = kernel_config_obtener_socket_filesystem_desbloqueos(kernelConfig);
+    for(;;) {
+        t_buffer* bufferDesbloqueo = buffer_crear();
+        uint8_t headerFS = stream_recibir_header(socketFSDesbloqueos);
+        char* nombreArchivo = malloc(sizeof(*nombreArchivo));
+        stream_recibir_buffer(socketFSDesbloqueos, bufferDesbloqueo);
+        buffer_desempaquetar_string(bufferDesbloqueo, &nombreArchivo);
+        switch(headerFS) {
+            case HEADER_desbloquear_proceso:
+                desbloquearProcesoDesdeFS(nombreArchivo);
+                break;
+            default:
+                log_error(kernelLogger, "No reconoce header desde FS desbloqueos");
+                exit(-1);
+                break;
+        }
+        buffer_destruir(bufferDesbloqueo);
+    }
 }
 
 void atender_pcb() {

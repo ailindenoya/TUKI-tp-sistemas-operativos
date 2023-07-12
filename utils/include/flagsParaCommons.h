@@ -47,7 +47,8 @@ typedef enum {
     HEADER_F_TRUNCATE_REALIZADO,
     HEADER_F_READ,
     HEADER_F_WRITE,
-    HEADER_F_CLOSE
+    HEADER_F_CLOSE,
+    HEADER_desbloquear_proceso
 } t_header;
 
 typedef enum {
