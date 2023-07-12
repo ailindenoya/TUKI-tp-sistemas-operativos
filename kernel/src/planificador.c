@@ -30,6 +30,7 @@ char** arrayDeRecursos;
 int* vectorDeInstancias;
 int dimensionDeArrayDeRecursos;
 bool hayQueReplanificar = true;
+bool hayProcesosBloqueadosPorRecursos = false;
 t_pcb* ultimoPcbEjecutado;
 
 t_list** pteroAVectorDeListaDeRecursos;
@@ -311,6 +312,7 @@ void atender_wait(char* recurso, t_pcb* pcb){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                //hayProcesosBloqueadosPorRecursos = true;
                 hayQueReplanificar = true;
             }
             else{
@@ -335,7 +337,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
-            if(vectorDeInstancias[i] >= 0){
+            if(vectorDeInstancias[i] == 0){
                 t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
                 pcb_setear_estado(pcbADesbloquear, READY);
@@ -475,7 +477,9 @@ void atender_pcb() {
         t_pcb* pcb = list_get(estado_obtener_lista(estadoExec), 0); // saca el primer pcb de la lista
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
         
-        loggear_cambio_estado("READY", "EXEC", pcb_obtener_pid(pcb));
+        if(hayQueReplanificar == false){
+            loggear_cambio_estado("READY", "EXEC", pcb_obtener_pid(pcb));
+        }
         // tiempo real ejecutado - rafaga
         struct timespec start;  
         __set_timespec(&start);
@@ -524,19 +528,21 @@ void atender_pcb() {
                 t_buffer* bufferWAIT = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferWAIT);
-                char* recursoDesempaquetadoWAIT;
+                char* recursoDesempaquetadoWAIT = malloc(sizeof(*recursoDesempaquetadoWAIT));
                 buffer_desempaquetar_string(bufferWAIT, &recursoDesempaquetadoWAIT);
                 atender_wait(recursoDesempaquetadoWAIT,pcb);
                 buffer_destruir(bufferWAIT);
+                free(recursoDesempaquetadoWAIT);
                 break;
             case HEADER_proceso_signal:
                 t_buffer* bufferSIGNAL = buffer_crear();
                 stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferSIGNAL);
-                char* recursoDesempaquetadoSIGNAL;
+                char* recursoDesempaquetadoSIGNAL = malloc(sizeof(*recursoDesempaquetadoSIGNAL));
                 buffer_desempaquetar_string(bufferSIGNAL, &recursoDesempaquetadoSIGNAL);   
                 atender_signal(recursoDesempaquetadoSIGNAL,pcb);
                 buffer_destruir(bufferSIGNAL);
+                free(recursoDesempaquetadoSIGNAL);
                 break;
             case HEADER_proceso_yield:
                 pcb_setear_estado(pcb, READY);
@@ -807,8 +813,10 @@ void atender_pcb() {
                 buffer_destruir(bufferDeleteSegmentParaMemoria);
 
                 hayQueReplanificar = false;
+                break;
             default:
                 log_error(kernelLogger, "Error al recibir mensaje de CPU");
+                exit(-1);
                 break;
         }
         if(hayQueReplanificar == true){
@@ -930,7 +938,7 @@ void iniciar_planificadores(void){
 
     arrayDeRecursos = kernel_config_obtener_recursos(kernelConfig);
     dimensionDeArrayDeRecursos = obtenerDimensionDeArrayDeRecursos(arrayDeRecursos);
-    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(arrayDeRecursos, dimensionDeArrayDeRecursos);
+    vectorDeInstancias = convertirInstanciasDeRecursoEnEnteros(kernel_config_obtener_instancias_recursos(kernelConfig), dimensionDeArrayDeRecursos);
     tablaArchivosAbiertos = list_create();
     listaDePcbs = list_create();
 

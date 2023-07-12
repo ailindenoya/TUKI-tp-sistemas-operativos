@@ -147,7 +147,7 @@ void compactar(){
     void copiarProcesoAListaCompactada(void* Aux){
         proceso* procesoACopiar = (proceso*) Aux;   
 
-        for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
+        for(int i=1; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
 
             if(procesoACopiar->tablaDeSegmentos[i].id != -1){
                 memcpy(bloque_espejo_para_compactar + cursor, bloque_de_memoria + procesoACopiar->tablaDeSegmentos[i].base, procesoACopiar->tablaDeSegmentos[i].tamanio);
@@ -171,6 +171,17 @@ void ocupar_hueco(int pid, int idSegmento){
     procesoEncontrado->tablaDeSegmentos[idSegmento] = *segmentoCreado;
     int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio;
     huecoDisponible->tamanio = tamanioNuevoDeHueco;
+
+    bool esHuecoAEliminar(void*huecoAux){
+                hueco_libre* hueco = (hueco_libre*) huecoAux;
+                return hueco->direccion == huecoDisponible->direccion;  
+    }
+
+    int* indiceAQuitar =  malloc(sizeof(*indiceAQuitar));
+    list_find_element_and_index(listaDeHuecosLibres, esHuecoAEliminar, indiceAQuitar);
+    list_remove(listaDeHuecosLibres, *indiceAQuitar);
+    free(indiceAQuitar);
+
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar_tabla_de_segmentos(buffer, procesoEncontrado->tablaDeSegmentos, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
     stream_enviar_buffer(socketKERNEL, HEADER_segmento_creado, buffer);
