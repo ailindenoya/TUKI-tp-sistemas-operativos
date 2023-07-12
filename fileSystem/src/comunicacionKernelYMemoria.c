@@ -48,7 +48,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
 
                 char* datosLeidos = malloc(cantBytesF_READ);
                 datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
-
+                //log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, , cantBytesF_READ)
 
                 buffer_empaquetar(bufferAux, &cantBytesF_READ, sizeof(cantBytesF_READ));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_registro, bufferAux);

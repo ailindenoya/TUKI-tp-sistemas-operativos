@@ -13,7 +13,7 @@ t_config* config_iniciar_fcb(char*);
 
 t_config* encontrarFCB(char*);
 void fcb_asignar_bloque(t_config*, uint32_t, uint32_t);
-void fcb_quitar_bloque(t_config*, int, uint32_t);
+void fcb_quitar_bloque(t_config*, int);
 char* leerBloqueDirecto(uint32_t, uint32_t, uint32_t, char*);
 char* leerBloqueIndirecto(uint32_t, uint32_t, uint32_t , char*);
 char* leerBloquesAPartirDePuntero(uint32_t, uint32_t, uint32_t, char*);

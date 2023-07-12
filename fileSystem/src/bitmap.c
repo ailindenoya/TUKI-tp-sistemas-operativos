@@ -39,8 +39,7 @@ void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo){
     log_info(fileSystemLogger, "Cantidad de bloques en puntero indirecto: %d", bloquesAsignadosEnPunteroIndirecto);
     
     for(int i=0;i<cantidadBloques;i++){
-        uint32_t bloqueDelArchivo = i + 2;  // El 1 es el Directo, que solo se quita en caso de F_TRUNCATE(nombreArchivo, 0)
-        fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto, bloqueDelArchivo);
+        fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
         if(bloquesAsignadosEnPunteroIndirecto == 1){
             config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
         }
