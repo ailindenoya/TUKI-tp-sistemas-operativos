@@ -12,5 +12,6 @@
 void F_OPEN(char*);
 void F_TRUNCATE(char*, uint32_t);
 char* F_READ(t_config*, uint32_t, uint32_t);
+void F_WRITE(t_config*, uint32_t, uint32_t, char*);
 void atenderPeticionesDeKernel(void);
 void dispatch_FS_peticiones_de_Kernel(void);

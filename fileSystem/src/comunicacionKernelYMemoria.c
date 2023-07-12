@@ -190,21 +190,25 @@ char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
     log_info(fileSystemLogger, "Ejecutando: F_READ - Archivo: %s - Bytes: %d - Puntero: %d", nombreArchivo, cantBytes, puntero);
 
-    uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
-    uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+    datos = leerBloques(fcb, cantBytes, puntero, nombreArchivo);
+    return datos;
+    
+}
 
-    if (puntero<64 && cantBytes <= tamanioBloque - puntero){   // hay que leer bloque del puntero directo nada más
-        datos = leerBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo);
-        return datos;
+void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informacion){
+    char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+    uint32_t tamanioArchivo = config_get_int_value(fcb, "TAMANIO_ARCHIVO");
+    if(puntero + cantBytes > tamanioArchivo){
+        log_error(fileSystemLogger, "Error: Posicion del puntero en el archivo + cantidad de bytes a escribir es mayor al tamanio del archivo");
+        exit(-1);
     }
-    else if(cantBytes > 64 && puntero == 0){  // Hay que leer del puntero indirecto y puntero igual a cero
-        datos = leerBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo);
-        uint32_t cantBytesRestantes = cantBytes - tamanioBloque;
-        datos = concat(datos, leerBloqueIndirecto(punteroIndirecto, cantBytesRestantes, puntero, nombreArchivo));
-        return datos;
+    uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
+    //uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+    //uint32_t bloqueDelPunteroDelArchivo = my_ceil((double) puntero / 64);
+    
+    if(puntero<64 && cantBytes <= tamanioBloque - puntero){
+        escribirEnBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo, informacion);
+        return;
     }
-    else {  // No estas parado en el inicio del archivo y hay que leer el bloque de puntero directo y uno o más del indirecto
-        datos = leerBloquesAPartirDePuntero(punteroIndirecto, cantBytes, puntero, nombreArchivo);
-        return datos;
-    }
+
 }

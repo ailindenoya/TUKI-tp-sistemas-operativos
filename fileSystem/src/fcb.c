@@ -29,6 +29,11 @@ double my_ceil(double x) {
   return i + 1.0;
 }
 
+int min(int x, int y)
+{
+  return (x < y) ? x : y;
+}
+
 void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignadosEnPunteroIndirecto){
     if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  
         char* bloq = string_itoa(bloque);
@@ -77,40 +82,23 @@ char* leerBloqueDirecto(uint32_t punteroDirecto, uint32_t cantBytes, uint32_t pu
     return datos;
 }
 
-char* leerBloqueIndirecto(uint32_t punteroIndirecto, uint32_t cantBytesRestantes, uint32_t puntero, char* nombreArchivo){
-    char* datos = malloc(cantBytesRestantes);
-    uint32_t bytesRestantes = cantBytesRestantes;
- 
-        uint32_t bloquesALeerDePunteroIndirecto = my_ceil((double) cantBytesRestantes / tamanioBloque); 
-        for(int i=0; i<bloquesALeerDePunteroIndirecto; i++){
-            char* aux = malloc(cantBytesRestantes);
-            uint32_t bloqueAAcceder;    
-            sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
-            memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + i * 4, 4);
-            log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);            
-            if(bytesRestantes < 64){    // Ultima iteración básicamente, no tenes necesariamente que leer el último bloque ENTERO (64 bytes)
-                sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-                memcpy(aux, bloques + bloqueAAcceder * tamanioBloque, cantBytesRestantes);
-                log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);
-                datos = concat(datos, aux);
-                free(aux);
-                return datos;
-            }
-            sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-            memcpy(aux, bloques + bloqueAAcceder * tamanioBloque , tamanioBloque);
-            log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, i+2, bloqueAAcceder);            
-            datos = concat(datos, aux);
-            bytesRestantes = cantBytesRestantes - tamanioBloque;
-        }
-    return datos;
-}
-
-char* leerBloquesAPartirDePuntero(uint32_t punteroIndirecto, uint32_t cantBytes, uint32_t puntero, char* nombreArchivo){
+char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nombreArchivo){
+        uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
+        uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+        
         char* datos = malloc(cantBytes);
         uint32_t bloqueDelPunteroDelArchivo = my_ceil((double) puntero / 64);   // Bloque donde está parado el puntero del proceso en el archivo
-        uint32_t posicionBloquePuntero = puntero % tamanioBloque;    // Byte del bloque del puntero, donde estás parado
+        if(bloqueDelPunteroDelArchivo == 0){
+            bloqueDelPunteroDelArchivo = 1;
+        }
+        uint32_t posicionBloquePuntero = puntero % tamanioBloque;    // Byte del bloque del puntero, donde estás parado en el bloque
         uint32_t bloquesAAcceder = my_ceil((double) (posicionBloquePuntero + cantBytes) / 64);
-        uint32_t restoALeerDeBloqueDelPuntero = bloqueDelPunteroDelArchivo * 64 - puntero;
+        uint32_t restoALeerDeBloqueDelPuntero;
+        if(puntero != 0){
+            restoALeerDeBloqueDelPuntero = bloqueDelPunteroDelArchivo * 64 - puntero;
+        } else {
+            restoALeerDeBloqueDelPuntero = min(cantBytes, tamanioBloque);
+        }
 
         uint32_t cantBytesRestantes = cantBytes;
         uint32_t bloqueSiguiente = bloqueDelPunteroDelArchivo + 1;
@@ -118,16 +106,24 @@ char* leerBloquesAPartirDePuntero(uint32_t punteroIndirecto, uint32_t cantBytes,
         char* aux = malloc(cantBytes);
         for(int i=0; i<bloquesAAcceder; i++){
             if(restoALeerDeBloqueDelPuntero != 0){
-                uint32_t bloqueAAcceder;    
-                sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-                memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + (bloqueDelPunteroDelArchivo - 2) * 4, 4);
-                log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);
-                sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-                memcpy(aux, bloques + bloqueAAcceder * tamanioBloque + posicionBloquePuntero, restoALeerDeBloqueDelPuntero);
-                log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, bloqueDelPunteroDelArchivo, bloqueAAcceder);
-                datos = concat(datos, aux);
-                restoALeerDeBloqueDelPuntero = 0;   
-                cantBytesRestantes = cantBytesRestantes - restoALeerDeBloqueDelPuntero;
+                if(bloqueDelPunteroDelArchivo == 1){
+                    aux = leerBloqueDirecto(punteroDirecto, restoALeerDeBloqueDelPuntero, puntero, nombreArchivo);
+                    datos = concat(datos, aux);
+                    restoALeerDeBloqueDelPuntero = 0;   
+                    cantBytesRestantes = cantBytesRestantes - restoALeerDeBloqueDelPuntero;
+                }
+                else{
+                    uint32_t bloqueAAcceder;    
+                    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
+                    memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + (bloqueDelPunteroDelArchivo - 2) * 4, 4);
+                    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);
+                    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
+                    memcpy(aux, bloques + bloqueAAcceder * tamanioBloque + posicionBloquePuntero, restoALeerDeBloqueDelPuntero);
+                    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, bloqueDelPunteroDelArchivo, bloqueAAcceder);
+                    datos = concat(datos, aux);
+                    restoALeerDeBloqueDelPuntero = 0;   
+                    cantBytesRestantes = cantBytesRestantes - restoALeerDeBloqueDelPuntero;
+                }
             } else {
                 // i = 1
                 uint32_t bloqueAAcceder;   
@@ -152,6 +148,12 @@ char* leerBloquesAPartirDePuntero(uint32_t punteroIndirecto, uint32_t cantBytes,
             }
         }
         return datos;
+}
+
+void escribirBloqueDirecto(uint32_t punteroDirecto, uint32_t cantBytes, uint32_t puntero, char* nombreArchivo, char* informacion){
+    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig) / 1000);
+    memcpy(bloques + punteroDirecto * 64 + puntero, informacion, cantBytes);
+    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
 }
 
 t_config* encontrarFCB(char* nombreArchivoNuevo){
