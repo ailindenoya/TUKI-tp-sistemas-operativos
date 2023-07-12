@@ -231,7 +231,7 @@ void ejecutar_MOV_OUT(t_contexto* contexto,uint32_t programCounterActualizado, c
 void ejecutar_CREATE_SEGMENT(t_contexto* contexto,uint32_t programCounterActualizado, char* IdsegmentoComoString, char* tamanioComoString){
     uint32_t id_segmento= atoi(IdsegmentoComoString);
     uint32_t tamanio_segmento = atoi(tamanioComoString);
-    log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT", contexto_obtener_pid(contexto));
+    log_info(cpuLogger, "PID: %d - Ejecutando: CREATE_SEGMENT - ID: %d - Tamanio: %d", contexto_obtener_pid(contexto), id_segmento, tamanio_segmento);
     t_buffer *buffer = buffer_crear();
     empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_create_segment, buffer);
@@ -240,7 +240,6 @@ void ejecutar_CREATE_SEGMENT(t_contexto* contexto,uint32_t programCounterActuali
     buffer_empaquetar(bufferParametros ,&id_segmento , sizeof(id_segmento));
     buffer_empaquetar(bufferParametros ,&tamanio_segmento , sizeof(tamanio_segmento));
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
-    log_info(cpuLogger, "llego a enviar buffer ");
     buffer_destruir(bufferParametros); 
 }  
 
@@ -537,7 +536,6 @@ void dispatch_peticiones_de_kernel(void) {
         uint8_t kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
         t_buffer* bufferContexto = NULL;
         t_contexto* contexto = NULL;
-        log_info(cpuLogger,"kernelR %d procAEjec %d", kernelRespuesta, HEADER_proceso_a_ejecutar);
         if (kernelRespuesta != HEADER_proceso_a_ejecutar) {
             log_error(cpuLogger, "Error al intentar recibir el CONTEXTO de Kernel");
             exit(-1);
@@ -545,14 +543,10 @@ void dispatch_peticiones_de_kernel(void) {
             bufferContexto = buffer_crear();
             stream_recibir_buffer(cpu_config_obtener_socket_kernel(cpuConfig), bufferContexto);
             buffer_desempaquetar(bufferContexto, &pidRecibido, sizeof(pidRecibido));
-            log_info(cpuLogger, "desempaquetado de pid %d", HEADER_proceso_a_ejecutar);
             buffer_desempaquetar(bufferContexto, &programCounter, sizeof(programCounter));
-            log_info(cpuLogger, "desempaquetado de prgr");
             contexto = crear_contexto(pidRecibido, programCounter);
             buffer_desempaquetar_tabla_de_segmentos(bufferContexto, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
-            log_info(cpuLogger, "desempaquetado de tab");
             buffer_desempaquetar_registros(bufferContexto, contexto_obtener_registros(contexto));
-            log_info(cpuLogger, "desempaquetado de regs");
             buffer_destruir(bufferContexto);
 
             kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));

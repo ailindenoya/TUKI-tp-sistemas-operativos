@@ -195,7 +195,8 @@ char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
     
 }
 
-void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informacion){
+
+void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informacion){/*
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
     uint32_t tamanioArchivo = config_get_int_value(fcb, "TAMANIO_ARCHIVO");
     if(puntero + cantBytes > tamanioArchivo){
@@ -210,5 +211,5 @@ void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informac
         escribirEnBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo, informacion);
         return;
     }
-
+*/
 }

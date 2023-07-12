@@ -45,11 +45,6 @@ void buffer_desempaquetar_tabla_de_segmentos(t_buffer* self, segmento* tablaDeSe
     }
 }
 
-void buffer_desempaquetar_proceso_de_memoria(t_buffer* self, proceso* unProceso, int cantidadDeSegmentos){
-    buffer_desempaquetar(self,&(unProceso->pid), sizeof(unProceso->pid));
-    buffer_desempaquetar_tabla_de_segmentos(self,unProceso->tablaDeSegmentos, cantidadDeSegmentos);
-}
-
 void buffer_empaquetar_lista_de_procesos_de_memoria(t_buffer* bufferProcesos,t_list* listaDeProcesos, int cantidadDeSegmentos){
     uint32_t cantidadDeProcesos = list_size(listaDeProcesos);
     buffer_empaquetar(bufferProcesos, &cantidadDeProcesos, sizeof(cantidadDeProcesos));
@@ -67,8 +62,10 @@ proceso* proceso_crear(uint32_t pid, int cantidadDeSegs){
     return procesoNuevo;
 }
 
-void proceso_destruir(proceso* procesoADestruir){
-    free(procesoADestruir->tablaDeSegmentos);
+void proceso_destruir(proceso* procesoADestruir, int cantidadDeSegmentos){
+    for(int i = 1; i < cantidadDeSegmentos; i++) {
+        free(&(procesoADestruir->tablaDeSegmentos[i]));
+    }
     free(procesoADestruir);
 }
 

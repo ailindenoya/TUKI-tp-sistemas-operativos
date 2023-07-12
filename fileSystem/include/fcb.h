@@ -1,3 +1,6 @@
+#ifndef FCB_H_INCLUDED
+#define FCB_H_INCLUDED
+
 #include <stdlib.h>
 #include "fileSystem_config.h"
 #include "../../utils/include/config_inicializacion.h"
@@ -20,3 +23,5 @@ char* leerBloques(t_config*, uint32_t, uint32_t, char*);
 void escribirEnBloqueDirecto(uint32_t, uint32_t, uint32_t, char*, char*);
 double my_ceil(double);
 int min(int, int);
+
+#endif

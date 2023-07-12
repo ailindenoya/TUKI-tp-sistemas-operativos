@@ -152,7 +152,8 @@ void compactar(){
             if(procesoACopiar->tablaDeSegmentos[i].id != -1){
                 memcpy(bloque_espejo_para_compactar + cursor, bloque_de_memoria + procesoACopiar->tablaDeSegmentos[i].base, procesoACopiar->tablaDeSegmentos[i].tamanio);
                 procesoACopiar->tablaDeSegmentos[i].base = cursor; 
-                cursor += procesoACopiar->tablaDeSegmentos[i].tamanio; 
+                cursor += procesoACopiar->tablaDeSegmentos[i].tamanio;
+                log_info(memoriaLogger, "PID: %d - Segmento: %d - Base: %d - Tamaño %d", procesoACopiar->pid, procesoACopiar->tablaDeSegmentos[i].id, procesoACopiar->tablaDeSegmentos[i].base, procesoACopiar->tablaDeSegmentos[i].tamanio);
             }
         }
     }
@@ -175,10 +176,7 @@ void ocupar_hueco(int pid, int idSegmento){
     proceso *procesoEncontrado = encontrar_proceso(pid);
     segmento *segmentoCreado = segmento_crear(idSegmento, huecoDisponible->direccion, tamanioRequeridoParaSegmentoACrear);
     procesoEncontrado->tablaDeSegmentos[idSegmento] = *segmentoCreado;
-    int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio;
-    huecoDisponible->direccion += segmentoCreado->tamanio;
-    huecoDisponible->tamanio = tamanioNuevoDeHueco;
-    if(huecoDisponible->tamanio == tamanioRequeridoParaSegmentoACrear){
+    if(huecoDisponible->tamanio == segmentoCreado->tamanio){
         bool esHuecoAEliminar(void*huecoAux){
             hueco_libre* hueco = (hueco_libre*) huecoAux;
             return hueco->direccion == huecoDisponible->direccion;  
@@ -188,6 +186,9 @@ void ocupar_hueco(int pid, int idSegmento){
         list_remove(listaDeHuecosLibres, *indiceAQuitar);
         free(indiceAQuitar);
     }
+    int tamanioNuevoDeHueco = huecoDisponible->tamanio - segmentoCreado->tamanio;
+    huecoDisponible->direccion += segmentoCreado->tamanio;
+    huecoDisponible->tamanio = tamanioNuevoDeHueco;
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar_tabla_de_segmentos(buffer, procesoEncontrado->tablaDeSegmentos, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
     stream_enviar_buffer(socketKERNEL, HEADER_segmento_creado, buffer);
@@ -202,6 +203,7 @@ void atender_create_segment(int pid, int idSegmento){
         ocupar_hueco(pid, idSegmento);
     }else if(obtener_tamanio_libre_total() >= tamanioRequeridoParaSegmentoACrear){
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_hay_que_compactar);
+        log_info(memoriaLogger, "Solicitud de compactacion");
         /// kernel valida que puede compactar TODO
         uint8_t respuestaKernel = stream_recibir_header(socketKERNEL);
         stream_recibir_buffer_vacio(socketKERNEL);
@@ -221,6 +223,7 @@ void atender_create_segment(int pid, int idSegmento){
     }else{
         stream_enviar_buffer_vacio(socketKERNEL,HEADER_proceso_terminado_out_of_memory);
     }
+    log_info(memoriaLogger, "Tamanio libre total: %d", obtener_tamanio_libre_total());
 }
 
 
@@ -232,27 +235,14 @@ proceso* encontrar_proceso(int pid){
     return list_find(listaDeProcesos,es_proceso); 
 }
 
-segmento segINVALIDO; // solo para que no tire control reaches end of non void function
-segmento encontrar_segmento(int pid, int idSegmento){
-    proceso* procesoEncontrado = encontrar_proceso(pid); 
-    for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
-        if (procesoEncontrado->tablaDeSegmentos[i].id == idSegmento){
-            return procesoEncontrado->tablaDeSegmentos[i];
-        }
-    }
-    log_error(memoriaLogger, "no se encontro segmento"); 
-    return segINVALIDO;
-}
-
-
 
 void atender_delete_segment(int pid, int idSegmento ){
   
-    segmento segmentoEncontrado = encontrar_segmento(pid,idSegmento);
-    hueco_libre* huecoLibre = crear_hueco_libre(segmentoEncontrado.tamanio, segmentoEncontrado.base);
-    segmentoEncontrado.base = -1;
-    segmentoEncontrado.id = -1;
-    segmentoEncontrado.tamanio = -1;
+    proceso* procesoEncontrado = encontrar_proceso(pid); 
+    hueco_libre* huecoLibre = crear_hueco_libre(procesoEncontrado->tablaDeSegmentos[idSegmento].tamanio, procesoEncontrado->tablaDeSegmentos[idSegmento].base);
+    procesoEncontrado->tablaDeSegmentos[idSegmento].base = -1;
+    procesoEncontrado->tablaDeSegmentos[idSegmento].id = -1;
+    procesoEncontrado->tablaDeSegmentos[idSegmento].tamanio = -1;
     /// si hay huecos libres aledaños, consolidar.
     
     bool esAledanioDeArriba(void* huecoAuxArriba){
@@ -417,7 +407,7 @@ void recibir_de_kernel(){
             break;
         case HEADER_finalizar_proceso_en_memoria:
             proceso* procesoAFinalizar = encontrar_proceso(pID);
-            for(int i=0; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
+            for(int i=1; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
                 atender_delete_segment(pID, procesoAFinalizar->tablaDeSegmentos[i].id);
             }
             bool esProcesoATerminar(void*procesoAux){
@@ -426,7 +416,9 @@ void recibir_de_kernel(){
             }
             int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
             list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
-            list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
+            proceso* procesoAEliminar = list_remove(listaDeProcesos, *indiceProcesoAFinalizar);
+            proceso_destruir(procesoAEliminar, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
+            //list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
             free(indiceProcesoAFinalizar);
             break;
         default:

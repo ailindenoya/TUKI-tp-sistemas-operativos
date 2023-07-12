@@ -425,15 +425,15 @@ t_pcb* encontrar_pcb(int pid){
 void buffer_desempaquetar_y_actualizar_lista_procesos(t_buffer* bufferProcesos){ //CARRI SEAL OF APPROVAL
     int cantidad;
     buffer_desempaquetar(bufferProcesos, &cantidad, sizeof(cantidad));
-    proceso* unProceso = malloc(sizeof(*unProceso));
+    
     for (int i = 0; i < cantidad; i++){
-        buffer_desempaquetar_proceso_de_memoria(bufferProcesos, unProceso, cantidadDeSegmentos);
-        t_pcb* pcbAActualizar = encontrar_pcb(proceso_obtener_pid(unProceso));
-        pthread_mutex_lock(pcb_obtener_mutex(pcbAActualizar));
-        buffer_desempaquetar_tabla_de_segmentos(bufferProcesos, pcb_obtener_tabla_de_segmentos(pcbAActualizar), cantidadDeSegmentos);
-        pthread_mutex_unlock(pcb_obtener_mutex(pcbAActualizar));
+        int pid;
+        buffer_desempaquetar(bufferProcesos, &pid, sizeof(pid));
+        t_pcb* pcbAActualizarTabla = encontrar_pcb(pid);
+        pthread_mutex_lock(pcb_obtener_mutex(pcbAActualizarTabla));
+        buffer_desempaquetar_tabla_de_segmentos(bufferProcesos, pcb_obtener_tabla_de_segmentos(pcbAActualizarTabla), cantidadDeSegmentos);
+        pthread_mutex_unlock(pcb_obtener_mutex(pcbAActualizarTabla));
     }
-    free(unProceso);
 }
 
 void desbloquearProcesoDesdeFS(char* nombreArchivo) {
@@ -873,7 +873,6 @@ void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb){
     int pid = pcb_obtener_pid(pcb);
     buffer_empaquetar(buffer, &pid, sizeof(pid));
     stream_enviar_buffer(socketMEMORIA,HEADER_proceso_a_agregar_a_memoria,buffer); 
-    log_info(kernelLogger, "empaqueto!");
     buffer_destruir(buffer);
 }
 
