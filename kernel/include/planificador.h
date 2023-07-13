@@ -16,6 +16,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void*);
 void iniciar_planificadores(void);
 void enviar_F_OPEN_a_FS(char*, uint32_t);
 
+char* kernel_config_obtener_algoritmo(t_kernel_config* self);
 void avisar_a_memoria_de_crear_segmentos_de_proceso(t_pcb* pcb);
 
 t_pcb* iniciar_fifo(t_estado* estado);

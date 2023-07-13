@@ -197,6 +197,21 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
 
 /*                          INICIO DISPOSITIVO I/O                       */
 
+char obtenerListaDePids(t_estado* estado){
+
+char vector[list_size(estado_obtener_lista(estado))]; 
+    
+    void copiarPIDaVector(void* Aux){
+        t_pcb* pcb = (t_pcb*) Aux;  
+        int i = 0; 
+        vector[i] = pcb_obtener_pid(pcb);
+        i++;
+    }
+
+    list_iterate(estado_obtener_lista(estado), copiarPIDaVector);
+    return *vector; 
+}
+
 void iniciar_io(t_pcb* pcb) {
    
     log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %u milisegundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
@@ -208,6 +223,8 @@ void iniciar_io(t_pcb* pcb) {
     pcb_setear_tiempo_bloqueo(pcb, 0);
     
     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
+
+   // log_info(kernelLogger, "Cola Ready %s  %d ", kernel_config_obtener_algoritmo(kernelConfig), obtenerListaDePids(estadoReady));
     sem_post(estado_obtener_sem(estadoReady));
 }
 /*                  PLANIFICADOR A LARGO PLAZO                              */
@@ -264,6 +281,7 @@ uint32_t obtener_tiempo_en_milisegundos(struct timespec end, struct timespec sta
 void atender_bloqueo(t_pcb* pcb) {
   //  pcb_marcar_tiempo_inicial_bloqueado(pcb); PREGUNTA
     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+    log_info(kernelLogger, "PID: %d - Bloqueado por: IO ", pcb_obtener_pid(pcb));
     pcb_setear_estado(pcb, BLOCKED);
     pthread_t operacionIO;
     pthread_create(&operacionIO, NULL, (void*) iniciar_io , pcb);
@@ -307,11 +325,13 @@ void atender_wait(char* recurso, t_pcb* pcb){
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]--;
+            log_info(kernelLogger, "PID: %d - Wait: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
 
             if(vectorDeInstancias[i] < 0){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), recurso);
                 //hayProcesosBloqueadosPorRecursos = true;
                 hayQueReplanificar = true;
             }
@@ -337,12 +357,14 @@ void atender_signal(char* recurso, t_pcb* pcb){
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
+            log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             if(vectorDeInstancias[i] == 0){
                 t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
                 pcb_setear_estado(pcbADesbloquear, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
                 loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbADesbloquear));
+                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), recurso);
                 pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
                 sem_post(estado_obtener_sem(estadoReady));
             }
@@ -592,6 +614,7 @@ void atender_pcb() {
                     t_archivo_tabla_agregar_proceso_a_cola_de_bloqueados(tablaDeArchivoBuscado, pcb);
                     pcb_setear_estado(pcb, BLOCKED);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                    log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreArchivoNuevo);
                     free(nombreArchivoNuevo);
                     hayQueReplanificar = true;
                     break;

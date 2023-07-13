@@ -65,7 +65,9 @@ void kernel_config_destruir(t_kernel_config* self) {
     free(self->INSTANCIAS_RECURSOS);
     free(self);
 }
-
+char* kernel_config_obtener_algoritmo(t_kernel_config* self){
+    return self->ALGORITMO_PLANIFICACION;
+}
 char* kernel_config_obtener_ip_memoria(t_kernel_config* self) {
     return self->IP_MEMORIA;
 }
