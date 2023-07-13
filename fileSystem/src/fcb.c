@@ -72,7 +72,7 @@ void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto){
 
     uint32_t bloqueAQuitar; // Variable para guardar el bloque que estamos sacando
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
-    memcpy(&bloqueAQuitar, bloques + posicionBloqueIndirecto * 64 + (cantBloquesEnPunteroIndirecto * 4 - 4 ), 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
+    memcpy(&bloqueAQuitar, bloques + posicionBloqueIndirecto * tamanioBloque + (cantBloquesEnPunteroIndirecto * 4 - 4 ), 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, bloqueAQuitar);                
 
     bitarray_clean_bit(bitmapBitarray, bloqueAQuitar);  // Actualizamos bitmap
@@ -120,7 +120,7 @@ char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nom
                 else{
                     uint32_t bloqueAAcceder;    
                     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-                    memcpy(&bloqueAAcceder, bloques + punteroIndirecto * 64 + (bloqueDelPunteroDelArchivo - 2) * 4, 4);
+                    memcpy(&bloqueAAcceder, bloques + punteroIndirecto *tamanioBloque + (bloqueDelPunteroDelArchivo - 2) * 4, 4);
                     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);
                     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
                     memcpy(aux, bloques + bloqueAAcceder * tamanioBloque + posicionBloquePuntero, restoALeerDeBloqueDelPuntero);
@@ -133,10 +133,10 @@ char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nom
                 // i = 1
                 uint32_t bloqueAAcceder;   
                 sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
-                memcpy(&bloqueAAcceder, bloques+ punteroIndirecto * 64 + (bloqueSiguienteDelArchivo - 2) * 4, 4);
+                memcpy(&bloqueAAcceder, bloques+ punteroIndirecto * tamanioBloque + (bloqueSiguienteDelArchivo - 2) * 4, 4);
                 log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);
 
-                if(cantBytesRestantes < 64){    // Ultima iteración básicamente, no tenes necesariamente que leer el último bloque ENTERO (64 bytes)
+                if(cantBytesRestantes < tamanioBloque){    // Ultima iteración básicamente, no tenes necesariamente que leer el último bloque ENTERO (64 bytes)
                     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
                     memcpy(aux, bloques + bloqueAAcceder * tamanioBloque, cantBytesRestantes);
                     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo,bloqueDelPunteroDelArchivo + i+2, bloqueAAcceder);                        
@@ -157,7 +157,7 @@ char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nom
 
 void escribirEnBloqueDirecto(uint32_t punteroDirecto, uint32_t cantBytes, uint32_t puntero, char* nombreArchivo, char* informacion){
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig) / 1000);
-    memcpy(bloques + punteroDirecto * 64 + puntero, informacion, cantBytes);
+    memcpy(bloques + punteroDirecto * tamanioBloque + puntero, informacion, cantBytes);
     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: 1 - Bloque de FS: %d", nombreArchivo, punteroDirecto);
 }
 
