@@ -114,8 +114,8 @@ char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nom
                 if(bloqueDelPunteroDelArchivo == 1){
                     aux = leerBloqueDirecto(punteroDirecto, restoALeerDeBloqueDelPuntero, puntero, nombreArchivo);
                     datos = concat(datos, aux);
-                    restoALeerDeBloqueDelPuntero = 0;   
                     cantBytesRestantes = cantBytesRestantes - restoALeerDeBloqueDelPuntero;
+                    restoALeerDeBloqueDelPuntero = 0;   
                 }
                 else{
                     uint32_t bloqueAAcceder;    
@@ -126,8 +126,8 @@ char* leerBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* nom
                     memcpy(aux, bloques + bloqueAAcceder * tamanioBloque + posicionBloquePuntero, restoALeerDeBloqueDelPuntero);
                     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, bloqueDelPunteroDelArchivo, bloqueAAcceder);
                     datos = concat(datos, aux);
-                    restoALeerDeBloqueDelPuntero = 0;   
                     cantBytesRestantes = cantBytesRestantes - restoALeerDeBloqueDelPuntero;
+                    restoALeerDeBloqueDelPuntero = 0;   
                 }
             } else {
                 // i = 1
