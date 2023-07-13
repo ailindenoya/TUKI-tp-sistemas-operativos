@@ -25,8 +25,9 @@ void consola_enviar_instrucciones_a_kernel(const char *pathInstrucciones, t_log 
 
 int main(int argc, char *argv[]) {
 
+    log_info(consolaLogger, "Iniciando consola...");
     t_log *consolaLogger = log_create(LOGS_CONSOLA, MODULO_CONSOLA, true, LOG_LEVEL_INFO);
-    
+    log_info(consolaLogger, "Cargando configuracion inicial...");
     t_consola_config *consolaConfig = consola_crear_config(argv[1], consolaLogger);
 
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
@@ -36,14 +37,14 @@ int main(int argc, char *argv[]) {
     }
     
     // conexion con KERNEL
-
+    log_info(consolaLogger, "Esperando conexion con Kernel...");
     const int kernelSocket = conectar_a_servidor(consola_config_obtener_kernel_IP(consolaConfig), consola_config_obtener_kernel_PUERTO(consolaConfig));
     if (kernelSocket == -1) {
         log_error(consolaLogger, "Consola no se pudo conectar con Kernel");
         consola_destruir(consolaLogger, consolaConfig);
         return -1;
     }
-
+    
     // envio de instrucciones a KERNEL
 
     t_buffer *buffer = buffer_crear();
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
         consola_destruir(consolaLogger, consolaConfig);
         return -1;
     }
-
+    
     const char *pathInstrucciones = argv[2];
     consola_enviar_instrucciones_a_kernel(pathInstrucciones, consolaLogger, kernelSocket);
     kernelRespuesta = stream_recibir_header(kernelSocket);
@@ -86,7 +87,7 @@ int main(int argc, char *argv[]) {
     }
 
     // limpieza
-
+    log_info(consolaLogger, "Eliminando datos residuales...");
     consola_config_destruir(consolaConfig);
     log_destroy(consolaLogger);
     return 0;
