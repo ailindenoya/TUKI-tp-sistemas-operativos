@@ -416,9 +416,7 @@ void recibir_de_kernel(){
             }
             int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
             list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
-            proceso* procesoAEliminar = list_remove(listaDeProcesos, *indiceProcesoAFinalizar);
-            proceso_destruir(procesoAEliminar, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
-            //list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
+            list_remove_and_destroy_element(listaDeProcesos, *indiceProcesoAFinalizar, free); 
             free(indiceProcesoAFinalizar);
             break;
         default:
