@@ -489,6 +489,7 @@ void atenderBloqueoDe_Filesystem(){
 }
 
 void atender_pcb() {
+    int socketMemoria = kernel_config_obtener_socket_memoria(kernelConfig);
 
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExec)); 
@@ -788,39 +789,50 @@ void atender_pcb() {
                 buffer_empaquetar(bufferCreateSegmentParaMemoria, &pidAEnviar, sizeof(pidAEnviar));
                 buffer_empaquetar(bufferCreateSegmentParaMemoria, &idCreate, sizeof(idCreate));
                 buffer_empaquetar(bufferCreateSegmentParaMemoria, &tamanio, sizeof(tamanio));
-                stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_create_segment, bufferCreateSegmentParaMemoria);
+                stream_enviar_buffer(socketMemoria, HEADER_create_segment, bufferCreateSegmentParaMemoria);
                 buffer_destruir(bufferCreateSegmentParaMemoria);
                 
-                uint8_t respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                uint8_t respuestaMemoria = stream_recibir_header(socketMemoria);
                 log_info(kernelLogger, "resp de memoria %d", respuestaMemoria);
                 if(respuestaMemoria == HEADER_segmento_creado ){
                     t_buffer* bufferSegCreado = buffer_crear();
-                    stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig),bufferSegCreado);
+                    stream_recibir_buffer(socketMemoria,bufferSegCreado);
                     buffer_desempaquetar_tabla_de_segmentos(bufferSegCreado,pcb_obtener_tabla_de_segmentos(pcb),cantidadDeSegmentos);
                     buffer_destruir(bufferSegCreado);
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_hay_que_compactar){
-                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    stream_recibir_buffer_vacio(socketMemoria);
                     
                     // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
 
-                    stream_enviar_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_bueno_compacta);
+                    stream_enviar_buffer_vacio(socketMemoria, HEADER_bueno_compacta);
 
                     // DESPUES DE COMPACTAR
-                    respuestaMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
+                    respuestaMemoria = stream_recibir_header(socketMemoria);
                     if(respuestaMemoria != HEADER_lista_de_tablas_de_segmentos){
                         log_error(kernelLogger, "NO recbibi lista de tablas de segmentos, recibi: %d", respuestaMemoria);
+                        exit(-1);
                     }
                     t_buffer* bufferProcesos = buffer_crear();
-                    stream_recibir_buffer(kernel_config_obtener_socket_memoria(kernelConfig), bufferProcesos);
+                    stream_recibir_buffer(socketMemoria, bufferProcesos);
 
                     buffer_desempaquetar_y_actualizar_lista_procesos(bufferProcesos);
                     
                     buffer_destruir(bufferProcesos);
+
+                    respuestaMemoria = stream_recibir_header(socketMemoria);
+                    if(respuestaMemoria != HEADER_segmento_creado) {
+                        log_error(kernelLogger, "Error al recibir header segmento creado, header recibido: %d", respuestaMemoria);
+                        exit(-1);
+                    }
+                    t_buffer* bufferTablaDespuesDeCompactar = buffer_crear();
+                    stream_recibir_buffer(socketMemoria, bufferTablaDespuesDeCompactar);
+                    buffer_desempaquetar_tabla_de_segmentos(bufferTablaDespuesDeCompactar, pcb_obtener_tabla_de_segmentos(pcb), cantidadDeSegmentos);
+                    buffer_destruir(bufferTablaDespuesDeCompactar);
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_proceso_terminado_out_of_memory){
                     finalizar_proceso(pcb,OUT_OF_MEMORY);
-                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_memoria(kernelConfig));
+                    stream_recibir_buffer_vacio(socketMemoria);
                     hayQueReplanificar = true; 
                 }else{
                     log_error(kernelLogger, "error al recibir respuesta de memoria para ejecutar create segment" );
