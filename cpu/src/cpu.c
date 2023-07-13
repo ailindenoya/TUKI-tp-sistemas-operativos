@@ -28,17 +28,20 @@ int recibir_cant_segmentos_de_memoria(int socketMEMORIA){
 }
 
 int main(int argc, char* argv[]) {
-   
     cpuLogger = log_create(LOGS_CPU, MODULO_CPU, true, LOG_LEVEL_INFO);
+    log_info(cpuLogger, "Iniciando modulo CPU...");
+    
     if (argc != NUMERO_DE_ARGUMENTOS_NECESARIOS) {
         log_error(cpuLogger, "Cantidad de argumentos inválida.\nArgumentos: <configPath>");
         log_destroy(cpuLogger);
         return -1;
-    }    
+    }  
+    log_info(cpuLogger, "Cargando configuracion inicial...");  
     cpuConfig = cpu_config_crear(argv[1], cpuLogger);
 
     // conexion con MEMORIA
-
+    
+    log_info(cpuLogger, "Esperando conexion modulo MEMORIA");
     const int socketMEMORIA = conectar_a_servidor(cpu_config_obtener_ip_memoria(cpuConfig), cpu_config_obtener_puerto_memoria(cpuConfig));
     if (socketMEMORIA == -1) {
         log_error(cpuLogger, "no se establecio conexion con MEMORIA");
@@ -64,6 +67,7 @@ int main(int argc, char* argv[]) {
     cantidadDeSegmentos = recibir_cant_segmentos_de_memoria(socketMEMORIA);
 
     // aceptar conexion con KERNEL
+    log_info(cpuLogger, "Eperando conexion con KERNEL");
 
     int socketKERNELESCUCHA= iniciar_servidor("0.0.0.0", cpu_config_obtener_puerto_escucha(cpuConfig));
     struct sockaddr cliente = {0};
@@ -87,5 +91,6 @@ int main(int argc, char* argv[]) {
     stream_enviar_buffer_vacio(socketKERNEL, HANDSHAKE_puede_continuar);
     log_info(cpuLogger, "se establecio conexion con KERNEL");
 
+    
     atender_peticiones_de_kernel();
 }
