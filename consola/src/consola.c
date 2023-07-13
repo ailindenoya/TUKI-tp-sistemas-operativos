@@ -25,8 +25,8 @@ void consola_enviar_instrucciones_a_kernel(const char *pathInstrucciones, t_log 
 
 int main(int argc, char *argv[]) {
 
-    log_info(consolaLogger, "Iniciando consola...");
     t_log *consolaLogger = log_create(LOGS_CONSOLA, MODULO_CONSOLA, true, LOG_LEVEL_INFO);
+    log_info(consolaLogger, "Iniciando consola...");
     log_info(consolaLogger, "Cargando configuracion inicial...");
     t_consola_config *consolaConfig = consola_crear_config(argv[1], consolaLogger);
 
