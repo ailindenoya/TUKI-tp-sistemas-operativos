@@ -2,6 +2,7 @@
 #include "../../utils/include/stream.h"
 #define PATH_FCB "fcb/"
 
+extern int socketMEMORIA;
 extern uint32_t tamanioBloque;
 extern t_log* fileSystemLogger;
 extern t_list* listaFCBsAbiertos;
@@ -41,12 +42,13 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
             case HEADER_F_READ:
                 log_info(fileSystemLogger, "Se recibió FREAD");
                 fcb = encontrarFCB(nombreArchivo);
-                uint32_t punteroF_READ, cantBytesF_READ;
+                uint32_t punteroF_READ, cantBytesF_READ, direccionMemoria;
                 buffer_desempaquetar(bufferAux,&punteroF_READ, sizeof(punteroF_READ));
+                
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
                 cantBytesF_READ = atoi(parametro3); 
 
-                char* datosLeidos = malloc(cantBytesF_READ);
+                char* datosLeidos = malloc(cantBytesF_READ);    // Guardar en memoria
                 datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
                 //log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, , cantBytesF_READ)
 
@@ -71,8 +73,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_desempaquetar(bufferAux,&punteroF_WRITE, sizeof(punteroF_WRITE));
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
                 cantBytesF_WRITE = atoi(parametro3); 
-                
-                // manejar logica FWRITE TODO
+
+                //log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, , cantBytesF_READ)
+                //F_WRITE(fcb, cantBytesF_WRITE, punteroF_WRITE, )
+
                 buffer_empaquetar(bufferAux, &cantBytesF_WRITE, sizeof(cantBytesF_WRITE));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_memoria, bufferAux);
                 int respuestaMemoriaF_WRITE = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
@@ -196,20 +200,13 @@ char* F_READ(t_config* fcb, uint32_t cantBytes, uint32_t puntero){
 }
 
 
-void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informacion){/*
+void F_WRITE(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* informacion){
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
     uint32_t tamanioArchivo = config_get_int_value(fcb, "TAMANIO_ARCHIVO");
     if(puntero + cantBytes > tamanioArchivo){
         log_error(fileSystemLogger, "Error: Posicion del puntero en el archivo + cantidad de bytes a escribir es mayor al tamanio del archivo");
         exit(-1);
     }
-    uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
-    //uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
-    //uint32_t bloqueDelPunteroDelArchivo = my_ceil((double) puntero / 64);
     
-    if(puntero<64 && cantBytes <= tamanioBloque - puntero){
-        escribirEnBloqueDirecto(punteroDirecto, cantBytes, puntero, nombreArchivo, informacion);
-        return;
-    }
-*/
+    escribirBloques(fcb, cantBytes, puntero, nombreArchivo, informacion);
 }

@@ -18,9 +18,9 @@ t_config* encontrarFCB(char*);
 void fcb_asignar_bloque(t_config*, uint32_t, uint32_t);
 void fcb_quitar_bloque(t_config*, int);
 char* leerBloqueDirecto(uint32_t, uint32_t, uint32_t, char*);
-char* leerBloqueIndirecto(uint32_t, uint32_t, uint32_t , char*);
 char* leerBloques(t_config*, uint32_t, uint32_t, char*);
 void escribirEnBloqueDirecto(uint32_t, uint32_t, uint32_t, char*, char*);
+void escribirBloques(t_config*, uint32_t, uint32_t, char*, char*);
 double my_ceil(double);
 int min(int, int);
 

@@ -6,6 +6,7 @@
 #define MODULO_FILESYSTEM "fileSystem"
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 3
 
+int socketMEMORIA;
 uint32_t tamanioBloque;
 extern t_log *fileSystemLogger;
 extern t_fileSystem_config *fileSystemConfig;
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
     }
     // conexion con MEMORIA
 
-    const int socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
+    socketMEMORIA = conectar_a_servidor(fileSystem_config_obtener_ip_memoria(fileSystemConfig), fileSystem_config_obtener_puerto_memoria(fileSystemConfig));
     if (socketMEMORIA == -1)
     {
         log_error(fileSystemLogger, "Error al intentar conectar con MEMORIA");
