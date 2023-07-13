@@ -24,8 +24,8 @@ double my_ceil(double x) {
     return x;
   }
 
-  intmax_t i = (intmax_t) x;      // this rounds towards 0
-  if (i < 0 || x == i) return i;  // negative x is already rounded up.
+  intmax_t i = (intmax_t) x;
+  if (i < 0 || x == i) return i; 
   return i + 1.0;
 }
 
@@ -237,8 +237,7 @@ t_config* config_iniciar_fcb(char* pathAlConfig) {
 
 
 char* concat(const char* s1, const char* s2){
-    char* result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
-    // in real code you would check for errors in malloc here
+    char* result = malloc(strlen(s1) + strlen(s2) + 1);
     strcpy(result, s1);
     strcat(result, s2);
     return result;
