@@ -29,6 +29,12 @@ double my_ceil(double x) {
   return i + 1.0;
 }
 
+int max(int x, int y)
+{
+  return (x > y) ? x : y;
+}
+
+
 int min(int x, int y)
 {
   return (x < y) ? x : y;
@@ -203,7 +209,7 @@ void escribirBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* 
                 sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);    
                 memcpy(bloques + bloqueAAcceder * tamanioBloque + posicionBloquePuntero, informacion, cantBytesRestantes);
                 log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, bloqueDelPunteroDelArchivo, bloqueAAcceder);
-                //cantBytesRestantes = max(0, cantBytesRestantes - tamanioBloque);
+                cantBytesRestantes = max(0, cantBytesRestantes - tamanioBloque);
                 bloqueSiguienteDelArchivo = bloqueSiguienteDelArchivo + 1;
             }
         }
