@@ -1,5 +1,6 @@
 #include "../include/comunicacionKernelYMemoria.h"
 #include "../../utils/include/stream.h"
+#include <commons/collections/list.h>
 #define PATH_FCB "fcb/"
 
 extern int socketMEMORIA;
@@ -125,9 +126,7 @@ void F_OPEN(char* NombreArchivo){
         stream_enviar_buffer_vacio(socketKERNEL, HEADER_no_existe_archivo);
 
         uint8_t respuestaKERNEL = stream_recibir_header(socketKERNEL);
-        //2)
-
-
+        
         if(respuestaKERNEL == HEADER_crear_archivo){
             crearArchivoFCB(NombreArchivo);
 

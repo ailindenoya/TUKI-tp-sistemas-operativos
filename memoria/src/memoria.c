@@ -394,14 +394,12 @@ void recibir_de_kernel(){
             break;
         case HEADER_create_segment:
             uint32_t  idSegmento_create;
-            buffer_desempaquetar(buffer, &idSegmento_create, sizeof(idSegmento_create));  
-            log_info(memoriaLogger, "header create");
+            buffer_desempaquetar(buffer, &idSegmento_create, sizeof(idSegmento_create)); 
             buffer_desempaquetar(buffer, &tamanioRequeridoParaSegmentoACrear,sizeof(tamanioRequeridoParaSegmentoACrear));
             atender_create_segment(pID,idSegmento_create);
             break;
         case HEADER_delete_segment:
             uint32_t idSegmento_delete; 
-            log_info(memoriaLogger, "header delete");
             buffer_desempaquetar(buffer,&idSegmento_delete,sizeof(idSegmento_delete));
             atender_delete_segment(pID, idSegmento_delete); 
             break;
