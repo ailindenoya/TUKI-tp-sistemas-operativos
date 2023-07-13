@@ -191,7 +191,7 @@ void ocupar_hueco(int pid, int idSegmento){
     huecoDisponible->tamanio = tamanioNuevoDeHueco;
     t_buffer *buffer = buffer_crear();
     buffer_empaquetar_tabla_de_segmentos(buffer, procesoEncontrado->tablaDeSegmentos, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
-    stream_enviar_buffer(socketKERNEL, HEADER_segmento_creado, buffer);
+    stream_enviar_buffer(socketKERNEL, HEADER_segmento_creado, buffer);                     
     buffer_destruir(buffer);
 }
 
