@@ -10,7 +10,7 @@
 
 void cargarBitMap(void);
 void limpiarPosiciones(t_bitarray* unEspacio, int posicionInicial, int tamanioProceso);
-void agregarBloques(int, t_config*, uint32_t);
-void quitarBloques(int, t_config*, uint32_t);
+void agregarBloques(int, t_config*, uint32_t, char*);
+void quitarBloques(int, t_config*, uint32_t, char*);
 void cargarArchivoDeBloques(void);
 uint32_t buscarBloqueLibre(void);

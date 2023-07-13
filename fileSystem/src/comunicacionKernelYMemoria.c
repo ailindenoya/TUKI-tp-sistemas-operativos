@@ -114,7 +114,6 @@ void atenderPeticionesDeKernel(void){
 }
 
 void F_OPEN(char* NombreArchivo){
-    log_info(fileSystemLogger, "Ejecutando: F_OPEN - Archivo: %s", NombreArchivo);
     int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
 
     char* ruta = concat(PATH_FCB, NombreArchivo);
@@ -129,7 +128,6 @@ void F_OPEN(char* NombreArchivo){
         
         if(respuestaKERNEL == HEADER_crear_archivo){
             crearArchivoFCB(NombreArchivo);
-
         }
         else {
             log_error(fileSystemLogger, "No se recibio respuesta de Kernel de F_OPEN");
@@ -162,8 +160,6 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     double tamanioEnBloquesViejo = my_ceil((double) tamanioViejo / tamanioBloque);
     double tamanioEnBloquesNuevo = my_ceil((double) tamanioNuevo / tamanioBloque);
 
-    int bloquesAsignadosEnPunteroIndirecto = tamanioEnBloquesViejo - 1;
-
     int cantBloques = abs(tamanioEnBloquesNuevo - tamanioEnBloquesViejo);    // Cantidad de bloques a agregar o quitar
     log_info(fileSystemLogger,"Cantidad de Bloques: %d", cantBloques);
     if (cantBloques == 0){
@@ -171,11 +167,11 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
     }
     else {
         if(tamanioNuevo > tamanioViejo){            
-            agregarBloques(cantBloques, fcb, bloquesAsignadosEnPunteroIndirecto);
+            agregarBloques(cantBloques, fcb, tamanioViejo, ruta);
             config_save_in_file(fcb, ruta);
         }
         else if (tamanioNuevo < tamanioViejo){
-            quitarBloques(cantBloques, fcb, tamanioViejo);
+            quitarBloques(cantBloques, fcb, tamanioViejo, ruta);
             config_save_in_file(fcb, ruta);
         }
         else if (tamanioNuevo == 0){
@@ -185,6 +181,7 @@ void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
         }     
     }
     log_info(fileSystemLogger, "Truncar Archivo: %s - Tamaño: %d", NombreArchivo, tamanioNuevo);
+    config_save_in_file(fcb, ruta);
 }
 
 

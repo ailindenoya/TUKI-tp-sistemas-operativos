@@ -40,10 +40,11 @@ int min(int x, int y)
   return (x < y) ? x : y;
 }
 
-void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignadosEnPunteroIndirecto){
+void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignadosEnPunteroIndirecto, char* ruta){
     if (config_get_int_value(fcb,"PUNTERO_DIRECTO") == -1){  
         char* bloq = string_itoa(bloque);
         config_set_value(fcb, "PUNTERO_DIRECTO",bloq);
+        config_save_in_file(fcb, ruta);
         return;
     }
     uint32_t punteroIndirecto = config_get_int_value(fcb,"PUNTERO_INDIRECTO");
@@ -51,15 +52,16 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
     if (punteroIndirecto == -1){   //HAY QUE ASIGNAR OTRO BLOQUE  aparte del asignado a puntero directo
         char* bloq = string_itoa(bloque);   
         config_set_value(fcb, "PUNTERO_INDIRECTO",bloq);
+        config_save_in_file(fcb, ruta);
         uint32_t blqueNuevoAAsignar = buscarBloqueLibre();
-        fcb_asignar_bloque(fcb,blqueNuevoAAsignar, bloquesAsignadosEnPunteroIndirecto);
+        fcb_asignar_bloque(fcb,blqueNuevoAAsignar, bloquesAsignadosEnPunteroIndirecto, ruta);
         return;
     }
     int posicionBloqueIndirecto = punteroIndirecto * tamanioBloque;
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
 
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
-    memcpy(bloques + posicionBloqueIndirecto + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
+    memcpy(bloques + posicionBloqueIndirecto * tamanioBloque + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
     log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, bloque);
     msync(bloques, sizeof(bloques), MS_SYNC);
 }
@@ -67,13 +69,12 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
 void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto){
     uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
-    int posicionBloqueIndirecto = punteroIndirecto * tamanioBloque; // Posicion en bloques, en bytes, del puntero indirecto, dentro de bloques.dat
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
 
     uint32_t bloqueAQuitar; // Variable para guardar el bloque que estamos sacando
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
-    memcpy(&bloqueAQuitar, bloques + posicionBloqueIndirecto * tamanioBloque + (cantBloquesEnPunteroIndirecto * 4 - 4 ), 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
-    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, bloqueAQuitar);                
+    memcpy(&bloqueAQuitar, bloques + punteroIndirecto * tamanioBloque + (cantBloquesEnPunteroIndirecto * 4 - 4 ), 4);    // Metemos en la variable auxiliar el bloque que vamos a sacar
+    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: Puntero Indirecto - Bloque de FS: %d", nombreArchivo, punteroIndirecto);                
 
     bitarray_clean_bit(bitmapBitarray, bloqueAQuitar);  // Actualizamos bitmap
     log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 1 a 0", bloqueAQuitar);
@@ -184,9 +185,7 @@ void escribirBloques(t_config* fcb, uint32_t cantBytes, uint32_t puntero, char* 
         for(int i=0; i<bloquesAAcceder; i++){
             if(restoAEscribirDeBloqueDelPuntero != 0){
                 if(bloqueDelPunteroDelArchivo == 1){
-                    sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig) / 1000);
-                    memcpy(bloques + punteroDirecto * tamanioBloque + puntero, informacion, restoAEscribirDeBloqueDelPuntero);
-                    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque de Archivo: %d - Bloque de FS: %d", nombreArchivo, bloqueDelPunteroDelArchivo, punteroDirecto);   
+                    escribirEnBloqueDirecto(punteroDirecto, restoAEscribirDeBloqueDelPuntero, puntero, nombreArchivo, informacion);
                     cantBytesRestantes = cantBytesRestantes - restoAEscribirDeBloqueDelPuntero;
                     restoAEscribirDeBloqueDelPuntero = 0;
                 }
