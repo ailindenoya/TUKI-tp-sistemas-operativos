@@ -18,12 +18,15 @@ void agregarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, c
     uint32_t punteroIndirecto = config_get_int_value(fcb,"PUNTERO_INDIRECTO");
 
     double tamanioEnBloquesViejo = my_ceil((double) tamanioViejo / tamanioBloque);
-    int bloquesAsignadosEnPunteroIndirecto = tamanioEnBloquesViejo - 1;
+    uint32_t bloquesAsignadosEnPunteroIndirecto = tamanioEnBloquesViejo - 1;
+    if(bloquesAsignadosEnPunteroIndirecto == -1){
+        bloquesAsignadosEnPunteroIndirecto = 0;
+    }
+    log_info(fileSystemLogger, "Cantidad de Bloques en Puntero Indirecto: %d", bloquesAsignadosEnPunteroIndirecto);
 
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     int aux = 0;
     for (int i = 0; i < tamanioBitmap; i++){
-        
         if (bitarray_test_bit(bitmapBitarray, i) == false){
             bitarray_set_bit(bitmapBitarray, i);    // Modificación de Bitmap
             log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", i);
@@ -58,8 +61,9 @@ void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, ch
 uint32_t buscarBloqueLibre(){
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     for (int i = 0; i < tamanioBitmap; i++){
-        if (bitarray_test_bit(bitmapBitarray, i)){
+        if (bitarray_test_bit(bitmapBitarray, i) == false){
             bitarray_set_bit(bitmapBitarray, i);
+            msync(bitmap, tamanioBitmap, MS_SYNC);
             return i;
         }
     }

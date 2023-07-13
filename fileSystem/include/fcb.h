@@ -23,5 +23,6 @@ void escribirEnBloqueDirecto(uint32_t, uint32_t, uint32_t, char*, char*);
 void escribirBloques(t_config*, uint32_t, uint32_t, char*, char*);
 double my_ceil(double);
 int min(int, int);
+int max(int, int);
 
 #endif

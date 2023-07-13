@@ -751,12 +751,17 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferF_TRUNCATE);
                 stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_TRUNCATE, bufferF_TRUNCATE);
                 
+                char* nombreArchivo_F_TRUNCATE = malloc(sizeof(nombreArchivo_F_TRUNCATE));
+                char* tamanio_F_TRUNCATE = malloc(sizeof(tamanio_F_TRUNCATE));
+                buffer_desempaquetar_string(bufferF_TRUNCATE, &nombreArchivo_F_TRUNCATE);
+                buffer_desempaquetar_string(bufferF_TRUNCATE, &tamanio_F_TRUNCATE);                
 
                 buffer_destruir(bufferF_TRUNCATE);
                 
                 pcb_setear_estado(pcb, BLOCKED);
                 estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                log_info(kernelLogger, "Truncar Archivo - PID: %d - Archivo: %s - Tamanio: %s", pcb_obtener_pid(pcb), nombreArchivo_F_TRUNCATE, tamanio_F_TRUNCATE);
                 //  sem_post(estado_obtener_sem(estadoBlocked));
                 hayQueReplanificar = true;
                 // hacer hilo

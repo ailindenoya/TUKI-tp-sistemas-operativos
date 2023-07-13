@@ -54,15 +54,15 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
         config_set_value(fcb, "PUNTERO_INDIRECTO",bloq);
         config_save_in_file(fcb, ruta);
         uint32_t blqueNuevoAAsignar = buscarBloqueLibre();
+        log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 0 a 1", blqueNuevoAAsignar);
         fcb_asignar_bloque(fcb,blqueNuevoAAsignar, bloquesAsignadosEnPunteroIndirecto, ruta);
         return;
     }
-    int posicionBloqueIndirecto = punteroIndirecto * tamanioBloque;
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
 
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);
-    memcpy(bloques + posicionBloqueIndirecto * tamanioBloque + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
-    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: 2 - Bloque File System: %d", nombreArchivo, bloque);
+    memcpy(bloques + punteroIndirecto * tamanioBloque + bloquesAsignadosEnPunteroIndirecto * 4, &bloque, sizeof(bloque));
+    log_info(fileSystemLogger, "Acceso a Bloque - Archivo: %s - Bloque Archivo: Puntero Indirecto - Bloque File System: %d", nombreArchivo, punteroIndirecto);
     msync(bloques, sizeof(bloques), MS_SYNC);
 }
 
