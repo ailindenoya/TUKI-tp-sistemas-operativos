@@ -568,7 +568,7 @@ void atender_pcb() {
                     t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, entradaDeTablaDeProceso); 
                     log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
-                    free(nombreArchivoNuevo);
+        
                     hayQueReplanificar = false;
                     break;
                 }
@@ -577,18 +577,18 @@ void atender_pcb() {
 
                 t_archivo_tabla* tablaDeArchivoBuscado = encontrarEntradaEnTablaGlobal(nombreArchivoNuevo);  //Buscas el archivo en la tabla
 
-                if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) != nombreArchivoNuevo){    // Si no está, lo abris
+                if(strcmp(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado),nombreArchivoNuevo)!= 0){    // Si no está, lo abris
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo, pcb_obtener_pid(pcb));
                     t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, entradaDeTablaDeProceso);
                     log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
-                    free(nombreArchivoNuevo);
+            
                     hayQueReplanificar = false;
                     break;
                 }
                 
                 // El archivo está en la tabla, está abierto, se bloquea el proceso en la cola de bloqueados del archivo
-                else if(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado) == nombreArchivoNuevo){
+                else if(strcmp(t_archivo_tabla_obtener_nombre_archivo(tablaDeArchivoBuscado),nombreArchivoNuevo) == 0){
                     t_archivo_tabla_agregar_proceso_a_cola_de_bloqueados(tablaDeArchivoBuscado, pcb);
                     pcb_setear_estado(pcb, BLOCKED);
                     loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
@@ -983,5 +983,4 @@ void iniciar_planificadores(void){
     pthread_create(&atenderBloqueoDeFilesystem, NULL, (void*) atenderBloqueoDe_Filesystem, NULL);
     pthread_detach(atenderBloqueoDeFilesystem);
 
-    free(pteroAVectorDeListaDeRecursos);
 }
