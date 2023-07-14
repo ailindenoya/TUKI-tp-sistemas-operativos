@@ -209,29 +209,20 @@ char* concat(const char* s1, const char* s2){
 void obtenerListaDePids(t_estado* estado){
 
     int cantidadDePcbs =list_size(estado_obtener_lista(estado));
-    char** vector;
-    char* vec;
+    char* vector = "";
+    char* vec = malloc(sizeof(*vec));
 
     for(int i=0; i<cantidadDePcbs; i++){
         int pid = pcb_obtener_pid(list_get(estado_obtener_lista(estado),i)); 
-        vector[i] = string_itoa(pid);
+        sprintf(vec, "%d", pid);
+        log_info(kernelLogger, "Cant pcbs %d", cantidadDePcbs);
+        log_info(kernelLogger, "Vec %s", vec);
+        log_info(kernelLogger, "Vector %s", vector);
+        vector = concat(vector, vec);
     }
 
-
-
-    void copiarPIDaVector(void* Aux){
-        t_pcb* pcb = (t_pcb*) Aux;  
-        int i=0;
-        vector[i] = string_itoa((int)pcb_obtener_pid(pcb));
-
-        i++;
-       /* vector = concat(vector, (string_itoa((int)pcb_obtener_pid(pcb))));
-        log_info(kernelLogger, " PCB NRO %s ", (string_itoa((int)pcb_obtener_pid(pcb))));*/
-    }
-
-    list_iterate(estado_obtener_lista(estado), copiarPIDaVector);
-
-    log_info(kernelLogger, "Cola Ready %s   %s ", kernel_config_obtener_algoritmo(kernelConfig), vector);
+    char* algoritmoPlanif = kernel_config_obtener_algoritmo(kernelConfig);
+    log_info(kernelLogger, "Cola Ready %s   %s ", algoritmoPlanif, vector);
     free(vector);
 }
 
