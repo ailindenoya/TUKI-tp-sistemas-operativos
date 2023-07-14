@@ -223,6 +223,7 @@ void obtenerListaDePids(t_estado* estado){
 
     char* algoritmoPlanif = kernel_config_obtener_algoritmo(kernelConfig);
     log_info(kernelLogger, "Cola Ready %s   %s ", algoritmoPlanif, vector);
+    free(vec);
     free(vector);
 }
 
