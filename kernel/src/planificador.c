@@ -483,7 +483,8 @@ void desbloquearProcesoDesdeFS(char* nombreArchivo) {
     t_pcb* pcbADesbloquear = encontrar_pcb(pid);
     pcb_setear_estado(pcbADesbloquear, READY);
     estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
-    loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcbADesbloquear));
+    loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbADesbloquear));
+    obtenerListaDePids(estadoReady);
     pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
     sem_post(estado_obtener_sem(estadoReady));
 }
