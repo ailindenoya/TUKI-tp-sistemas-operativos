@@ -498,11 +498,9 @@ void atenderBloqueoDe_Filesystem(){
         buffer_desempaquetar_string(bufferDesbloqueo, &nombreArchivo);
         if(headerFS == HEADER_desbloquear_proceso){
             desbloquearProcesoDesdeFS(nombreArchivo);
-            break;
         }else{
             log_error(kernelLogger, "No reconoce header desde FS desbloqueos");
             exit(-1);
-            break;
         }
         buffer_destruir(bufferDesbloqueo);
         free(nombreArchivo);
@@ -792,24 +790,10 @@ void atender_pcb() {
                 buffer_destruir(bufferF_TRUNCATE);
                 
                 pcb_setear_estado(pcb, BLOCKED);
-                estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
+                //estado_encolar_pcb_con_semaforo(estadoBlocked, pcb);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                 log_info(kernelLogger, "Truncar Archivo - PID: %d - Archivo: %s - Tamanio: %s", pcb_obtener_pid(pcb), nombreArchivo_F_TRUNCATE, tamanio_F_TRUNCATE);
-                //  sem_post(estado_obtener_sem(estadoBlocked));
                 hayQueReplanificar = true;
-                // hacer hilo
-                /* Logica para desbloqueo del proceso por un F_TRUNCATE*/
-                /* uint8_t respuestaFileSystem = stream_recibir_header(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig));
-
-                if(respuestaFileSystem == HEADER_ERROR_F_TRUNCATE){
-                    log_error(kernelLogger, "Error al ejecutar F_TRUNCATE");
-                }
-                else if(respuestaFileSystem == HEADER_F_TRUNCATE_REALIZADO){
-                    pcb_setear_estado(pcb, READY);
-                    estado_encolar_pcb_con_semaforo(estadoReady, pcb);
-                    loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
-                    log_info(kernelLogger, "PID: %d - Archivo: %s - Tamaño: %d", pcb_obtener_pid(pcb), nombreArchivo, tamanio);
-                }*/
                 break;
             case HEADER_create_segment:
                 log_info(kernelLogger, "SE LLEGO A CREATE");
