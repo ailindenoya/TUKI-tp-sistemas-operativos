@@ -705,6 +705,11 @@ void atender_pcb() {
 
                 stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig),HEADER_F_READ, bufferParaMANDARaFS);
                 buffer_destruir(bufferParaMANDARaFS);
+                
+                pcb_setear_estado(pcb, BLOCKED);
+                loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFRead);
+                    
                 free(nombreDeArchFRead);
                 free(cantBytes);
                 /// logica para bloquearlo 
@@ -742,6 +747,11 @@ void atender_pcb() {
                 buffer_empaquetar(bufferParaMANDARFWRITE, &offsetFWRITE, sizeof(offsetFWRITE));
                 stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig),HEADER_F_WRITE, bufferParaMANDARFWRITE);
                 buffer_destruir(bufferParaMANDARFWRITE);
+
+                pcb_setear_estado(pcb, BLOCKED);
+                loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
+                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFRead);
+                
                 free(nombreDeArchFWRITE);
                 free(cantBytesFWRITE);
                 hayQueReplanificar = false;
