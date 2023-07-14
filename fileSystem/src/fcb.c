@@ -68,8 +68,17 @@ void fcb_asignar_bloque(t_config* fcb, uint32_t bloque, uint32_t bloquesAsignado
 
 void fcb_quitar_bloque(t_config* fcb, int cantBloquesEnPunteroIndirecto){
     uint32_t punteroIndirecto = config_get_int_value(fcb, "PUNTERO_INDIRECTO");
+    uint32_t punteroDirecto = config_get_int_value(fcb, "PUNTERO_DIRECTO");
     int tamanioBitmap = (int) bitarray_get_max_bit(bitmapBitarray);
     char* nombreArchivo = config_get_string_value(fcb, "NOMBRE_ARCHIVO");
+
+    if(cantBloquesEnPunteroIndirecto == 0){
+        bitarray_clean_bit(bitmapBitarray, punteroDirecto);
+        log_info(fileSystemLogger, "Acceso a Bitmap - Bloque: %d - Estado: 1 a 0", punteroDirecto);
+        config_set_value(fcb, "PUNTERO_DIRECTO", "-1");
+        msync(bitmap, tamanioBitmap, MS_SYNC);
+        return;
+    }
 
     uint32_t bloqueAQuitar; // Variable para guardar el bloque que estamos sacando
     sleep(fileSystem_config_obtener_retardo_acceso_bloque(fileSystemConfig)/1000);

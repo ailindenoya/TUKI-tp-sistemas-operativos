@@ -44,7 +44,6 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_READ:
                 sem_wait(&sePuedeCompactar);
-                log_info(fileSystemLogger, "Se recibió FREAD");
                 fcb = encontrarFCB(nombreArchivo);
                 uint32_t punteroF_READ, cantBytesF_READ, direccionLogicaDeFREAD;
                 uint32_t pidParaFREAD, nroSegmentoFREAD, offsetFREAD; 
@@ -80,7 +79,6 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 break;
             case HEADER_F_WRITE:
                 sem_wait(&sePuedeCompactar);    
-                log_info(fileSystemLogger, "Se recibió F_WRITE");
                 fcb = encontrarFCB(nombreArchivo);
                 uint32_t punteroF_WRITE, cantBytesF_WRITE, dirLogica;
                 buffer_desempaquetar(bufferAux,&punteroF_WRITE, sizeof(punteroF_WRITE));
@@ -133,6 +131,7 @@ void atenderPeticionesDeKernel(void){
 
 void F_OPEN(char* NombreArchivo){
     int socketKERNEL = fileSystem_config_obtener_socket_kernel_peticiones(fileSystemConfig);
+    log_info(fileSystemLogger, "Ejecutando: F_OPEN - Archivo: %s", NombreArchivo);
 
     char* ruta = concat(PATH_FCB, NombreArchivo);
     int fd = open(ruta, O_RDWR);
@@ -165,7 +164,7 @@ void F_OPEN(char* NombreArchivo){
 
 void F_TRUNCATE(char* NombreArchivo, uint32_t tamanioNuevo){
 
-    log_info(fileSystemLogger, "Ejecutando: F_TRUNCATE - Archivo: %s", NombreArchivo);
+    log_info(fileSystemLogger, "Ejecutando: F_TRUNCATE - Archivo: %s - Tamanio: %d", NombreArchivo, tamanioNuevo);
     char* ruta = concat(PATH_FCB, NombreArchivo);
 
     t_config* fcb = encontrarFCB(NombreArchivo);
