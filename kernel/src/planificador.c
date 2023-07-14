@@ -652,6 +652,16 @@ void atender_pcb() {
                 buffer_desempaquetar_string(bufferFCLOSE, &nombreDeArchFClose);
                 t_archivo_tabla* entradaDeTabla = encontrarEntradaEnTablaGlobal(nombreDeArchFClose);
                 if(list_is_empty(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla))){
+
+                    bool encontrarArch(void* Aux){
+                        t_archivo_tabla* tab = (t_archivo_tabla*) Aux; 
+                        return strcmp(t_archivo_tabla_obtener_nombre_archivo(tab), nombreDeArchFClose)== 0;
+                    }
+
+                    int* indice = malloc(sizeof(*indice));
+                    list_find_element_and_index(tablaArchivosAbiertos, encontrarArch, indice);
+                    list_remove(tablaArchivosAbiertos, *indice);
+
                     t_buffer* buffer_FCLOSE_FS = buffer_crear();
                     buffer_empaquetar_string(buffer_FCLOSE_FS, nombreDeArchFClose);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
@@ -681,7 +691,8 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferFREAD);
                 char* nombreDeArchFRead = malloc(sizeof(*nombreDeArchFRead));
                 char* cantBytes =malloc(sizeof(*cantBytes));
-                uint32_t pidParaFREAD, nroSegmentoFREAD, offsetFREAD; 
+                uint32_t pidParaFREAD, nroSegmentoFREAD, offsetFREAD, direccionLogicaREAD; 
+                buffer_desempaquetar(bufferFREAD, &direccionLogicaREAD, sizeof(direccionLogicaREAD));
                 buffer_desempaquetar_string(bufferFREAD, &nombreDeArchFRead);
                 buffer_desempaquetar_string(bufferFREAD, &cantBytes);
                 buffer_desempaquetar(bufferFREAD, &pidParaFREAD, sizeof(pidParaFREAD));
@@ -696,7 +707,7 @@ void atender_pcb() {
                 buffer_empaquetar(bufferParaMANDARaFS, &punteroFRead, sizeof(punteroFRead));
                 buffer_empaquetar_string(bufferParaMANDARaFS, cantBytes);
                 // para fs
-
+                buffer_empaquetar(bufferParaMANDARaFS, &direccionLogicaREAD, sizeof(direccionLogicaREAD));
                 buffer_empaquetar(bufferParaMANDARaFS, &pidParaFREAD, sizeof(pidParaFREAD));
                 buffer_empaquetar(bufferParaMANDARaFS, &nroSegmentoFREAD, sizeof(nroSegmentoFREAD));
                 buffer_empaquetar(bufferParaMANDARaFS, &offsetFREAD, sizeof(offsetFREAD));
@@ -712,7 +723,7 @@ void atender_pcb() {
                 free(nombreDeArchFRead);
                 free(cantBytes);
                 /// logica para bloquearlo 
-                hayQueReplanificar = false;
+                hayQueReplanificar = true;
                 break;
             case HEADER_proceso_F_WRITE:
                 t_buffer* bufferWRITE =buffer_crear();
@@ -739,7 +750,7 @@ void atender_pcb() {
                 // para fs
                 buffer_empaquetar_string(bufferParaMANDARFWRITE, nombreDeArchFWRITE);
                 buffer_empaquetar(bufferParaMANDARFWRITE, &punteroFWrite, sizeof(punteroFWrite));
-                buffer_empaquetar_string(bufferParaMANDARFWRITE, cantBytes);
+                buffer_empaquetar_string(bufferParaMANDARFWRITE, cantBytesFWRITE);
                 buffer_empaquetar(bufferParaMANDARFWRITE, &direccionLogica, sizeof(direccionLogica));
                 buffer_empaquetar(bufferParaMANDARFWRITE, &pidParaFWRITE, sizeof(pidParaFWRITE));
                 buffer_empaquetar(bufferParaMANDARFWRITE, &nroSegmentoFWRITE, sizeof(nroSegmentoFWRITE));
@@ -749,11 +760,11 @@ void atender_pcb() {
 
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
-                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFRead);
+                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFWRITE);
                 
                 free(nombreDeArchFWRITE);
                 free(cantBytesFWRITE);
-                hayQueReplanificar = false;
+                hayQueReplanificar = true;
                 break;
             case HEADER_proceso_F_SEEK:
                 t_buffer* buffer_F_SEEK = buffer_crear();

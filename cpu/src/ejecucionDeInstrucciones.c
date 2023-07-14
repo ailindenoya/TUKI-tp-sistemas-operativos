@@ -366,8 +366,8 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
     buffer_destruir(buffer_F_SEEK);
 
     t_buffer* buffer_Parametros = buffer_crear();
-    buffer_empaquetar_string(buffer_Parametros, nombreArchivo);
     buffer_empaquetar(buffer_Parametros, &punteroArchivo, sizeof(punteroArchivo));
+    buffer_empaquetar_string(buffer_Parametros, nombreArchivo);
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, buffer_Parametros);
     buffer_destruir(buffer_Parametros);
 }
@@ -385,11 +385,12 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
 
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
-            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_READ, bufferFREAD);
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_READ, bufferFREAD);
             buffer_destruir(bufferFREAD);
 
             t_buffer *bufferParametros = buffer_crear();
             uint32_t pid = contexto_obtener_pid(contexto);
+            buffer_empaquetar(bufferParametros,&direccionLogica, sizeof(direccionLogica));
             buffer_empaquetar_string(bufferParametros, nombreArchivo);
             buffer_empaquetar_string(bufferParametros, cantBytes);
             buffer_empaquetar(bufferParametros, &pid,sizeof(pid));
@@ -414,13 +415,13 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
     uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
     uint32_t offset = obtener_offset_de_segmento(direccionLogica);
     
-    t_buffer *bufferFREAD = buffer_crear();
-    empaquetar_contexto_para_kernel(bufferFREAD,programCounterActualizado,contexto);
+    t_buffer *bufferWRITE= buffer_crear();
+    empaquetar_contexto_para_kernel(bufferWRITE,programCounterActualizado,contexto);
 
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
-            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_WRITE, bufferFREAD);
-            buffer_destruir(bufferFREAD);
+            stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_WRITE, bufferWRITE);
+            buffer_destruir(bufferWRITE);
         
             t_buffer *bufferParametros = buffer_crear();
             uint32_t pid = contexto_obtener_pid(contexto);
@@ -434,11 +435,11 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
             buffer_destruir(bufferParametros);
         }
         else{
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferWRITE);
         }
     }
     else{
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferWRITE);
     }
 }
 
@@ -462,7 +463,7 @@ bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoIns
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_write:
-        ejecutar_FREAD(contexto,programCounterActualizado,parametro1,parametro2, parametro3);
+        ejecutar_FWRITE(contexto,programCounterActualizado,parametro1,parametro2, parametro3);
         pararDeEjecutar = true;
         break;
     case INSTRUCCION_f_read:
