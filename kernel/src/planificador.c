@@ -215,9 +215,9 @@ void obtenerListaDePids(t_estado* estado){
     for(int i=0; i<cantidadDePcbs; i++){
         int pid = pcb_obtener_pid(list_get(estado_obtener_lista(estado),i)); 
         sprintf(vec, "%d", pid);
-        log_info(kernelLogger, "Cant pcbs %d", cantidadDePcbs);
+      /* log_info(kernelLogger, "Cant pcbs %d", cantidadDePcbs);
         log_info(kernelLogger, "Vec %s", vec);
-        log_info(kernelLogger, "Vector %s", vector);
+        log_info(kernelLogger, "Vector %s", vector);*/ 
         vector = concat(vector, vec);
     }
 
@@ -238,7 +238,8 @@ void iniciar_io(t_pcb* pcb) {
     pcb_setear_tiempo_bloqueo(pcb, 0);
     
     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
-
+    pcb_setear_tiempoDellegadaAReady(pcb);
+    
     obtenerListaDePids(estadoReady);
     sem_post(estado_obtener_sem(estadoReady));
 }
@@ -484,6 +485,7 @@ void desbloquearProcesoDesdeFS(char* nombreArchivo) {
     pcb_setear_estado(pcbADesbloquear, READY);
     estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
     loggear_cambio_estado("EXEC", "READY", pcb_obtener_pid(pcbADesbloquear));
+    pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
     sem_post(estado_obtener_sem(estadoReady));
 }
 
@@ -663,6 +665,7 @@ void atender_pcb() {
                     pcb_setear_estado(pcbQueAgarraArchivo, READY);
                     estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
                     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
+                    pcb_setear_tiempoDellegadaAReady(pcbQueAgarraArchivo);
                     obtenerListaDePids(estadoReady);
                     sem_post(estado_obtener_sem(estadoReady));
                 }
@@ -718,7 +721,8 @@ void atender_pcb() {
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig), bufferWRITE);
                 char* nombreDeArchFWRITE = malloc(sizeof(*nombreDeArchFWRITE));
                 char* cantBytesFWRITE =malloc(sizeof(*cantBytesFWRITE));
-                uint32_t pidParaFWRITE, nroSegmentoFWRITE, offsetFWRITE; 
+                uint32_t pidParaFWRITE, nroSegmentoFWRITE, offsetFWRITE, direccionLogica;
+                buffer_desempaquetar(bufferWRITE, &direccionLogica, sizeof(direccionLogica));
                 buffer_desempaquetar_string(bufferWRITE, &nombreDeArchFWRITE);
                 buffer_desempaquetar_string(bufferWRITE, &cantBytesFWRITE);
                 buffer_desempaquetar(bufferWRITE, &pidParaFWRITE, sizeof(pidParaFWRITE));
@@ -729,16 +733,15 @@ void atender_pcb() {
                 t_buffer* bufferParaMANDARFWRITE = buffer_crear();
                 t_archivo_tabla_proceso* entradaDeTablaDeProcesoFWrite = encontrarArchivoTablaProcesos(nombreDeArchFWRITE, pcb);
                 uint32_t punteroFWrite = t_archivo_tabla_proceso_obtener_puntero(entradaDeTablaDeProcesoFWrite);
+                // para fs
                 buffer_empaquetar_string(bufferParaMANDARFWRITE, nombreDeArchFWRITE);
                 buffer_empaquetar(bufferParaMANDARFWRITE, &punteroFWrite, sizeof(punteroFWrite));
                 buffer_empaquetar_string(bufferParaMANDARFWRITE, cantBytes);
-                // para fs
+                buffer_empaquetar(bufferParaMANDARFWRITE, &direccionLogica, sizeof(direccionLogica));
                 buffer_empaquetar(bufferParaMANDARFWRITE, &pidParaFWRITE, sizeof(pidParaFWRITE));
                 buffer_empaquetar(bufferParaMANDARFWRITE, &nroSegmentoFWRITE, sizeof(nroSegmentoFWRITE));
                 buffer_empaquetar(bufferParaMANDARFWRITE, &offsetFWRITE, sizeof(offsetFWRITE));
-                // para fs que se lo envia a memoria 
                 stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig),HEADER_F_WRITE, bufferParaMANDARFWRITE);
-
                 buffer_destruir(bufferParaMANDARFWRITE);
                 free(nombreDeArchFWRITE);
                 free(cantBytesFWRITE);

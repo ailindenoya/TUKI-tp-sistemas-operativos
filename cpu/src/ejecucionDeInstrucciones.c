@@ -407,7 +407,7 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
 void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
     log_info(cpuLogger, "PID: %d - Ejecutando: FWRITE", contexto_obtener_pid(contexto));
     int bytes = atoi(cantBytes);
-    int direccionLogica = atoi(dirLogica);
+    uint32_t direccionLogica = atoi(dirLogica);
     uint32_t nroSegmento = obtener_numero_de_segmento(direccionLogica);
     uint32_t offset = obtener_offset_de_segmento(direccionLogica);
     
@@ -418,9 +418,10 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_F_WRITE, bufferFREAD);
             buffer_destruir(bufferFREAD);
-
+        
             t_buffer *bufferParametros = buffer_crear();
             uint32_t pid = contexto_obtener_pid(contexto);
+            buffer_empaquetar(bufferParametros,&direccionLogica, sizeof(direccionLogica));
             buffer_empaquetar_string(bufferParametros, nombreArchivo);
             buffer_empaquetar_string(bufferParametros, cantBytes);
             buffer_empaquetar(bufferParametros, &pid,sizeof(pid));

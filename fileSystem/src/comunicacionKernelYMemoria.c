@@ -43,17 +43,15 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
             case HEADER_F_READ:
                 log_info(fileSystemLogger, "Se recibió FREAD");
                 fcb = encontrarFCB(nombreArchivo);
-                uint32_t punteroF_READ, cantBytesF_READ, direccionMemoria;
+                uint32_t punteroF_READ, cantBytesF_READ, direccionLogicaDeFREAD;
                 buffer_desempaquetar(bufferAux,&punteroF_READ, sizeof(punteroF_READ));
-                
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
+                buffer_desempaquetar(bufferAux, &direccionLogicaDeFREAD, sizeof(direccionLogicaDeFREAD));
                 cantBytesF_READ = atoi(parametro3); 
-
-                char* datosLeidos = malloc(cantBytesF_READ);    // Guardar en memoria
-                datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
-                //log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, , cantBytesF_READ)
-
+                char* datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
+                log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, direccionLogicaDeFREAD, cantBytesF_READ)
                 buffer_empaquetar(bufferAux, &cantBytesF_READ, sizeof(cantBytesF_READ));
+                buffer_empaquetar(bufferAux, datosLeidos, sizeof(*datosLeidos)*cantBytesF_READ);
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_registro, bufferAux);
                 int respuestaMemoriaF_READ = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
                 if(respuestaMemoriaF_READ!= HEADER_OK_puede_continuar){
@@ -70,22 +68,32 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
             case HEADER_F_WRITE:
                 log_info(fileSystemLogger, "Se recibió F_WRITE");
                 fcb = encontrarFCB(nombreArchivo);
-                uint32_t punteroF_WRITE, cantBytesF_WRITE;
+                uint32_t punteroF_WRITE, cantBytesF_WRITE, dirLogica;
                 buffer_desempaquetar(bufferAux,&punteroF_WRITE, sizeof(punteroF_WRITE));
                 buffer_desempaquetar_string(bufferAux, &parametro3); // cantbytes
+                buffer_desempaquetar(bufferAux, &dirLogica, sizeof(dirLogica));
                 cantBytesF_WRITE = atoi(parametro3); 
-
-                //log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, , cantBytesF_READ)
-                //F_WRITE(fcb, cantBytesF_WRITE, punteroF_WRITE, )
-
                 buffer_empaquetar(bufferAux, &cantBytesF_WRITE, sizeof(cantBytesF_WRITE));
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_memoria, bufferAux);
                 int respuestaMemoriaF_WRITE = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
                 if(respuestaMemoriaF_WRITE!= HEADER_OK_puede_continuar){
-                    log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir"); 
+                    log_error(fileSystemLogger, "error al recibir ok de memoria luego de escribir %d", respuestaMemoriaF_WRITE); 
                     exit(-1);
                 }
-                stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                t_buffer* bufferValorDeMemoria = buffer_crear();
+                char* informacion = malloc(sizeof(*informacion)*cantBytesF_WRITE);
+                int respuestaValorDeMemoria = stream_recibir_header(fileSystem_config_obtener_socket_memoria(fileSystemConfig));
+                if(respuestaValorDeMemoria!= HEADER_valor_de_memoria){
+                    log_error(fileSystemLogger, "error al recibir valor de memoria %d", respuestaValorDeMemoria); 
+                    exit(-1);
+                }
+                stream_recibir_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), bufferValorDeMemoria);   
+                buffer_desempaquetar(bufferValorDeMemoria, informacion, sizeof(*informacion)*cantBytesF_WRITE);
+                buffer_destruir(bufferValorDeMemoria);
+
+                F_WRITE(fcb, cantBytesF_WRITE, punteroF_WRITE, informacion);
+                log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ,dirLogica,cantBytesF_READ);
+
                 t_buffer* bufferDesbloqueoFWRITE = buffer_crear();
                 buffer_empaquetar_string(bufferDesbloqueoFWRITE, nombreArchivo);
                 stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFWRITE);
