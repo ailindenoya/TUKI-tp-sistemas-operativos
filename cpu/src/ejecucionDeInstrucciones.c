@@ -362,11 +362,14 @@ void ejecutar_F_SEEK(t_contexto* contexto,uint32_t programCounterActualizado, ch
 
     t_buffer* buffer_F_SEEK = buffer_crear();
     empaquetar_contexto_para_kernel(buffer_F_SEEK, programCounterActualizado, contexto);
-    buffer_empaquetar_string(buffer_F_SEEK, nombreArchivo);
-    buffer_empaquetar(buffer_F_SEEK, &punteroArchivo, sizeof(punteroArchivo));
-
     stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_SEEK, buffer_F_SEEK);
     buffer_destruir(buffer_F_SEEK);
+
+    t_buffer* buffer_Parametros = buffer_crear();
+    buffer_empaquetar_string(buffer_Parametros, nombreArchivo);
+    buffer_empaquetar(buffer_Parametros, &punteroArchivo, sizeof(punteroArchivo));
+    stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, buffer_Parametros);
+    buffer_destruir(buffer_Parametros);
 }
 
 

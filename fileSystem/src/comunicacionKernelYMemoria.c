@@ -134,7 +134,7 @@ void F_OPEN(char* NombreArchivo){
     int fd = open(ruta, O_RDWR);
 
     if (fd == -1){
-        log_error(fileSystemLogger, "No existe el archivo FCB: %s", NombreArchivo);
+        log_info(fileSystemLogger, "No existe el archivo FCB: %s", NombreArchivo);
 
         stream_enviar_buffer_vacio(socketKERNEL, HEADER_no_existe_archivo);
 
