@@ -197,19 +197,42 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
 
 /*                          INICIO DISPOSITIVO I/O                       */
 
-char obtenerListaDePids(t_estado* estado){
 
-char vector[list_size(estado_obtener_lista(estado))]; 
-    
+
+char* concat(const char* s1, const char* s2){
+    char* result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+
+void obtenerListaDePids(t_estado* estado){
+
+    int cantidadDePcbs =list_size(estado_obtener_lista(estado));
+    char** vector;
+    char* vec;
+
+    for(int i=0; i<cantidadDePcbs; i++){
+        int pid = pcb_obtener_pid(list_get(estado_obtener_lista(estado),i)); 
+        vector[i] = string_itoa(pid);
+    }
+
+
+
     void copiarPIDaVector(void* Aux){
         t_pcb* pcb = (t_pcb*) Aux;  
-        int i = 0; 
-        vector[i] = pcb_obtener_pid(pcb);
+        int i=0;
+        vector[i] = string_itoa((int)pcb_obtener_pid(pcb));
+
         i++;
+       /* vector = concat(vector, (string_itoa((int)pcb_obtener_pid(pcb))));
+        log_info(kernelLogger, " PCB NRO %s ", (string_itoa((int)pcb_obtener_pid(pcb))));*/
     }
 
     list_iterate(estado_obtener_lista(estado), copiarPIDaVector);
-    return *vector; 
+
+    log_info(kernelLogger, "Cola Ready %s   %s ", kernel_config_obtener_algoritmo(kernelConfig), vector);
+    free(vector);
 }
 
 void iniciar_io(t_pcb* pcb) {
@@ -224,7 +247,7 @@ void iniciar_io(t_pcb* pcb) {
     
     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcb));
 
-   // log_info(kernelLogger, "Cola Ready %s  %d ", kernel_config_obtener_algoritmo(kernelConfig), obtenerListaDePids(estadoReady));
+    obtenerListaDePids(estadoReady);
     sem_post(estado_obtener_sem(estadoReady));
 }
 /*                  PLANIFICADOR A LARGO PLAZO                              */
@@ -263,6 +286,7 @@ void  planificador_largo_plazo(void) {
         
         estado_encolar_pcb_con_semaforo(estadoReady, pcbQuePasaAReady);
         loggear_cambio_estado("NEW", "READY", pcb_obtener_pid(pcbQuePasaAReady));
+        obtenerListaDePids(estadoReady);
         pcb_setear_tiempoDellegadaAReady(pcbQuePasaAReady);
         sem_post(estado_obtener_sem(estadoReady));
 
@@ -316,8 +340,6 @@ int* convertirInstanciasDeRecursoEnEnteros(char** instancias, int dimension){
 }
 
 
-
-
 void atender_wait(char* recurso, t_pcb* pcb){
     
     char** pteroARecursos = kernel_config_obtener_recursos(kernelConfig);
@@ -325,8 +347,6 @@ void atender_wait(char* recurso, t_pcb* pcb){
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]--;
-            log_info(kernelLogger, "PID: %d - Wait: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
-
             if(vectorDeInstancias[i] < 0){
                 list_add(pteroAVectorDeListaDeRecursos[i],pcb);
                 pcb_setear_estado(pcb, BLOCKED);
@@ -347,8 +367,16 @@ void atender_wait(char* recurso, t_pcb* pcb){
             finalizar_proceso(pcb,WAIT_DE_RECURSO_NO_EXISTENTE);
             hayQueReplanificar = true; 
     }
+    loggearInstancias(pcb, recurso);
 }
 
+void loggearInstancias(t_pcb* pcb, char* recurso){
+    char inst[dimensionDeArrayDeRecursos]; 
+    for(int i=0; i<dimensionDeArrayDeRecursos; i++){
+        inst[i] = vectorDeInstancias[i];
+    }
+    log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %s ", pcb_obtener_pid(pcb), recurso, inst);
+}
 
 void atender_signal(char* recurso, t_pcb* pcb){
     
@@ -357,14 +385,13 @@ void atender_signal(char* recurso, t_pcb* pcb){
     for(i=0; i<dimensionDeArrayDeRecursos;i++){
         if(strcmp(*pteroARecursos, recurso) == 0){
             vectorDeInstancias[i]++;
-            log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %d", pcb_obtener_pid(pcb), recurso, vectorDeInstancias[i]);
             if(vectorDeInstancias[i] == 0){
                 t_pcb* pcbADesbloquear = list_get(pteroAVectorDeListaDeRecursos[i], 0);  //agarra el primero de la cola de bloqueados del recurso
                 list_remove(pteroAVectorDeListaDeRecursos[i],0);
                 pcb_setear_estado(pcbADesbloquear, READY);
                 estado_encolar_pcb_con_semaforo(estadoReady, pcbADesbloquear);
                 loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbADesbloquear));
-                log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), recurso);
+                obtenerListaDePids(estadoReady);
                 pcb_setear_tiempoDellegadaAReady(pcbADesbloquear);
                 sem_post(estado_obtener_sem(estadoReady));
             }
@@ -378,6 +405,7 @@ void atender_signal(char* recurso, t_pcb* pcb){
     }else{
         hayQueReplanificar = false;
     }
+    loggearInstancias(pcb, recurso);
 }
 
 t_archivo_tabla* encontrarEntradaEnTablaGlobal(char* nombreArchivo){
@@ -499,7 +527,7 @@ void atender_pcb() {
         t_pcb* pcb = list_get(estado_obtener_lista(estadoExec), 0); // saca el primer pcb de la lista
         pthread_mutex_unlock(estado_obtener_mutex(estadoExec));
         
-        if(hayQueReplanificar == false){
+        if(hayQueReplanificar == true){
             loggear_cambio_estado("READY", "EXEC", pcb_obtener_pid(pcb));
         }
         // tiempo real ejecutado - rafaga
@@ -643,6 +671,7 @@ void atender_pcb() {
                     pcb_setear_estado(pcbQueAgarraArchivo, READY);
                     estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
                     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
+                    obtenerListaDePids(estadoReady);
                     sem_post(estado_obtener_sem(estadoReady));
                 }
                 free(nombreDeArchFClose);
