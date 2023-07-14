@@ -213,7 +213,7 @@ void obtenerListaDePids(t_estado* estado){
 
     for(int i=0; i<cantidadDePcbs; i++){
         int pid = pcb_obtener_pid(list_get(estado_obtener_lista(estado),i)); 
-        sprintf(vec, "%d", pid);
+        sprintf(vec, " %d", pid);
       /* log_info(kernelLogger, "Cant pcbs %d", cantidadDePcbs);
         log_info(kernelLogger, "Vec %s", vec);
         log_info(kernelLogger, "Vector %s", vector);*/ 
@@ -221,7 +221,7 @@ void obtenerListaDePids(t_estado* estado){
     }
 
     char* algoritmoPlanif = kernel_config_obtener_algoritmo(kernelConfig);
-    log_info(kernelLogger, "Cola Ready %s   %s ", algoritmoPlanif, vector);
+    log_info(kernelLogger, "Cola Ready %s  [ %s ]", algoritmoPlanif, vector);
     free(vec);
     free(vector);
 }
@@ -363,11 +363,23 @@ void atender_wait(char* recurso, t_pcb* pcb){
 }
 
 void loggearInstancias(t_pcb* pcb, char* recurso){
-    char inst[dimensionDeArrayDeRecursos]; 
+
+    char* vector = "";
+    char* vec = malloc(sizeof(*vec));
+
     for(int i=0; i<dimensionDeArrayDeRecursos; i++){
-        inst[i] = vectorDeInstancias[i];
+        
+        int instancia = vectorDeInstancias[i];
+        sprintf(vec, "%d ", instancia);
+      /* log_info(kernelLogger, "Cant pcbs %d", cantidadDePcbs);
+        log_info(kernelLogger, "Vec %s", vec);
+        log_info(kernelLogger, "Vector %s", vector);*/ 
+        vector = concat(vector, vec);
     }
-    log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: %s ", pcb_obtener_pid(pcb), recurso, inst);
+    
+    log_info(kernelLogger, "PID: %d - Signal: %s - Instancias: [ %s ]", pcb_obtener_pid(pcb), recurso, vector);
+    free(vec);
+    free(vector);
 }
 
 void atender_signal(char* recurso, t_pcb* pcb){
