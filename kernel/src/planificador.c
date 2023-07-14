@@ -14,7 +14,6 @@ extern int socketMEMORIA;
 
 uint32_t siguientePID;
 
-//faltan semaforos
 sem_t gradoDeMultiprogramacion;
 sem_t hayPcbsParaAgregarAlSistema;
 sem_t dispatchPermitido;
@@ -831,12 +830,16 @@ void atender_pcb() {
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_hay_que_compactar){
                     stream_recibir_buffer_vacio(socketMemoria);
-                    
-                    // verificar que no haya operaciones FREAD Y FWRITE entre memoria y FS
-
+  
+                    stream_enviar_buffer_vacio(kernel_config_obtener_socket_compactacion(kernelConfig), HEADER_comprobar_si_hay_operaciones_activas_fs_mem);
+                    int rstaFSCOMPACTACION = stream_recibir_header(kernel_config_obtener_socket_compactacion(kernelConfig));
+                    if(rstaFSCOMPACTACION != HEADER_OK_puede_continuar){
+                        log_error(kernelLogger, "no se recibio correctamente el rstaFSCOMPACTACION se recibio %d", rstaFSCOMPACTACION);
+                        exit(-1);
+                    }
+                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_compactacion(kernelConfig))                    
                     stream_enviar_buffer_vacio(socketMemoria, HEADER_bueno_compacta);
 
-                    // DESPUES DE COMPACTAR
                     respuestaMemoria = stream_recibir_header(socketMemoria);
                     if(respuestaMemoria != HEADER_lista_de_tablas_de_segmentos){
                         log_error(kernelLogger, "NO recbibi lista de tablas de segmentos, recibi: %d", respuestaMemoria);
