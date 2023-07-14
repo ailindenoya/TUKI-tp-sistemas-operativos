@@ -170,11 +170,14 @@ int main(int argc, char* argv[]){
     conectar_con_file_system(&socketFilesystemDesbloqueos, HANDSHAKE_kernel_desbloqueos);
     kernel_config_setear_socket_filesystem_desbloqueos(kernelConfig, socketFilesystemDesbloqueos);
 
-    
+    int socketFilesystemCOMPACTACION;
+    conectar_con_file_system(&socketFilesystemCOMPACTACION, HANDSHAKE_kernel_compactacion);
+    kernel_config_obtener_socket_compactacion(kernelConfig, socketFilesystemCOMPACTACION);
 
-    // inicializa servidor de instancias CONSOLA /// ARREGLAR 
+    // inicializa servidor de instancias CONSOLA ///
     int socketESCUCHA = iniciar_servidor("0.0.0.0", kernel_config_obtener_puerto_escucha(kernelConfig));
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE INSTANCIAS CONSOLA");
+
 
 
     // inicializar 

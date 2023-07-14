@@ -51,5 +51,6 @@ int kernel_config_obtener_socket_cpu(t_kernel_config* self);
 int kernel_config_obtener_socket_memoria(t_kernel_config* self);
 int kernel_config_obtener_socket_filesystem_peticiones(t_kernel_config* self);
 int kernel_config_obtener_socket_filesystem_desbloqueos(t_kernel_config* self);
-
+int kernel_config_obtener_socket_compactacion(t_kernel_config* self);
+void kernel_config_obtener_socket_compactacion(t_kernel_config* self, int socket);
 #endif

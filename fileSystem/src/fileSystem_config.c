@@ -22,6 +22,7 @@ struct t_fileSystem_config{
     int SOCKET_MEMORIA;
     int SOCKET_KERNEL_PETICIONES;
     int SOCKET_KERNEL_DESBLOQUEOS;
+    int SOCKET_KERNEL_COMPACTACION;
 };
 
 struct t_superbloque_config{
@@ -42,6 +43,9 @@ void fileSystem_config_iniciar(void* moduleConfig, t_config* tempCfg){
     fileSystemConfig->PATH_FCB = strdup(config_get_string_value(tempCfg, "PATH_FCB"));
     fileSystemConfig->RETARDO_ACCESO_BLOQUE = config_get_int_value(tempCfg, "RETARDO_ACCESO_BLOQUE");
     fileSystemConfig->SOCKET_MEMORIA = -1;
+    fileSystemConfig->SOCKET_KERNEL_PETICIONES= -1;
+    fileSystemConfig->SOCKET_KERNEL_DESBLOQUEOS= -1;
+    fileSystemConfig->SOCKET_KERNEL_COMPACTACION = -1;
 }
 
 void superbloque_config_iniciar(void* moduleConfig, t_config* tempCfg){
@@ -73,13 +77,10 @@ void fileSystem_config_destruir(t_fileSystem_config* self) {
      free(self->PATH_BITMAP);
      free(self->PATH_BLOQUES);
      free(self->PATH_FCB);
-     //free(self->RETARDO_ACCESO_BLOQUE);
      free(self);
  }
 
  void superbloque_config_destruir(t_superbloque_config* self){
-    // free(self->BLOCK_COUNT);
-    // free(self->BLOCK_SIZE);
 
     free(self);
  }
@@ -119,6 +120,12 @@ void fileSystem_config_setear_socket_kernel_peticiones(t_fileSystem_config* self
 }
 int fileSystem_config_obtener_socket_kernel_peticiones(t_fileSystem_config* self) {
      return self->SOCKET_KERNEL_PETICIONES;
+}
+int fileSystem_config_obtener_socket_kernel_compactacion(t_fileSystem_config* self) {
+     return self->SOCKET_KERNEL_COMPACTACION;
+}
+void fileSystem_config_setear_socket_kernel_compactacion(t_fileSystem_config* self, int socket) {
+     self->SOCKET_KERNEL_COMPACTACION = socket; 
 }
 void fileSystem_config_setear_socket_kernel_desbloqueos(t_fileSystem_config* self, int socket) {
      self->SOCKET_KERNEL_DESBLOQUEOS = socket;

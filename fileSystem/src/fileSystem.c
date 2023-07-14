@@ -1,11 +1,15 @@
 #include "../include/fileSystem_config.h"
 #include "../include/bitmap.h"
 #include "../include/comunicacionKernelYMemoria.h"
+#include <pthread.h>
+#include <semaphore.h>
 
 #define LOGS_FILESYSTEM "bin/fi64eSystem.log"
 #define MODULO_FILESYSTEM "fileSystem"
 #define NUMERO_DE_ARGUMENTOS_NECESARIOS 3
 
+
+sem_t sePuedeCompactar;
 int socketMEMORIA;
 uint32_t tamanioBloque;
 extern t_log *fileSystemLogger;
@@ -49,6 +53,23 @@ void handshake_kernel(int socket, uint8_t handshake)
     }
     stream_enviar_buffer_vacio(socket, HANDSHAKE_puede_continuar);
     log_info(fileSystemLogger, "se establecio conexion con %s", cliente);
+}
+
+void controlar_pedidos_de_compactacion(){
+    for(;;){
+        int headerCompactacion = stream_recibir_header(fileSystem_config_obtener_socket_kernel_compactacion(fileSystemConfig));
+        stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_kernel_compactacion(fileSystemConfig));
+        if(headerCompactacion != HEADER_comprobar_si_hay_operaciones_activas_fs_mem){
+            log_error(fileSystemConfig, "no se recibio el header de compactacion, se recibio %d",headerCompactacion);
+            exit(-1);
+        }
+        sem_wait(&sePuedeCompactar);
+        
+        stream_enviar_buffer_vacio(fileSystem_config_obtener_socket_kernel_compactacion(fileSystemConfig), HEADER_OK_puede_continuar);
+        
+        sem_post(&sePuedeCompactar);
+
+    }
 }
 
 int main(int argc, char *argv[])
@@ -104,12 +125,24 @@ int main(int argc, char *argv[])
     avisar_si_hay_error(socketESCUCHA, "SERVIDOR DE ESCUCHA PARA KERNEL");
 
     log_info(fileSystemLogger, "ESPERANDO CLIENTES");
+
+    
     int socketKERNEL = accept(socketESCUCHA, &cliente, &len);
     handshake_kernel(socketKERNEL, HANDSHAKE_kernel);
     fileSystem_config_setear_socket_kernel_peticiones(fileSystemConfig, socketKERNEL);
+
     int socketKERNEL_DESBLOQUEOS = accept(socketESCUCHA, &cliente, &len);
     handshake_kernel(socketKERNEL_DESBLOQUEOS, HANDSHAKE_kernel_desbloqueos);
     fileSystem_config_setear_socket_kernel_desbloqueos(fileSystemConfig, socketKERNEL_DESBLOQUEOS);
+    
+    int socketKERNEL_COMPACTACION = accept(socketESCUCHA, &cliente, &len);
+    handshake_kernel(socketKERNEL_COMPACTACION, HANDSHAKE_kernel_compactacion);
+    fileSystem_config_setear_socket_kernel_compactacion(fileSystemConfig, socketKERNEL_COMPACTACION);
+
+    sem_init(&sePuedeCompactar,0,1);
+    pthread_t hiloDeEscuchaParaKernel; 
+    pthread_create(&hiloDeEscuchaParaKernel, NULL, (void*)controlar_pedidos_de_compactacion, NULL);
 
     atenderPeticionesDeKernel();
+
 }

@@ -1,8 +1,10 @@
 #include "../include/comunicacionKernelYMemoria.h"
 #include "../../utils/include/stream.h"
 #include <commons/collections/list.h>
+#include <semaphore.h>
 #define PATH_FCB "fcb/"
 
+extern sem_t sePuedeCompactar;  
 extern int socketMEMORIA;
 extern uint32_t tamanioBloque;
 extern t_log* fileSystemLogger;
@@ -41,6 +43,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_destruir(bufferDesbloqueoTruncate);
                 break;
             case HEADER_F_READ:
+                sem_wait(&sePuedeCompactar);
                 log_info(fileSystemLogger, "Se recibió FREAD");
                 fcb = encontrarFCB(nombreArchivo);
                 uint32_t punteroF_READ, cantBytesF_READ, direccionLogicaDeFREAD;
@@ -64,8 +67,10 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_empaquetar_string(bufferDesbloqueoFREAD, nombreArchivo);
                 stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFREAD);
                 buffer_destruir(bufferDesbloqueoFREAD);
+                sem_post(&sePuedeCompactar);
                 break;
             case HEADER_F_WRITE:
+                sem_wait(&sePuedeCompactar);    
                 log_info(fileSystemLogger, "Se recibió F_WRITE");
                 fcb = encontrarFCB(nombreArchivo);
                 uint32_t punteroF_WRITE, cantBytesF_WRITE, dirLogica;
@@ -98,6 +103,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_empaquetar_string(bufferDesbloqueoFWRITE, nombreArchivo);
                 stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFWRITE);
                 buffer_destruir(bufferDesbloqueoFWRITE);
+                sem_post(&sePuedeCompactar);
                 break;
             case HEADER_F_CLOSE:
                 t_config* fcbABorrar = encontrarFCB(nombreArchivo);

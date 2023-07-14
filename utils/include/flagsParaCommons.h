@@ -31,6 +31,7 @@ typedef enum {
     HEADER_existe_archivo,
     HEADER_proceso_terminado_out_of_memory,
     HEADER_hay_que_compactar,
+    HEADER_comprobar_si_hay_operaciones_activas_fs_mem,
     HEADER_bueno_compacta,
     HEADER_lista_de_tablas_de_segmentos,
     HEADER_proceso_terminado_seg_fault,
@@ -58,6 +59,7 @@ typedef enum {
     HANDSHAKE_filesystem,
     HANDSHAKE_kernel,
     HANDSHAKE_kernel_desbloqueos,
+    HANDSHAKE_kernel_compactacion,
     HANDSHAKE_interrupcion,
     HANDSHAKE_puede_continuar
 } t_handshake;

@@ -19,6 +19,7 @@ struct t_kernel_config {
     int SOCKET_MEMORIA;
     int SOCKET_FILESYSTEM_PETICIONES;
     int SOCKET_FILESYSTEM_DESBLOQUEOS;
+    int SOCKET_COMPACTACION;
     char** RECURSOS; //Lista ordenada de los nombres de los recursos compartidos del sistema 
     char** INSTANCIAS_RECURSOS; //Lista ordenada de la cantidad de unidades por recurso
 
@@ -41,6 +42,7 @@ void kernel_config_iniciar(void* moduleConfig, t_config* tempCfg) {
     kernelConfig->SOCKET_MEMORIA = -1;
     kernelConfig->SOCKET_FILESYSTEM_PETICIONES = -1;
     kernelConfig->SOCKET_FILESYSTEM_DESBLOQUEOS = -1;
+    kernelConfig->SOCKET_COMPACTACION = -1;
     kernelConfig->RECURSOS = copiar_array(config_get_array_value(tempCfg,"RECURSOS"));
     kernelConfig->INSTANCIAS_RECURSOS = copiar_array(config_get_array_value(tempCfg,"INSTANCIAS_RECURSOS"));
 }
@@ -109,6 +111,12 @@ int kernel_config_obtener_socket_cpu(t_kernel_config* self) {
 }
 int kernel_config_obtener_socket_memoria(t_kernel_config* self) {
     return self->SOCKET_MEMORIA;
+}
+int kernel_config_obtener_socket_compactacion(t_kernel_config* self) {
+    return self->SOCKET_COMPACTACION;
+}
+void kernel_config_obtener_socket_compactacion(t_kernel_config* self, int socket) {
+    self->SOCKET_COMPACTACION = socket;
 }
 int kernel_config_obtener_socket_filesystem_peticiones(t_kernel_config* self) {
     return self->SOCKET_FILESYSTEM_PETICIONES;
