@@ -59,9 +59,9 @@ typedef enum {
     HANDSHAKE_filesystem,
     HANDSHAKE_kernel,
     HANDSHAKE_kernel_desbloqueos,
-    HANDSHAKE_kernel_compactacion,
     HANDSHAKE_interrupcion,
-    HANDSHAKE_puede_continuar
+    HANDSHAKE_puede_continuar,
+    HANDSHAKE_kernel_compactacion
 } t_handshake;
 
 

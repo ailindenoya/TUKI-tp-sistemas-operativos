@@ -1,3 +1,4 @@
 F_OPEN Michis2
 F_TRUNCATE Michis2 256
+F_TRUNCATE Michis2 128
 EXIT

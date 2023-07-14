@@ -50,11 +50,11 @@ void quitarBloques(int cantidadBloques, t_config* fcb, uint32_t tamanioViejo, ch
     
     for(int i=0;i<cantidadBloques;i++){
         fcb_quitar_bloque(fcb, bloquesAsignadosEnPunteroIndirecto);
-        if(bloquesAsignadosEnPunteroIndirecto == 1){
+        bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
+        if(bloquesAsignadosEnPunteroIndirecto == 0){
             config_set_value(fcb, "PUNTERO_INDIRECTO", "-1");
             config_save_in_file(fcb, ruta);
         }
-        bloquesAsignadosEnPunteroIndirecto = bloquesAsignadosEnPunteroIndirecto - 1;
     }
 }
 

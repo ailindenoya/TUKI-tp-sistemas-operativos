@@ -60,7 +60,7 @@ void controlar_pedidos_de_compactacion(){
         int headerCompactacion = stream_recibir_header(fileSystem_config_obtener_socket_kernel_compactacion(fileSystemConfig));
         stream_recibir_buffer_vacio(fileSystem_config_obtener_socket_kernel_compactacion(fileSystemConfig));
         if(headerCompactacion != HEADER_comprobar_si_hay_operaciones_activas_fs_mem){
-            log_error(fileSystemConfig, "no se recibio el header de compactacion, se recibio %d",headerCompactacion);
+            log_error(fileSystemLogger, "no se recibio el header de compactacion, se recibio %d",headerCompactacion);
             exit(-1);
         }
         sem_wait(&sePuedeCompactar);

@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig), bufferMemoria);
 
     if (memoriaRespuesta != HANDSHAKE_puede_continuar) {
-        log_error(cpuLogger, "no se establecio conexion con MEMORIA");
+        log_error(cpuLogger, "no se establecio conexion con MEMORIA: memoriaRespuesta: %d", memoriaRespuesta);
         log_destroy(cpuLogger);
         return -1;
     }else{

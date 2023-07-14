@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/memoria.out",
             "args": [
-                "cfg/Memoria_Memoria.cfg"
+                "cfg/Memoria_Filesystem.cfg"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

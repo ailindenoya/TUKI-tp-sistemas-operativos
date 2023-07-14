@@ -52,7 +52,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_desempaquetar(bufferAux, &direccionLogicaDeFREAD, sizeof(direccionLogicaDeFREAD));
                 cantBytesF_READ = atoi(parametro3); 
                 char* datosLeidos = F_READ(fcb, cantBytesF_READ, punteroF_READ);
-                log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, direccionLogicaDeFREAD, cantBytesF_READ)
+                log_info(fileSystemLogger, "Leer Archivo: %s - Puntero: %d - Memoria: %d - Tamaño: %d", nombreArchivo, punteroF_READ, direccionLogicaDeFREAD, cantBytesF_READ);
                 buffer_empaquetar(bufferAux, &cantBytesF_READ, sizeof(cantBytesF_READ));
                 buffer_empaquetar(bufferAux, datosLeidos, sizeof(*datosLeidos)*cantBytesF_READ);
                 stream_enviar_buffer(fileSystem_config_obtener_socket_memoria(fileSystemConfig), HEADER_valor_de_registro, bufferAux);

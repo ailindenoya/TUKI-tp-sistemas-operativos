@@ -172,7 +172,7 @@ int main(int argc, char* argv[]){
 
     int socketFilesystemCOMPACTACION;
     conectar_con_file_system(&socketFilesystemCOMPACTACION, HANDSHAKE_kernel_compactacion);
-    kernel_config_obtener_socket_compactacion(kernelConfig, socketFilesystemCOMPACTACION);
+    kernel_config_setear_socket_compactacion(kernelConfig, socketFilesystemCOMPACTACION);
 
     // inicializa servidor de instancias CONSOLA ///
     int socketESCUCHA = iniciar_servidor("0.0.0.0", kernel_config_obtener_puerto_escucha(kernelConfig));

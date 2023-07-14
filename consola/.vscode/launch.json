@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/consola.out",
-            "args": ["cfg/consola_config.cfg", "include/instrucciones/MEMORIA_2"],
+            "args": ["cfg/consola_config.cfg", "include/instrucciones/testFS"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

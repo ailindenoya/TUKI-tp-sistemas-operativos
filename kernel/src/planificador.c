@@ -847,7 +847,7 @@ void atender_pcb() {
                         log_error(kernelLogger, "no se recibio correctamente el rstaFSCOMPACTACION se recibio %d", rstaFSCOMPACTACION);
                         exit(-1);
                     }
-                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_compactacion(kernelConfig))                    
+                    stream_recibir_buffer_vacio(kernel_config_obtener_socket_compactacion(kernelConfig));                    
                     stream_enviar_buffer_vacio(socketMemoria, HEADER_bueno_compacta);
 
                     respuestaMemoria = stream_recibir_header(socketMemoria);
