@@ -678,6 +678,7 @@ void atender_pcb() {
                     buffer_empaquetar_string(buffer_FCLOSE_FS, nombreDeArchFClose);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
                     buffer_destruir(buffer_FCLOSE_FS);
+                    log_info(kernelLogger, "PID: %d - Cerrar Archivo: %s", pcb_obtener_pid(pcb), nombreDeArchFClose);
                 }
                 else{
                     t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
@@ -731,6 +732,7 @@ void atender_pcb() {
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                 log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFRead);
+                log_info(kernelLogger, "PID: %d - Leer Archivo: %s - Puntero: %d - Dirección Memoria: %d - Tamaño: %s", pcb_obtener_pid(pcb), nombreDeArchFRead, punteroFRead, direccionLogicaREAD, cantBytes);
                     
                 free(nombreDeArchFRead);
                 free(cantBytes);
@@ -773,7 +775,9 @@ void atender_pcb() {
                 pcb_setear_estado(pcb, BLOCKED);
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                 log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFWRITE);
-                
+                log_info(kernelLogger, "PID: %d - Escribir Archivo: %s - Puntero: %d - Dirección Memoria: %d - Tamaño: %s", pcb_obtener_pid(pcb), nombreDeArchFWRITE, punteroFWrite, direccionLogica, cantBytesFWRITE);
+                “PID: <PID> - Escribir Archivo: <NOMBRE ARCHIVO> - Puntero <PUNTERO> - Dirección Memoria <DIRECCIÓN MEMORIA> - Tamaño <TAMAÑO>”
+
                 free(nombreDeArchFWRITE);
                 free(cantBytesFWRITE);
                 hayQueReplanificar = true;
