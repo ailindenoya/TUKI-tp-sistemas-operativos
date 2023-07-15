@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/kernel.out",
-            "args": ["cfg/Kernel2.cfg"],
+            "args": ["cfg/Kernel_Memoria.cfg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
