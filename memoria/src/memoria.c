@@ -418,10 +418,14 @@ void recibir_de_kernel(){
                 proceso* procesoATerminar = (proceso*) procesoAux;
                 return procesoATerminar->pid == pID; 
             }
+            segmento* unSegmento = segmento_crear(0, 0, memoria_config_obtener_tamanio_segmento_0(memoriaConfig));
+            procesoAFinalizar->tablaDeSegmentos[0] = *unSegmento;
+
             int* indiceProcesoAFinalizar =  malloc(sizeof(*indiceProcesoAFinalizar));
             list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
             list_remove(listaDeProcesos, *indiceProcesoAFinalizar);  
-            // HAY QUE HACER FREE DEL RESTO DE SEGMENTOS EXCEPTO EL SEGMENTO 0 SI ES POSIBLE
+            // NO ANDA, EL FREE ESTE DE ABAJO ROMPE TODO
+            //free(procesoAFinalizar);
             free(indiceProcesoAFinalizar);
             break;
         default:

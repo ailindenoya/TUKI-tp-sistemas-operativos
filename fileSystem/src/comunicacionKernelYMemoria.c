@@ -105,6 +105,7 @@ void dispatch_FS_peticiones_de_Kernel(void){    // Completar con demás instrucc
                 buffer_empaquetar_string(bufferDesbloqueoFWRITE, nombreArchivo);
                 stream_enviar_buffer(socketKERNELDESBLOQUEOS, HEADER_desbloquear_proceso, bufferDesbloqueoFWRITE);
                 buffer_destruir(bufferDesbloqueoFWRITE);
+                free(informacion);
                 sem_post(&sePuedeCompactar);
                 break;
             case HEADER_F_CLOSE:

@@ -17,6 +17,7 @@ uint32_t siguientePID;
 sem_t gradoDeMultiprogramacion;
 sem_t hayPcbsParaAgregarAlSistema;
 sem_t dispatchPermitido;
+sem_t controlDeIntercambioDePcbs;
 
 struct tm* tiempo1970;
 time_t tiempoLocalActual;
@@ -172,6 +173,7 @@ void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
 void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
+        sem_wait(&controlDeIntercambioDePcbs);
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
 
         t_buffer* bufferParaMemoria = buffer_crear();
@@ -179,7 +181,7 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
         buffer_empaquetar(bufferParaMemoria,&idDePcbALiberar,sizeof(idDePcbALiberar));
         stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_finalizar_proceso_en_memoria, bufferParaMemoria);
         buffer_destruir(bufferParaMemoria);
-
+        sem_post(&controlDeIntercambioDePcbs);
         bool esPCBATerminar(void*pcbAux){
                 t_pcb* procesoATerminar = (t_pcb*) pcbAux;
                 return pcb_obtener_pid(procesoATerminar) == pcb_obtener_pid(pcbALiberar); 
@@ -251,6 +253,7 @@ void  planificador_largo_plazo(void) {
     for (;;) {
         sem_wait(&hayPcbsParaAgregarAlSistema);
         sem_wait(&gradoDeMultiprogramacion);
+        sem_wait(&controlDeIntercambioDePcbs);
 
         pthread_mutex_lock(estado_obtener_mutex(estadoNew));
         t_pcb* pcbQuePasaAReady = list_remove(estado_obtener_lista(estadoNew), 0);
@@ -261,7 +264,6 @@ void  planificador_largo_plazo(void) {
         pthread_mutex_unlock(&controlListaPcbs);
         ////// PARTE DE MEMORIA 
         avisar_a_memoria_de_crear_segmentos_de_proceso(pcbQuePasaAReady);
-        
         t_buffer* bufferSegmentoCreado = buffer_crear();
         uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
         log_info(kernelLogger, "kernel OBTIENE rsta de memoria %d", respuestaDeMemoria);
@@ -273,6 +275,7 @@ void  planificador_largo_plazo(void) {
         buffer_desempaquetar_tabla_de_segmentos(bufferSegmentoCreado,pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady),cantidadDeSegmentos);
         buffer_destruir(bufferSegmentoCreado);
 
+        sem_post(&controlDeIntercambioDePcbs);
         log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(pcbQuePasaAReady), pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady)[0].tamanio);
         ///////////
         
@@ -1052,6 +1055,7 @@ void iniciar_planificadores(void){
     pthread_t atenderBloqueoDeFilesystem;
     siguientePID = 1;
     sem_init(&dispatchPermitido,0,1);
+    sem_init(&controlDeIntercambioDePcbs,0,1);
     sem_init(&hayPcbsParaAgregarAlSistema,0,0);
     sem_init(&gradoDeMultiprogramacion, 0, kernel_config_obtener_grado_multiprogramacion(kernelConfig));
 
