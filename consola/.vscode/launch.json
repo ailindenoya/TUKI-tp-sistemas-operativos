@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/consola.out",
-            "args": ["cfg/consola_config.cfg", "include/instrucciones/FS_3"],
+            "args": ["cfg/consola_config.cfg", "include/instrucciones/DEADLOCK_3"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

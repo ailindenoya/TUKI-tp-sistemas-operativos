@@ -24,12 +24,12 @@ int obtener_indice_de_pcb(t_list* list, t_pcb* otroPCB) {
 }
 
 void intervalo_de_pausa(uint32_t duracionEnMilisegundos) {
-    const uint32_t SECS_MILISECS = 1000;
+    /*const uint32_t SECS_MILISECS = 1000;
     const uint32_t MILISECS_NANOSECS = 1000000;
     struct timespec timeSpec;
     timeSpec.tv_sec = duracionEnMilisegundos / SECS_MILISECS;
     timeSpec.tv_nsec = (duracionEnMilisegundos % SECS_MILISECS) * MILISECS_NANOSECS;
-    nanosleep(&timeSpec, &timeSpec);
+    nanosleep(&timeSpec, &timeSpec);*/
 }
 
 t_estado* estado_crear(t_nombre_estado nombre) {

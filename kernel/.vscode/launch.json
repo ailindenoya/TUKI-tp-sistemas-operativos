@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/kernel.out",
-            "args": ["cfg/Kernel_Filesystem.cfg"],
+            "args": ["cfg/Kernel_Deadlock.cfg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

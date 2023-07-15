@@ -230,9 +230,10 @@ void obtenerListaDePids(t_estado* estado){
 
 void iniciar_io(t_pcb* pcb) {
    
-    log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %u milisegundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
+    log_info(kernelLogger, "Ejecutando ráfagas I/O de PCB <ID %d> por %u segundos", pcb_obtener_pid(pcb), pcb_obtener_tiempo_bloqueo(pcb));
       
-    intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcb));
+    //intervalo_de_pausa(pcb_obtener_tiempo_bloqueo(pcb));
+    sleep(pcb_obtener_tiempo_bloqueo(pcb));
 
     pcb_setear_estado(pcb, READY);
     estado_encolar_pcb_con_semaforo(estadoReady, pcb);
