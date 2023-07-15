@@ -1,0 +1,17 @@
+#!/bin/bash
+cd ..
+cd memoria
+./bin/memoria.out cfg/Memoria_Deadlock.cfg
+cd ..
+cd cpu
+./bin/cpu.out cfg/CPU_Deadlock.cfg
+cd ..
+cd fileSystem
+./bin/fileSystem.out cfg/FileSystem_Deadlock.cfg superbloque.dat
+cd ..
+cd kernel
+./bin/kernel.out cfg/Kernel_Deadlock.cfg
+cd ..
+cd consola
+./bin/consola.out cfg/consola_config.cfg
+cd ..
