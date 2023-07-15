@@ -165,7 +165,7 @@ void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
         log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     case SIGNAL_DE_RECURSO_NO_EXISTENTE:
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SIGNAL_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
         break;
     }
 }
@@ -173,7 +173,7 @@ void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
 void finalizar_pcbs_en_hilo_con_exit(void) {
     for (;;) {
         sem_wait(estado_obtener_sem(estadoExit));
-        sem_wait(&controlDeIntercambioDePcbs);
+        //sem_wait(&controlDeIntercambioDePcbs);
         t_pcb* pcbALiberar = estado_desencolar_primer_pcb_con_semaforo(estadoExit);
 
         t_buffer* bufferParaMemoria = buffer_crear();
@@ -181,7 +181,7 @@ void finalizar_pcbs_en_hilo_con_exit(void) {
         buffer_empaquetar(bufferParaMemoria,&idDePcbALiberar,sizeof(idDePcbALiberar));
         stream_enviar_buffer(kernel_config_obtener_socket_memoria(kernelConfig), HEADER_finalizar_proceso_en_memoria, bufferParaMemoria);
         buffer_destruir(bufferParaMemoria);
-        sem_post(&controlDeIntercambioDePcbs);
+        //sem_post(&controlDeIntercambioDePcbs);
         bool esPCBATerminar(void*pcbAux){
                 t_pcb* procesoATerminar = (t_pcb*) pcbAux;
                 return pcb_obtener_pid(procesoATerminar) == pcb_obtener_pid(pcbALiberar); 
@@ -253,7 +253,7 @@ void  planificador_largo_plazo(void) {
     for (;;) {
         sem_wait(&hayPcbsParaAgregarAlSistema);
         sem_wait(&gradoDeMultiprogramacion);
-        sem_wait(&controlDeIntercambioDePcbs);
+        //sem_wait(&controlDeIntercambioDePcbs);
 
         pthread_mutex_lock(estado_obtener_mutex(estadoNew));
         t_pcb* pcbQuePasaAReady = list_remove(estado_obtener_lista(estadoNew), 0);
@@ -274,7 +274,7 @@ void  planificador_largo_plazo(void) {
         buffer_desempaquetar_tabla_de_segmentos(bufferSegmentoCreado,pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady),cantidadDeSegmentos);
         buffer_destruir(bufferSegmentoCreado);
 
-        sem_post(&controlDeIntercambioDePcbs);
+        //sem_post(&controlDeIntercambioDePcbs);
         log_info(kernelLogger, "Proceso con ID %d tiene ahora su segmento 0 de tamanio %d cargado en MEMORIA ", pcb_obtener_pid(pcbQuePasaAReady), pcb_obtener_tabla_de_segmentos(pcbQuePasaAReady)[0].tamanio);
         ///////////
         
