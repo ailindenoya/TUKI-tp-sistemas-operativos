@@ -125,11 +125,8 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
         buffer_empaquetar(buffer,&offset, sizeof(offset));
         char* valorDeMemoria = malloc(sizeof(*valorDeMemoria));
         if (strcmp(reg, "AX") == 0){   
-            log_info(cpuLogger, "llegue a AX");
             pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
-            log_info(cpuLogger, "le pedi a memoria");
             copiarStringAVector(valorDeMemoria, registrosDeCpu.AX, 4);
-            log_info(cpuLogger, "copie el string al vector");
         }else if (strcmp(reg, "BX") == 0){   
             pedirleAMemoria(buffer, 4, valorDeMemoria, offset, contexto, nroSegmento, programCounterActualizado);
             copiarStringAVector(valorDeMemoria, registrosDeCpu.BX, 4);

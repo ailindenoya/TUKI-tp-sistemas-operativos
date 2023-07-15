@@ -831,7 +831,7 @@ void atender_pcb() {
                 break;
             case HEADER_create_segment:
                 t_buffer* bufferCreateSegment = buffer_crear();
-                uint8_t headerCPU = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
+                stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
                 uint32_t idCreate;
                 uint32_t tamanio;
