@@ -102,11 +102,12 @@ void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMe
         }
         valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
         char* valorReg = obtener_string_de_un_registro(valorDeMemoria, cantidadDeBytes);
-        log_info(cpuLogger, "PID: %d - Accion: Leer - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, contexto_obtener_tabla_de_segmentos(contexto)->base + offset, valorDeMemoria);
+        
         free(valorReg);
         t_buffer* recibidoDeMemoria = buffer_crear();
         stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria);
         buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes);
+log_info(cpuLogger, "PID: %d - Accion: Leer - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, contexto_obtener_tabla_de_segmentos(contexto)->base + offset, valorDeMemoria);
         buffer_destruir(recibidoDeMemoria);
         pararDeEjecutar = false;
     }
