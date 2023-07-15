@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/cpu.out",
-            "args": ["cfg/CPU_Deadlock.cfg"],
+            "args": ["cfg/CPU.cfg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

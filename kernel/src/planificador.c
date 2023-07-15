@@ -153,19 +153,19 @@ void finalizar_proceso(t_pcb* pcb, int motivoDeFinalizacion){
     switch (motivoDeFinalizacion)
     {
     case SUCCESS: // caso feliz
-        log_info(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SUCCESS", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_info(kernelLogger, "Se finaliza PCB <ID %d> por motivo: SUCCESS", pcb_obtener_pid(pcb));
         break;
     case SEG_FAULT: // caso seg fault
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SEG_FAULT", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> por motivo: SEG_FAULT", pcb_obtener_pid(pcb));
         break;
     case OUT_OF_MEMORY: 
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: OUT_OF_MEMORY", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> por motivo: OUT_OF_MEMORY", pcb_obtener_pid(pcb));
         break;
     case WAIT_DE_RECURSO_NO_EXISTENTE:
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> por motivo: WAIT_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb));
         break;
     case SIGNAL_DE_RECURSO_NO_EXISTENTE:
-        log_error(kernelLogger, "Se finaliza PCB <ID %d> de tamaño %d por motivo: SIGNAL_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb), pcb_obtener_tamanio(pcb));
+        log_error(kernelLogger, "Se finaliza PCB <ID %d> por motivo: SIGNAL_DE_RECURSO_NO_EXISTENTE", pcb_obtener_pid(pcb));
         break;
     }
 }
@@ -572,7 +572,7 @@ void atender_pcb() {
                 break;
             case HEADER_proceso_terminado:
                 finalizar_proceso(pcb,SUCCESS);
-                registros_imprimir(pcb_obtener_registros(pcb));
+                //registros_imprimir(pcb_obtener_registros(pcb));
                 hayQueReplanificar = true; 
                 break;
             case HEADER_proceso_bloqueado:     
