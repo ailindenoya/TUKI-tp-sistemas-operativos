@@ -266,7 +266,6 @@ void  planificador_largo_plazo(void) {
         avisar_a_memoria_de_crear_segmentos_de_proceso(pcbQuePasaAReady);
         t_buffer* bufferSegmentoCreado = buffer_crear();
         uint8_t respuestaDeMemoria = stream_recibir_header(kernel_config_obtener_socket_memoria(kernelConfig));
-        log_info(kernelLogger, "kernel OBTIENE rsta de memoria %d", respuestaDeMemoria);
         if (respuestaDeMemoria != HEADER_proceso_agregado_a_memoria) {
             log_error(kernelLogger, "Error al intentar recibir la tabla de segmentos de MEMORIA <socket %d> para proceso de ID %d", kernel_config_obtener_socket_memoria(kernelConfig), pcb_obtener_pid(pcbQuePasaAReady));
             exit(-1);
@@ -543,7 +542,6 @@ void atender_pcb() {
 
         kernel_enviar_pcb_a_cpu(pcb, kernelConfig, kernelLogger, HEADER_proceso_a_ejecutar);
         uint8_t cpuRespuesta = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
-        log_info(kernelLogger, "HEADER DE RSTA CPU: %d", cpuRespuesta);
         struct timespec end;
         __set_timespec(&end);
         // tiempo real ejecutado - rafaga
@@ -622,7 +620,6 @@ void atender_pcb() {
                 
                 if(list_is_empty(tablaArchivosAbiertos)){   // Si la tabla está vacía
                     enviar_F_OPEN_a_FS(nombreArchivoNuevo,pcb_obtener_pid(pcb));
-                    log_info(kernelLogger, "se envio FOPEN a fs");
                     t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreArchivoNuevo);
                     pcb_agregar_a_tabla_de_archivos_abiertos(pcb, entradaDeTablaDeProceso); 
                     log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcb), nombreArchivoNuevo);
@@ -827,11 +824,9 @@ void atender_pcb() {
                 hayQueReplanificar = true;
                 break;
             case HEADER_create_segment:
-                log_info(kernelLogger, "SE LLEGO A CREATE");
                 t_buffer* bufferCreateSegment = buffer_crear();
                 uint8_t headerCPU = stream_recibir_header(kernel_config_obtener_socket_cpu(kernelConfig));
                 stream_recibir_buffer(kernel_config_obtener_socket_cpu(kernelConfig),bufferCreateSegment);
-                log_info(kernelLogger, "llego a recibir header  %d", headerCPU);
                 uint32_t idCreate;
                 uint32_t tamanio;
                 buffer_desempaquetar(bufferCreateSegment, &idCreate, sizeof(idCreate));
@@ -847,7 +842,6 @@ void atender_pcb() {
                 buffer_destruir(bufferCreateSegmentParaMemoria);
                 
                 uint8_t respuestaMemoria = stream_recibir_header(socketMemoria);
-                log_info(kernelLogger, "resp de memoria %d", respuestaMemoria);
                 if(respuestaMemoria == HEADER_segmento_creado ){
                     t_buffer* bufferSegCreado = buffer_crear();
                     stream_recibir_buffer(socketMemoria,bufferSegCreado);

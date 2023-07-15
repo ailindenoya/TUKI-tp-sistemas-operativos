@@ -552,7 +552,6 @@ void dispatch_peticiones_de_kernel(void) {
         uint8_t kernelRespuesta = stream_recibir_header(cpu_config_obtener_socket_kernel(cpuConfig));
         t_buffer* bufferContexto = NULL;
         t_contexto* contexto = NULL;
-        log_info(cpuLogger, "CPU recibe de KERNEL: %d", kernelRespuesta);
         if (kernelRespuesta != HEADER_proceso_a_ejecutar) {
             log_error(cpuLogger, "Error al intentar recibir el CONTEXTO de KERNEL");
             exit(-1);

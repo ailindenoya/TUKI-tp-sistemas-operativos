@@ -376,7 +376,6 @@ void recibir_de_kernel(){
     
     for(; ;){
         uint8_t headerRecibido = stream_recibir_header(socketKERNEL);
-        log_info(memoriaLogger, "recibe de kernel: %d", headerRecibido);
         stream_recibir_buffer(socketKERNEL,buffer);
         uint32_t pID;
         buffer_desempaquetar(buffer,&pID,sizeof(pID));
