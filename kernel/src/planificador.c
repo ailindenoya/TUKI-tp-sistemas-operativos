@@ -776,7 +776,7 @@ void atender_pcb() {
                 loggear_cambio_estado("EXEC", "BLOCKED", pcb_obtener_pid(pcb));
                 log_info(kernelLogger, "PID: %d - Bloqueado por: %s ", pcb_obtener_pid(pcb), nombreDeArchFWRITE);
                 log_info(kernelLogger, "PID: %d - Escribir Archivo: %s - Puntero: %d - Dirección Memoria: %d - Tamaño: %s", pcb_obtener_pid(pcb), nombreDeArchFWRITE, punteroFWrite, direccionLogica, cantBytesFWRITE);
-                “PID: <PID> - Escribir Archivo: <NOMBRE ARCHIVO> - Puntero <PUNTERO> - Dirección Memoria <DIRECCIÓN MEMORIA> - Tamaño <TAMAÑO>”
+                
 
                 free(nombreDeArchFWRITE);
                 free(cantBytesFWRITE);

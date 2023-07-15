@@ -85,11 +85,11 @@ void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMe
             exit(-1);
         }
         valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
-
+        log_info(cpuLogger, "PID: %d - Accion: Leer - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, nroSegmento*(cpu_config_obtener_tam_max_segmento(cpuConfig))+offset, valorDeMemoria);
         t_buffer* recibidoDeMemoria = buffer_crear();
         stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
         log_info(cpuLogger, "CPU esta listo para empaquetar, con header recibido: %d", headerDeValorDeMemoria);
-        buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes); // ERROR : ACA NO HACE EL DESEMPAQUETADO
+        buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes);
         log_info(cpuLogger, "desempaqueto bloque de memoria");
         buffer_destruir(recibidoDeMemoria);
         pararDeEjecutar = false;
@@ -168,6 +168,7 @@ void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg, ui
         pararDeEjecutar = true;
     }
     else{
+        log_info(cpuLogger, "PID: %d - Accion: Escribir - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, nroSegmento*(cpu_config_obtener_tam_max_segmento(cpuConfig))+offset, reg);
         buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
         buffer_empaquetar(buffer, reg, cantidadDeBytes);
         stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);
@@ -389,7 +390,7 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_READ, bufferFREAD);
-            buffer_destruir(bufferFREAD);
+            
 
             t_buffer *bufferParametros = buffer_crear();
             uint32_t pid = contexto_obtener_pid(contexto);
@@ -400,6 +401,7 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
             buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
             buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+            buffer_destruir(bufferParametros);
         }
         else{
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
@@ -411,7 +413,7 @@ void ejecutar_FREAD(t_contexto* contexto,uint32_t programCounterActualizado, cha
         stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferFREAD);
         log_info(cpuLogger, "PID: %d- Error SEG_FAULT- Segmento: %d- Offset: %d- Tamaño: <TAMAÑO>", contexto_obtener_pid(contexto), nroSegmento, offset);
     }
-    buffer_destruir(bufferParametros);
+    buffer_destruir(bufferFREAD);
 }
 
 void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, char* nombreArchivo, char* dirLogica, char* cantBytes){
@@ -427,7 +429,7 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
     if(offset < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         if((offset + bytes) < contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_F_WRITE, bufferWRITE);
-            buffer_destruir(bufferWRITE);
+            
         
             t_buffer *bufferParametros = buffer_crear();
             uint32_t pid = contexto_obtener_pid(contexto);
@@ -438,6 +440,7 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
             buffer_empaquetar(bufferParametros, &nroSegmento, sizeof(nroSegmento));
             buffer_empaquetar(bufferParametros, &offset, sizeof(offset));
             stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_parametros, bufferParametros);
+            buffer_destruir(bufferParametros);
         }
         else{
         stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferWRITE);
@@ -448,7 +451,7 @@ void ejecutar_FWRITE(t_contexto* contexto,uint32_t programCounterActualizado, ch
         stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,bufferWRITE);
         log_info(cpuLogger, "PID: %d- Error SEG_FAULT- Segmento: %d- Offset: %d- Tamaño: <TAMAÑO>", contexto_obtener_pid(contexto), nroSegmento, offset);
     }
-    buffer_destruir(bufferParametros);
+    buffer_destruir(bufferWRITE);
 }
 
 bool cpu_ejecutar_instrucciones(t_contexto* contexto, t_tipo_instruccion tipoInstruccion, char* parametro1, char* parametro2, char* parametro3) {
