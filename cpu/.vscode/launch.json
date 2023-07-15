@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/cpu.out",
-            "args": ["cfg/CPU_Errores.cfg"],
+            "args": ["cfg/CPU_Filesystem.cfg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [

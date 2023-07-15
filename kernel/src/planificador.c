@@ -678,18 +678,23 @@ void atender_pcb() {
                     buffer_empaquetar_string(buffer_FCLOSE_FS, nombreDeArchFClose);
                     stream_enviar_buffer(kernel_config_obtener_socket_filesystem_peticiones(kernelConfig), HEADER_F_CLOSE, buffer_FCLOSE_FS);
                     buffer_destruir(buffer_FCLOSE_FS);
-                    log_info(kernelLogger, "PID: %d - Cerrar Archivo: %s", pcb_obtener_pid(pcb), nombreDeArchFClose);
                 }
                 else{
                     t_pcb* pcbQueAgarraArchivo = list_remove(t_archivo_tabla_obtener_cola_procesos(entradaDeTabla), 0);
                     t_archivo_tabla_setear_pid(entradaDeTabla, pcb_obtener_pid(pcbQueAgarraArchivo));
+
+                    t_archivo_tabla_proceso* entradaDeTablaDeProceso = crearEntradaEnTablaProceso(nombreDeArchFClose);
+                    pcb_agregar_a_tabla_de_archivos_abiertos(pcbQueAgarraArchivo, entradaDeTablaDeProceso); 
+                    log_info(kernelLogger, "PID: %d - Abrir Archivo: %s", pcb_obtener_pid(pcbQueAgarraArchivo), nombreDeArchFClose);
+
                     pcb_setear_estado(pcbQueAgarraArchivo, READY);
-                    estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
                     loggear_cambio_estado("BLOCKED", "READY", pcb_obtener_pid(pcbQueAgarraArchivo));
+                    estado_encolar_pcb_con_semaforo(estadoReady, pcbQueAgarraArchivo);
                     pcb_setear_tiempoDellegadaAReady(pcbQueAgarraArchivo);
                     obtenerListaDePids(estadoReady);
                     sem_post(estado_obtener_sem(estadoReady));
                 }
+                log_info(kernelLogger, "PID: %d - Cerrar Archivo: %s", pcb_obtener_pid(pcb), nombreDeArchFClose);
                 free(nombreDeArchFClose);
                 buffer_destruir(bufferFCLOSE);
                 hayQueReplanificar = false;
@@ -1002,7 +1007,6 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         pcb_setear_socket(nuevoPCB, socketProceso);
         pcb_setear_buffer_de_instrucciones(nuevoPCB, bufferDeInstruccionesCopia);
 
-        log_info(kernelLogger, "Creación de nuevo proceso ID %d de tamaño %d mediante <socket %d>", pcb_obtener_pid(nuevoPCB), tamanio, *socketProceso);
 
         t_buffer* bufferPID = buffer_crear();
         buffer_empaquetar(bufferPID, &nuevoPID, sizeof(nuevoPID));
@@ -1010,6 +1014,7 @@ void* encolar_en_new_nuevo_pcb_entrante(void* socket) {
         buffer_destruir(bufferPID);
 
         estado_encolar_pcb_con_semaforo(estadoNew, nuevoPCB);
+        log_info(kernelLogger, "Se crea el proceso %d en NEW", pcb_obtener_pid(nuevoPCB));
         loggear_cambio_estado("NULL", "NEW", pcb_obtener_pid(nuevoPCB));
         sem_post(&hayPcbsParaAgregarAlSistema);
         buffer_destruir(bufferDeInstrucciones);

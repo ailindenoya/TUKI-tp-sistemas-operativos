@@ -31,6 +31,23 @@ void empaquetar_contexto_para_kernel(t_buffer* buffer,uint32_t programCounterAct
     buffer_empaquetar_tabla_de_segmentos(buffer, contexto_obtener_tabla_de_segmentos(contexto), cantidadDeSegmentos);
 }
 
+char* concat(const char* s1, const char* s2){
+    char* result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+
+char* obtener_string_de_un_registro(char* reg, int cantCaracteres) {
+    char* vector = "";
+    char* vec= malloc(sizeof(*vec));
+    for(int i = 0; i < cantCaracteres; i++){
+        sprintf(vec, "%c", reg[i]);
+        vector = concat(vector, vec);
+    }
+    return vector;
+}
+
 void ejecutar_SET(t_contexto* contexto, char* reg, char* param) {
     
     log_info(cpuLogger, "PID: %d - Ejecutando: SET ", contexto_obtener_pid(contexto));
@@ -78,19 +95,18 @@ void pedirleAMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* valorDeMe
         stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_memoria, buffer);
 
         int headerDeValorDeMemoria = stream_recibir_header(cpu_config_obtener_socket_memoria(cpuConfig));
-        log_info(cpuLogger,"header valor mem %d", headerDeValorDeMemoria);
 
         if (headerDeValorDeMemoria != HEADER_valor_de_memoria){
             log_error(cpuLogger, "error al recibir header de 'valor de memoria' de MEMORIA");
             exit(-1);
         }
         valorDeMemoria = realloc(valorDeMemoria,sizeof(*valorDeMemoria)*cantidadDeBytes);
-        log_info(cpuLogger, "PID: %d - Accion: Leer - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, nroSegmento*(cpu_config_obtener_tam_max_segmento(cpuConfig))+offset, valorDeMemoria);
+        char* valorReg = obtener_string_de_un_registro(valorDeMemoria, cantidadDeBytes);
+        log_info(cpuLogger, "PID: %d - Accion: Leer - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, contexto_obtener_tabla_de_segmentos(contexto)->base + offset, valorDeMemoria);
+        free(valorReg);
         t_buffer* recibidoDeMemoria = buffer_crear();
-        stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria); 
-        log_info(cpuLogger, "CPU esta listo para empaquetar, con header recibido: %d", headerDeValorDeMemoria);
+        stream_recibir_buffer(cpu_config_obtener_socket_memoria(cpuConfig),recibidoDeMemoria);
         buffer_desempaquetar(recibidoDeMemoria,valorDeMemoria, sizeof(*valorDeMemoria)*cantidadDeBytes);
-        log_info(cpuLogger, "desempaqueto bloque de memoria");
         buffer_destruir(recibidoDeMemoria);
         pararDeEjecutar = false;
     }
@@ -161,14 +177,17 @@ void ejecutar_MOV_IN(t_contexto* contexto,uint32_t programCounterActualizado, ch
     buffer_destruir(buffer);
 }
 
+
 void escribirEnMemoria(t_buffer* buffer, uint32_t cantidadDeBytes, char* reg, uint32_t offset, t_contexto* contexto, uint32_t nroSegmento, uint32_t programCounterActualizado){
     if((offset + cantidadDeBytes) > contexto_obtener_tabla_de_segmentos(contexto)[nroSegmento].tamanio){
         empaquetar_contexto_para_kernel(buffer,programCounterActualizado,contexto);
-        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer);
+        stream_enviar_buffer(cpu_config_obtener_socket_kernel(cpuConfig), HEADER_proceso_terminado_seg_fault,buffer); 
         pararDeEjecutar = true;
     }
     else{
-        log_info(cpuLogger, "PID: %d - Accion: Escribir - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, nroSegmento*(cpu_config_obtener_tam_max_segmento(cpuConfig))+offset, reg);
+        char* valorReg= obtener_string_de_un_registro(reg, cantidadDeBytes);
+        log_info(cpuLogger, "PID: %d - Accion: Escribir - Segmento: %d - Direccion Fisica: %d - Valor: %s", contexto_obtener_pid(contexto), nroSegmento, contexto_obtener_tabla_de_segmentos(contexto)->base + offset, valorReg);
+        free(valorReg);
         buffer_empaquetar(buffer, &cantidadDeBytes, sizeof(cantidadDeBytes));
         buffer_empaquetar(buffer, reg, cantidadDeBytes);
         stream_enviar_buffer(cpu_config_obtener_socket_memoria(cpuConfig), HEADER_valor_de_registro, buffer);

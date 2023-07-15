@@ -425,8 +425,8 @@ void recibir_de_kernel(){
             list_find_element_and_index(listaDeProcesos, esProcesoATerminar, indiceProcesoAFinalizar);
             list_remove(listaDeProcesos, *indiceProcesoAFinalizar);  
             // NO ANDA, EL FREE ESTE DE ABAJO ROMPE TODO
-            //free(proceso_obtener_tabla_de_segmentos(procesoAFinalizar));
-            //free(procesoAFinalizar);
+            free(proceso_obtener_tabla_de_segmentos(procesoAFinalizar));
+            free(procesoAFinalizar);
             free(indiceProcesoAFinalizar);
             break;
         default:

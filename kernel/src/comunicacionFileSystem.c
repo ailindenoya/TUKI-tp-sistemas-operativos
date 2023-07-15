@@ -7,14 +7,17 @@ extern t_list* tablaArchivosAbiertos;
 t_archivo_tabla* crearEntradaEnTabla(uint32_t pid, char* NombreArchivo){
     t_archivo_tabla* aux = malloc(sizeof(*aux));
     aux->pid = pid;
-    aux->nombreArchivo = NombreArchivo;
+    //aux->nombreArchivo = NombreArchivo;
+    aux->nombreArchivo = malloc(sizeof(*(aux->nombreArchivo)));
+    strcpy(aux->nombreArchivo, NombreArchivo);
     aux->colaProcesos = list_create();
     return aux;
 }
 
 t_archivo_tabla_proceso* crearEntradaEnTablaProceso(char* NombreArchivo){
     t_archivo_tabla_proceso* aux = malloc(sizeof(*aux));
-    aux->nombreArchivo = NombreArchivo;
+    aux->nombreArchivo = malloc(sizeof(*(aux->nombreArchivo)));
+    strcpy(aux->nombreArchivo, NombreArchivo);
     aux->puntero = 0;
     return aux;
 }
