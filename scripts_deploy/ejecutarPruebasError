@@ -1,0 +1,7 @@
+#!/bin/bash
+cd ..
+cd consola
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/ERROR_1
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/ERROR_2
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/ERROR_3
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/ERROR_4

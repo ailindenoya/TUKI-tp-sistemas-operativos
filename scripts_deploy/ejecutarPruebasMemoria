@@ -1,0 +1,6 @@
+#!/bin/bash
+cd ..
+cd consola
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/MEMORIA_1 
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/MEMORIA_2
+./bin/consola.out cfg/consola_config.cfg include/instrucciones/MEMORIA_3
