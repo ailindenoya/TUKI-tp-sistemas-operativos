@@ -383,6 +383,7 @@ void recibir_de_kernel(){
         switch (headerRecibido)
         {
         case HEADER_proceso_a_agregar_a_memoria:
+            log_info(memoriaLogger, "Creación de Proceso PID: %d", pID);
             proceso* procesoNuevo = proceso_crear(pID, memoria_config_obtener_cantidad_de_segmentos(memoriaConfig));
             procesoNuevo->tablaDeSegmentos[0] = *pteroASegmento0;
             list_add(listaDeProcesos,procesoNuevo);
@@ -396,14 +397,19 @@ void recibir_de_kernel(){
             uint32_t  idSegmento_create;
             buffer_desempaquetar(buffer, &idSegmento_create, sizeof(idSegmento_create)); 
             buffer_desempaquetar(buffer, &tamanioRequeridoParaSegmentoACrear,sizeof(tamanioRequeridoParaSegmentoACrear));
+            proceso* procesoDeCreate = encontrar_proceso(pID);
+            log_info(memoriaLogger, "PID: %d - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pID, idSegmento_create,procesoDeCreate->tablaDeSegmentos[idSegmento_create].base, procesoDeCreate->tablaDeSegmentos[idSegmento_create].tamanio);
             atender_create_segment(pID,idSegmento_create);
             break;
         case HEADER_delete_segment:
             uint32_t idSegmento_delete; 
+            proceso* procesoDeDelete = encontrar_proceso(pID);
             buffer_desempaquetar(buffer,&idSegmento_delete,sizeof(idSegmento_delete));
+            log_info(memoriaLogger, "PID: %d - Crear Segmento: %d - Base: %d - TAMAÑO: %d", pID, idSegmento_delete,procesoDeDelete->tablaDeSegmentos[idSegmento_delete].base, procesoDeDelete->tablaDeSegmentos[idSegmento_delete].tamanio);
             atender_delete_segment(pID, idSegmento_delete); 
             break;
         case HEADER_finalizar_proceso_en_memoria:
+            log_info(memoriaLogger, "Eliminación de Proceso PID: %d", pID);
             proceso* procesoAFinalizar = encontrar_proceso(pID);
             for(int i=1; i<memoria_config_obtener_cantidad_de_segmentos(memoriaConfig); i++){
                 atender_delete_segment(pID, procesoAFinalizar->tablaDeSegmentos[i].id);

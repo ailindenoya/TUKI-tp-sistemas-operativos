@@ -829,6 +829,7 @@ void atender_pcb() {
                 uint32_t tamanio;
                 buffer_desempaquetar(bufferCreateSegment, &idCreate, sizeof(idCreate));
                 buffer_desempaquetar(bufferCreateSegment, &tamanio, sizeof(tamanio));
+                log_info(kernelLogger,"PID: %d- Crear Segmento - Id: %d - Tamaño: %d", pcb_obtener_pid(pcb), idCreate, tamanio);
                 buffer_destruir(bufferCreateSegment);
 
                 t_buffer* bufferCreateSegmentParaMemoria = buffer_crear();
@@ -848,8 +849,10 @@ void atender_pcb() {
                     hayQueReplanificar = false;
                 }else if(respuestaMemoria == HEADER_hay_que_compactar){
                     stream_recibir_buffer_vacio(socketMemoria);
+                    log_info(kernelLogger, "Compactación: Se solicitó compactación");
   
                     stream_enviar_buffer_vacio(kernel_config_obtener_socket_compactacion(kernelConfig), HEADER_comprobar_si_hay_operaciones_activas_fs_mem);
+                    log_info(kernelLogger, "Compactación: Esperando Fin de Operaciones de FS");
                     int rstaFSCOMPACTACION = stream_recibir_header(kernel_config_obtener_socket_compactacion(kernelConfig));
                     if(rstaFSCOMPACTACION != HEADER_OK_puede_continuar){
                         log_error(kernelLogger, "no se recibio correctamente el rstaFSCOMPACTACION se recibio %d", rstaFSCOMPACTACION);
@@ -867,7 +870,7 @@ void atender_pcb() {
                     stream_recibir_buffer(socketMemoria, bufferProcesos);
 
                     buffer_desempaquetar_y_actualizar_lista_procesos(bufferProcesos);
-                    
+                    log_info(kernelLogger, "Se finalizó el proceso de compactación");
                     buffer_destruir(bufferProcesos);
 
                     respuestaMemoria = stream_recibir_header(socketMemoria);
@@ -895,6 +898,7 @@ void atender_pcb() {
 
                 uint32_t idDelete;
                 buffer_desempaquetar(bufferDeleteSegment, &idDelete, sizeof(idDelete));
+                log_info(kernelLogger,"PID: %d - Eliminar Segmento - Id Segmento: %d", pcb_obtener_pid(pcb), idDelete);
                 buffer_destruir(bufferDeleteSegment);
 
                 t_buffer* bufferDeleteSegmentParaMemoria = buffer_crear();
